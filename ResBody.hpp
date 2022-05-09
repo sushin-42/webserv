@@ -6,12 +6,12 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/09 19:22:25 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/09 21:19:44 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/09 22:39:28 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef ResBody_HPP
-# define ResBody_HPP
+#ifndef RESBODY_HPP
+# define RESBODY_HPP
 
 # include <string>
 # include <sys/fcntl.h>
