@@ -1,25 +1,20 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   HeaderTemplate.hpp                                 :+:      :+:    :+:   */
+/*   IHeader.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/05/06 14:58:24 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/06 17:43:33 by mishin           ###   ########.fr       */
+/*   Created: 2022/05/09 18:26:49 by mishin            #+#    #+#             */
+/*   Updated: 2022/05/09 20:55:29 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-
-#ifndef HEADERTEMPLATE_HPP
-# define HEADERTEMPLATE_HPP
+#ifndef IHEADER_HPP
+# define IHEADER_HPP
 
 # include <string>
-# include <cstring>
-# include <map>
-#include <sys/fcntl.h>
 using namespace std;
-
 
 // * example header
 string headerTemplate = "#HTTP-VERSION #STATUS #REASON-PHARSE\n"
@@ -27,11 +22,25 @@ string headerTemplate = "#HTTP-VERSION #STATUS #REASON-PHARSE\n"
     					"Server: webserv42\n"
     					"Connection: #CONNECTION\n"
     					"Content-Type: #MIME-TYPE\n\n";
+class IHeader
+{
+protected:
+	typedef unsigned short status_code_t;
+	string	content;
+public:
+	IHeader() : content() {}
+	IHeader( const string& s ) : content(s) {}
+	IHeader( const IHeader& src ) : content(src.content) {}
+	virtual ~IHeader() {}
 
-    			// "X-Powered-By: PHP/4.0.6\n"
+	IHeader&	operator=( const IHeader& src )
+	{
+		if (this != &src)
+			content = src.content;
+		return *this;
+	}
 
-
-
-
-
+	string			getContent() const	{ return this->content; }
+	virtual void	clear() = 0;
+};
 #endif

@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/06 10:46:37 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/06 15:03:01 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/09 20:19:07 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,8 @@ public:
 		cout << "accept OK" << endl;
 		return c;
 	}
+private:
+	void dummy() {}
 };
 
 

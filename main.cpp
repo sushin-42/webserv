@@ -2,7 +2,9 @@
 #include <signal.h>
 
 #include "Config.hpp"
-#include "HeaderTemplate.hpp"
+#include "ResBody.hpp"
+#include "ReqHeader.hpp"
+#include "ResHeader.hpp"
 #include "ServerSocket.hpp"
 
 int main()
@@ -21,9 +23,24 @@ int main()
 
 	while (1)
 	{
-		connected = serv.accept();
-		cout << connected.getRequest() << endl;
-		connected.sendResponse();
+		ReqHeader	reqH;
+		ResHeader	resH;
+		ResBody		resB;
+		connected	= serv.accept();
+		reqH		= connected.recvRequest();
+		reqH.setPath();
+		reqH.checkFile();
+
+		resH = makeResponseHeader(reqH);
+		connected.send(resH.getContent());
+		if (reqH.status == 200)
+		{
+			resB.readFile(reqH.path);
+			connected.send(resB.getContent());
+		}
+		// reqH.clear();
+		// resH.clear();
+		// reqB.clear();
 	}
 }
 

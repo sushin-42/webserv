@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/06 10:32:52 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/06 21:06:24 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/09 20:17:57 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ public:
 	ISocket( const ISocket& src )
 	:sock(src.sock), info(src.info) {}
 
-	virtual ~ISocket() {};
+	virtual ~ISocket() {}
 
 	ISocket&	operator=( const ISocket& src )
 	{
@@ -56,7 +56,7 @@ public:
 		return *this;
 	}
 
-	string			getIP() const		{ return inet_ntoa(info.sin_addr); };
+	string			getIP() const		{ return inet_ntoa(info.sin_addr); }
 	unsigned short	getPort() const		{ return ntohs(info.sin_port); }
 
 	//! do not set connected-socket
@@ -71,6 +71,9 @@ public:
 					virtual ~something_wrong() throw() {};
 					virtual const char * what() const throw() { return msg.c_str(); }
 	};
+
+private:
+	virtual void			dummy() = 0;
 };
 
 

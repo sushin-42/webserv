@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/06 12:03:16 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/06 21:12:27 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/09 21:21:02 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,14 +15,16 @@
 
 # include <iostream>
 #include <string>
+#include <sys/_types/_ssize_t.h>
 # include <utility>
 
 # include <sys/fcntl.h>
 
 # include "ISocket.hpp"
 # include "Config.hpp"
-# include "HeaderTemplate.hpp"
+
 # include "utils.hpp"
+# include "ResHeader.hpp"
 
 # define GET	1
 # define PUT	2
@@ -45,13 +47,12 @@ friend class ServerSocket;
 
 private:
 	socklen_t	len;
-	string		reqHeader;
 	char		recvbuf[1024];
-	char		sendbuf[1024];
+	// char		sendbuf[1024];	//' is required?
 
 public:
-	ConnSocket() : ISocket(), len(sizeof(info)), reqHeader() {};
-	~ConnSocket() {};
+	ConnSocket() : ISocket(), len(sizeof(info)) {}
+	~ConnSocket() {}
 
 	ConnSocket&	operator=( const ConnSocket& src )
 	{
@@ -59,7 +60,6 @@ public:
 		{
 			this->ISocket::operator=(src);
 			this->len		= src.len;
-			this->reqHeader = src.reqHeader;
 			//NOTE: no buf copy
 		}
 		return *this;
@@ -76,19 +76,20 @@ public:
 		return -1;
 	}
 
-	string getRequest()
+	ReqHeader recvRequest()
 	{
 		ssize_t	byte;
+		string	content;
 		int		method = 0;
 		bzero(recvbuf, sizeof(recvbuf));
 		while ( (byte = read(this->sock, this->recvbuf, sizeof(recvbuf))) > 0)
 		{
-			reqHeader += recvbuf;	//NOTE: if read binary from req?
+			content += recvbuf;	//NOTE: if read binary from req?
 			if (!method)
-				switch (method = checkMethod(reqHeader))
+				switch (method = checkMethod(content))
 				{
 				case GET:
-					if (reqHeader.substr(reqHeader.length() - 4) == "\r\n\r\n")
+					if (content.substr(content.length() - 4) == "\r\n\r\n")
 						goto exitloop;		// ' 'break' do not exit the loop due to switch
 											// ! read() will be blocked until EOF, need 'break'
 					break;
@@ -101,76 +102,38 @@ public:
 	exitloop:
 		if (byte == -1)	throw something_wrong(strerror(errno));
 
-		return reqHeader;
+		ReqHeader req(content);
+		cout << req.getContent() << endl;
+		return req;
 	}
 
-	string	getPath()
+	void	send(const string& content)
 	{
-		string::size_type start = reqHeader.find(" ") + 1;
-		string::size_type end	= reqHeader.find(" ", start);
-
-		return reqHeader.substr(start, end - (start));
+		write(this->sock, content.data(), content.length());
+		// write(STDOUT_FILENO, content.data(), content.length());
 	}
 
-	pair<int, status_code_t>	checkFile()	// return (requested fd, status code)
+	void	sendResponseBody()
 	{
-		string	path		= root + getPath();
-		int		requested	= open(path.c_str(), O_RDONLY);
-
-		// if (requested == -1)	throw something_wrong(strerror(errno));
-		if (requested == -1)	return make_pair(requested, 404);
-
-		return make_pair(requested, 200);
-	}
-
-	void	replaceToken(string& header, const string& token, const string& value)
-	{
-		header.replace(header.find(token), token.length(), value);
-	}
-
-	string	makeResponseHeader(status_code_t status)
-	{
-		string	header			= headerTemplate;
-		string	reason;
-
-		replaceToken(header, "#HTTP-VERSION", "HTTP/1.1");
-		replaceToken(header, "#STATUS", toString(status));
-		switch (status)
-		{
-		case 200:	reason = "OK"; break;
-		case 404:	reason = "NOT FOUND"; break;
-		}
-		replaceToken(header, "#REASON-PHARSE", reason);
-		replaceToken(header, "#MIME-TYPE", MIME[getExt(getPath())]);
-		replaceToken(header, "#CONNECTION", "keep-alive");
-
-		return header;
-	}
-
-	void	sendResponseHeader(const string& header)
-	{
-		write(this->sock, header.c_str(), header.length());
-		write(STDOUT_FILENO, header.c_str(), header.length());
-	}
-
-	void	sendResponseBody(int fd)
-	{
-		ssize_t	byte = 0;
-		bzero(sendbuf, sizeof(sendbuf));
-		while ( (byte = read(fd, sendbuf, sizeof(sendbuf))) > 0 )
-		{
-			write(this->sock, sendbuf, byte);
-			bzero(sendbuf, sizeof(sendbuf));
-		}
+		;
+		// ssize_t	byte = 0;
+		// bzero(sendbuf, sizeof(sendbuf));
+		// while ( resbody.content -> sendbuf )
+		// {
+		// 	write(this->sock, sendbuf, byte);
+		// 	// bzero(sendbuf, sizeof(sendbuf));
+		// }
 	}
 
 	void	sendResponse()
 	{
-		pair<int, status_code_t>	fd_status	= checkFile();
-
-		sendResponseHeader( makeResponseHeader(fd_status.second) );
-		sendResponseBody(fd_status.first);
+		;
+		// pair<int, status_code_t>	fd_status	= checkFile();
+		// sendResponseHeader( makeResponseHeader(fd_status.second) );
+		// sendResponseBody();
 	}
+private:
+	void			dummy() {}
 };
 
 
