@@ -6,13 +6,14 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/09 19:22:25 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/09 22:39:28 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/10 19:22:55 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef RESBODY_HPP
 # define RESBODY_HPP
 
+#include <iostream>
 # include <string>
 # include <sys/fcntl.h>
 # include <unistd.h>
@@ -43,6 +44,7 @@ public:
 
 	void	readFile( const string& path )
 	{
+		// cout << path << endl;
 		ifstream input_file(path);
 	    if (!input_file.is_open())
 			exit(EXIT_FAILURE);	//FIXME

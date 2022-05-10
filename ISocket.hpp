@@ -6,18 +6,23 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/06 10:32:52 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/09 20:17:57 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/10 19:18:45 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef ISOCKET_HPP
 # define ISOCKET_HPP
 
+# include <iostream>
 # include <netinet/in.h>
 # include <cstring>
+# include <sys/fcntl.h>
 # include <sys/socket.h>
 # include <arpa/inet.h>
 # include <string>
+# include <unistd.h>
+
+# include "color.hpp"
 
 using namespace std;
 // struct sockaddr_in;
@@ -40,6 +45,7 @@ public:
 		bzero(info.sin_zero, sizeof(info.sin_zero));
 
 		sock = socket(PF_INET, SOCK_STREAM, 0);
+		fcntl(sock, F_SETFL, O_NONBLOCK | SO_REUSEADDR);
 	}
 	ISocket( const ISocket& src )
 	:sock(src.sock), info(src.info) {}
@@ -58,6 +64,8 @@ public:
 
 	string			getIP() const		{ return inet_ntoa(info.sin_addr); }
 	unsigned short	getPort() const		{ return ntohs(info.sin_port); }
+	int				getFD()	const		{ return sock; }
+	void			close()				{ ::close(sock); cout << RED("close ") << sock << endl; }
 
 	//! do not set connected-socket
 	void			setIP( const string& ip )				{ if (ip ==  "")	this->info.sin_addr.s_addr = INADDR_ANY;
@@ -71,6 +79,7 @@ public:
 					virtual ~something_wrong() throw() {};
 					virtual const char * what() const throw() { return msg.c_str(); }
 	};
+
 
 private:
 	virtual void			dummy() = 0;

@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/06 12:03:16 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/09 21:21:02 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/10 23:29:22 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,12 +16,14 @@
 # include <iostream>
 #include <string>
 #include <sys/_types/_ssize_t.h>
+#include <sys/errno.h>
 # include <utility>
 
 # include <sys/fcntl.h>
 
 # include "ISocket.hpp"
 # include "Config.hpp"
+# include "color.hpp"
 
 # include "utils.hpp"
 # include "ResHeader.hpp"
@@ -78,29 +80,45 @@ public:
 
 	ReqHeader recvRequest()
 	{
-		ssize_t	byte;
+		ssize_t	byte = 0;
 		string	content;
 		int		method = 0;
+		cout << "trying recv from fd " << this->sock << endl;
+		// cout << this << " in recvReq() " << endl;
+		// cout << "size of recvbuf = " << sizeof(recvbuf) << endl;
 		bzero(recvbuf, sizeof(recvbuf));
-		while ( (byte = read(this->sock, this->recvbuf, sizeof(recvbuf))) > 0)
+		// memset(recvbuf, 0, sizeof(recvbuf));	//BUG
+		while ((byte = read(this->sock, this->recvbuf, sizeof(recvbuf))) > 0)
 		{
-			content += recvbuf;	//NOTE: if read binary from req?
+ 			content.append(recvbuf, byte);	// '+=' is bad for processing binary data
 			if (!method)
 				switch (method = checkMethod(content))
 				{
 				case GET:
 					if (content.substr(content.length() - 4) == "\r\n\r\n")
 						goto exitloop;		// ' 'break' do not exit the loop due to switch
-											// ! read() will be blocked until EOF, need 'break'
+											// ! read() will return EAGAIN if no to read, need 'break'
 					break;
 				case PUT:	cerr << "NOT SUPPORT PUT" << endl;		break;
 				case POST:	cerr << "NOT SUPPORT POST" << endl;		break;
 				case DELETE:cerr << "NOT SUPPORT DELETE" << endl;	break;
 				}
 			bzero(recvbuf, sizeof(recvbuf));
+			// memset(recvbuf, 0, sizeof(recvbuf));
 		}
 	exitloop:
-		if (byte == -1)	throw something_wrong(strerror(errno));
+		if (byte == -1)
+		{
+			if (errno != EAGAIN && errno != EWOULDBLOCK)
+				throw something_wrong(strerror(errno));
+		}
+		else if (byte == 0)	//TODO: closed by CLIENT
+		{
+			cout << PURPLE("CLIENT EXIT") << endl;
+			if (errno != EAGAIN && errno != EWOULDBLOCK)
+				throw something_wrong(strerror(errno));
+		}
+
 
 		ReqHeader req(content);
 		cout << req.getContent() << endl;
@@ -109,28 +127,14 @@ public:
 
 	void	send(const string& content)
 	{
-		write(this->sock, content.data(), content.length());
+		ssize_t	status;
+		status = write(this->sock, content.data(), content.length());
+		if (status == -1)
+			cerr << RED("ConnSocket#write() bad") << endl;
+		else
+			cout << CYAN("ConnSocket#send() good") << endl;
+
 		// write(STDOUT_FILENO, content.data(), content.length());
-	}
-
-	void	sendResponseBody()
-	{
-		;
-		// ssize_t	byte = 0;
-		// bzero(sendbuf, sizeof(sendbuf));
-		// while ( resbody.content -> sendbuf )
-		// {
-		// 	write(this->sock, sendbuf, byte);
-		// 	// bzero(sendbuf, sizeof(sendbuf));
-		// }
-	}
-
-	void	sendResponse()
-	{
-		;
-		// pair<int, status_code_t>	fd_status	= checkFile();
-		// sendResponseHeader( makeResponseHeader(fd_status.second) );
-		// sendResponseBody();
 	}
 private:
 	void			dummy() {}

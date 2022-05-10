@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/06 10:46:37 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/09 20:19:07 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/10 17:30:20 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,12 +39,11 @@ public:
 		if (any)	throw something_wrong(strerror(errno));
 		cout << "listen OK" << endl;
 	}
-	ConnSocket	accept()
+	ConnSocket	accept() const
 	{
 		ConnSocket c;
 		c.sock = ::accept(this->sock, (struct sockaddr *)&c.info, &c.len);
-		if (c.sock == -1)
-			exit(-1);
+		if (c.sock == -1)	throw something_wrong(strerror(errno));
 		cout << "accept OK" << endl;
 		return c;
 	}
