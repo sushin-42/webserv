@@ -11,7 +11,7 @@
 #include "ResHeader.hpp"
 #include "ServerSocket.hpp"
 
-#define SIZE 10
+
 
 int main()
  {
@@ -24,42 +24,49 @@ int main()
 	ResBody				ResB;
 
 	PollSet				set;
-	// ISocket*			ret = NULL;
-	Poll*			ret = NULL;
+	PollSet::iterator	it;
 
 	root += "/static_file";
 
 	try						{ serv.bind(); }
 	catch (exception& e)	{ cerr << e.what() << endl; }
-	try						{ serv.listen(0); }
+	try						{ serv.listen(10 /*backlog*/); }
 	catch (exception& e)	{ cerr << e.what() << endl; }
 
-	Poll sp = Poll(&serv);
-	set.enroll(sp);
+	set.enroll(&serv);
 	while (1)
 	{
-		ret = set.examine(serv);
-		if (ret)
+		try						{ it = set.examine(serv); }
+		catch (exception& e)	{ continue; }
+
+		connected.setFD(it->fd);
+		try						{ ReqH = connected.recvRequest(); }
+		catch (exception& e)	{ connected.close(); set.drop(it); continue; }
+		ReqH.setPath();
+		ReqH.checkFile();
+		ResH = makeResponseHeader(ReqH);
+
+		cout << ReqH.path << " is Requested by " << it->fd << endl;
+		switch (ReqH.getStatus())
 		{
-			cout << "show ret! " <<  ret->s << " : " <<  ret->s->getFD() << endl;
-			ReqH = ((ConnSocket*)(ret->s))->recvRequest();
-			ReqH.setPath();
-			ReqH.checkFile();
-			ResH = makeResponseHeader(ReqH);
-
-			cout << ReqH.path << " is Requested by " << ret->s->getFD() << endl;
-
-			switch (ReqH.status)
-			{
-			case 200: ResB.readFile(ReqH.path);				break;
-			case 404: ResB.readFile(root+"/404/404.html");	break;
-			}
-
-			((ConnSocket*)(ret->s))->send(ResH.getContent());
-			((ConnSocket*)(ret->s))->send(ResB.getContent());
-			// ret->s->close();
-			ret->revents = 0;
-			ret->fd = -1;
+		case 200: ResB.readFile(ReqH.path);				break;
+		case 404: ResB.readFile(root+"/404/404.html");	break;
 		}
+		connected.send(ResH.getContent());
+		connected.send(ResB.getContent());
+		connected.close();
+
+		it->revents = 0;
+		it->fd = -1;
+
+		ReqH.clear();
+		ResH.clear();
+		ResB.clear();
 	}
- }
+}
+
+
+
+
+
+

@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/09 18:36:49 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/09 20:57:07 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/11 16:29:03 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,17 +39,13 @@ public:
 	{
 		content.replace(content.find(token), token.length(), value);
 	}
-	void	clear()
-	{
-		content = "";
-	}
 };
 
 ResHeader	makeResponseHeader(const ReqHeader& req)
 {
 	ResHeader	res(headerTemplate);
 	res.replaceToken("#HTTP-VERSION", "HTTP/1.1");
-	res.replaceToken("#STATUS", toString(req.status));
+	res.replaceToken("#STATUS", toString(req.getStatus()));
 	res.replaceToken("#REASON-PHARSE", req.reason);
 	res.replaceToken("#MIME-TYPE", MIME[getExt(req.path)]);
 	res.replaceToken("#CONNECTION", "keep-alive");

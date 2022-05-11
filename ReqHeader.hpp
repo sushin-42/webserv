@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/09 18:30:30 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/10 22:10:07 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/11 15:59:16 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,13 +19,8 @@
 
 class ReqHeader : public IHeader
 {
-private:
-	typedef unsigned short status_code_t;
-
-
 public:
 	string			reason;
-	status_code_t	status;
 	string			path;
 
 	ReqHeader() : IHeader() {}
@@ -55,25 +50,27 @@ public:
 		{
 			if (errno == ENOENT) { this->status = 404; this->reason = "File Not Found"; }
 			// . . .
+			/*
+			.	separate setStatus() / setReason() ?
+				switch (req.status)
+				{
+				case 200:	req.reason = "OK"; break;
+				case 404:	req.reason = "NOT FOUND"; break;
+				}
+			*/
 			return ;
 		}
 		close(requested);
 		this->status = 200;
 		this->reason = "OK";
 	}
-	/*
-	 .	separate getStatus() / getReason() ?
-	 	switch (req.status)
-		{
-		case 200:	req.reason = "OK"; break;
-		case 404:	req.reason = "NOT FOUND"; break;
-		}
-	*/
+
 
 	void	clear()
 	{
-		content = reason = path = "";
-		status = -1;
+		IHeader::clear();
+		reason.clear();
+		path.clear();
 	}
 
 };

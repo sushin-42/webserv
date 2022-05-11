@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/06 12:03:16 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/10 23:29:22 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/11 15:57:39 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,37 +80,38 @@ public:
 
 	ReqHeader recvRequest()
 	{
+		int method = 0;
+		static int count = 0;
 		ssize_t	byte = 0;
 		string	content;
-		int		method = 0;
-		cout << "trying recv from fd " << this->sock << endl;
-		// cout << this << " in recvReq() " << endl;
-		// cout << "size of recvbuf = " << sizeof(recvbuf) << endl;
 		bzero(recvbuf, sizeof(recvbuf));
-		// memset(recvbuf, 0, sizeof(recvbuf));	//BUG
 		while ((byte = read(this->sock, this->recvbuf, sizeof(recvbuf))) > 0)
 		{
  			content.append(recvbuf, byte);	// '+=' is bad for processing binary data
-			if (!method)
-				switch (method = checkMethod(content))
-				{
-				case GET:
-					if (content.substr(content.length() - 4) == "\r\n\r\n")
-						goto exitloop;		// ' 'break' do not exit the loop due to switch
-											// ! read() will return EAGAIN if no to read, need 'break'
-					break;
-				case PUT:	cerr << "NOT SUPPORT PUT" << endl;		break;
-				case POST:	cerr << "NOT SUPPORT POST" << endl;		break;
-				case DELETE:cerr << "NOT SUPPORT DELETE" << endl;	break;
-				}
+
+			if (!method)	method = checkMethod(content);
+			switch (method)
+			{
+			case GET:
+				if (content.substr(content.length() - 4) == "\r\n\r\n")
+					goto exitloop;		// ' 'break' do not exit the loop due to switch
+										// ! read() will return EAGAIN if no to read, need 'break'
+				break;
+			case PUT:	cerr << "NOT SUPPORT PUT" << endl;		break;
+			case POST:	cerr << "NOT SUPPORT POST" << endl;		break;
+			case DELETE:cerr << "NOT SUPPORT DELETE" << endl;	break;
+			}
 			bzero(recvbuf, sizeof(recvbuf));
 			// memset(recvbuf, 0, sizeof(recvbuf));
 		}
 	exitloop:
+		ReqHeader req(content);
 		if (byte == -1)
 		{
-			if (errno != EAGAIN && errno != EWOULDBLOCK)
-				throw something_wrong(strerror(errno));
+			cout << req.getContent() << endl;
+			if (errno != EAGAIN && errno != EWOULDBLOCK) exit(100);
+			else { cout << RED("RECV REQUEST COUNT ") << count++ << endl; return req;}
+
 		}
 		else if (byte == 0)	//TODO: closed by CLIENT
 		{
@@ -120,8 +121,6 @@ public:
 		}
 
 
-		ReqHeader req(content);
-		cout << req.getContent() << endl;
 		return req;
 	}
 
@@ -133,8 +132,16 @@ public:
 			cerr << RED("ConnSocket#write() bad") << endl;
 		else
 			cout << CYAN("ConnSocket#send() good") << endl;
+	}
 
-		// write(STDOUT_FILENO, content.data(), content.length());
+	void	send(const string& content, int fd)
+	{
+		ssize_t	status;
+		status = write(fd, content.data(), content.length());
+		if (status == -1)
+			cerr << RED("ConnSocket#write() bad") << endl;
+		else
+			cout << CYAN("ConnSocket#send() good") << endl;
 	}
 private:
 	void			dummy() {}

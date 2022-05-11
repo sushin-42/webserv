@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/06 10:46:37 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/10 17:30:20 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/11 11:00:19 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 # include "ConnSocket.hpp"
 # include <exception>
 # include <stdexcept>
+#include <sys/errno.h>
 # include <sys/socket.h>
 
 
@@ -43,8 +44,12 @@ public:
 	{
 		ConnSocket c;
 		c.sock = ::accept(this->sock, (struct sockaddr *)&c.info, &c.len);
-		if (c.sock == -1)	throw something_wrong(strerror(errno));
-		cout << "accept OK" << endl;
+		if (c.sock == -1)
+		{
+			if (errno != EWOULDBLOCK && errno != EAGAIN)	exit(-1);
+			else											throw something_wrong(strerror(errno));
+		}
+		cout << "accept OK :" << c.sock << endl;
 		return c;
 	}
 private:

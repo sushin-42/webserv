@@ -6,15 +6,13 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/09 18:26:49 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/09 20:55:29 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/11 16:04:01 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef IHEADER_HPP
 # define IHEADER_HPP
-
-# include <string>
-using namespace std;
+# include "IText.hpp"
 
 // * example header
 string headerTemplate = "#HTTP-VERSION #STATUS #REASON-PHARSE\n"
@@ -22,15 +20,17 @@ string headerTemplate = "#HTTP-VERSION #STATUS #REASON-PHARSE\n"
     					"Server: webserv42\n"
     					"Connection: #CONNECTION\n"
     					"Content-Type: #MIME-TYPE\n\n";
-class IHeader
+class IHeader: public IText
 {
-protected:
-	typedef unsigned short status_code_t;
-	string	content;
 public:
-	IHeader() : content() {}
-	IHeader( const string& s ) : content(s) {}
-	IHeader( const IHeader& src ) : content(src.content) {}
+	typedef unsigned short status_code_t;
+protected:
+	status_code_t	status;
+
+public:
+	IHeader() : IText() {}
+	IHeader( const string& s ) : IText(s) {}
+	IHeader( const IHeader& src ) : IText(src.content) {}
 	virtual ~IHeader() {}
 
 	IHeader&	operator=( const IHeader& src )
@@ -40,7 +40,7 @@ public:
 		return *this;
 	}
 
-	string			getContent() const	{ return this->content; }
-	virtual void	clear() = 0;
+	void			clear()				{ content.clear(); status = -1; }
+	status_code_t	getStatus()	const	{ return status; }
 };
 #endif

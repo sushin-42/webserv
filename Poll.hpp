@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/10 16:56:25 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/10 23:33:27 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/11 16:31:51 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,123 +14,95 @@
 # define POLL_HPP
 # include <poll.h>
 # include <sys/_types/_size_t.h>
+#include <sys/poll.h>
+#include <sys/socket.h>
+#include <unistd.h>
 # include <vector>
 
 # include "ConnSocket.hpp"
+# include "ISocket.hpp"
+# include "ResBody.hpp"
 # include "ServerSocket.hpp"
 # include "color.hpp"
 
-class Poll : public pollfd
-{
-friend class PollSet;
-// private:
-public:
-	ISocket* s;
 
-public:
-	Poll()
-	{
-		this->fd		= -1;
-		this->events	= POLLIN;
-		this->revents	= 0;
-		this->s			= NULL;
-	}
-	Poll( ISocket* S )
-	{
-		this->fd		= S->getFD();
-		this->events	= POLLIN;
-		this->revents	= 0;
-		// a=b=c=0;
-		this->s			= S;
-	}
-	Poll( const Poll& src )
-	{
-		this->fd		= src.fd;
-		this->events	= src.events;
-		this->revents	= src.revents;
-		this->s			= src.s;
-	}
-	~Poll()
-	{
-		// s->close();
-		// delete s;
-	}
-
-	Poll&	operator=( const Poll& src )
-	{
-		if (this != &src)
-		{
-			this->fd		= src.fd;
-			this->events	= src.events;
-			this->revents	= src.revents;
-			this->s			= src.s;
-		}
-		return *this;
-	}
-
-};
-
-class PollSet
+typedef struct pollfd Poll;
+class PollSet: private vector<Poll>
 {
 private:
-	typedef vector<Poll> _Vp;
-	_Vp	arr;
+	typedef vector<Poll>		_Vp;
 
 public:
-	PollSet(): arr() {}
-	PollSet( const PollSet& src ): arr(src.arr) {}
+	typedef _Vp::iterator		iterator;
+
+	PollSet(): vector() {}
+	PollSet( const PollSet& src ): vector(src) {}
 	~PollSet() {}
 
 	PollSet&	operator=( const PollSet& src )
 	{
 		if (this != &src)
-			this->arr.assign(src.arr.begin(), src.arr.end());
+			this->assign(src.begin(), src.end());
 		return *this;
 	}
 
-	void	enroll( const Poll& poll )
+	void	enroll( ISocket* sock )
 	{
-		cout << "enroll" <<endl;
-		arr.push_back(poll);
+		Poll		p;
+		p.fd		= sock->getFD();
+		p.events	= POLLIN;
+		p.revents	= 0;
+
+		cout << "enroll [" << p.fd << "] to pollset" <<endl;
+		this->push_back(p);
 	}
 
-	Poll*	examine( const ServerSocket& serv )
+	void	drop( iterator it )
+	{
+		cout << "drop" <<endl;
+		this->erase(it);
+	}
+
+	_Vp::iterator	examine( const ServerSocket& serv)
 	{
 		ConnSocket* 	connected = NULL;
-		int				numReady;
-		_Vp::size_type	size = arr.size();
+		int				numReady = 0;
 
-		if ((numReady = ::poll(arr.data(), size, -1/*time-out*/)) > 0)
+		switch (numReady = ::poll(this->data(), this->size(), -1/*time-out*/))
 		{
-			for (_Vp::size_type i = 0; i<size; i++)
-			{
-				if (arr[i].revents & POLLIN)
-				{
-					if (arr[i].fd == serv.getFD())
-					{
-						cout << GREEN("got new connection:") " [" << i << "] " << arr[i].fd << endl;
-						connected = new ConnSocket(serv.accept());
-						// cout << connected << " : " << connected->getFD() << endl;
-						Poll tmp(connected);
-						arr.push_back(tmp);
-						// cout << tmp.s << " : " << connected->getFD() << endl;
-						// cout << arr[size].s << " : " << connected->getFD() << endl;
-						cout << YELLOW("poll new socket:")  " [" << size << "] " << arr[size].fd << endl;
-						connected = NULL;
-						// return &arr[size];
-					}
-					else
-					{
-						cout << GREEN("new to read")  " => " << arr[i].fd << endl;
-						return &arr[i];
-						// ((ConnSocket*)connected)->recvRequest();
-					}
-				}
+		case -1: cerr << RED("poll() ERROR: ")	<< strerror(errno) << endl;	break;
+		case 0 : cerr << RED("poll() TIMEOUT")	<< endl;					break;
+		default:;
+		}
 
+		for (_Vp::iterator it = this->begin(); it<this->end(); it++)
+		{
+			if (it->revents == 0)		continue;
+			if (!(it->revents & POLLIN)) { cout << it->revents << endl; exit(123); }
+
+			if (it == this->begin())
+			{
+				while(1)
+				{
+					try
+					{
+						connected = new ConnSocket(serv.accept());
+						this->enroll(connected);
+
+						cout << GREEN("got new connection") << endl;
+						delete connected;
+					}
+					catch (exception& e) { break; }
+					throw exception();	// Cannot return NULL :(
+				}
+			}
+			else
+			{
+				cout << GREEN("new to read")  " => " << it->fd << endl;
+				return it;
 			}
 		}
-		return NULL;
-	}
-
+		throw exception();
+		}
 };
 #endif
