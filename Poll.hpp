@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/10 16:56:25 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/11 16:31:51 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/17 18:55:32 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,7 +82,7 @@ public:
 
 			if (it == this->begin())
 			{
-				while(1)
+				while(1)	// accept() will throw exception if not readied
 				{
 					try
 					{
@@ -92,8 +92,8 @@ public:
 						cout << GREEN("got new connection") << endl;
 						delete connected;
 					}
-					catch (exception& e) { break; }
-					throw exception();	// Cannot return NULL :(
+					catch (exception& e) { continue; }	// accept() not ready
+					throw exception();	// enroll OK, Cannot return NULL :(
 				}
 			}
 			else
