@@ -54,10 +54,6 @@ int main()
 		}
 		connected.send(ResH.getContent());
 		connected.send(ResB.getContent());
-		connected.close();
-
-		it->revents = 0;
-		it->fd = -1;
 
 		ReqH.clear();
 		ResH.clear();
