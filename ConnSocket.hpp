@@ -6,13 +6,14 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/06 12:03:16 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/11 15:57:39 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/18 18:47:35 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CONNSOCKET_HPP
 # define CONNSOCKET_HPP
 
+#include <cstring>
 # include <iostream>
 #include <string>
 #include <sys/_types/_ssize_t.h>
@@ -40,6 +41,12 @@
  * If it is a POST method, read the Content-Length in the header and read up to Content-Length bytes.
  * If it is a POST method and the Content-Length header is absent, which is most likely to happen, read until -1 is returned, which is the signal of EOF.
 */
+
+struct undone
+{
+	string	content;
+	ssize_t	totalWrited;
+};
 
 typedef unsigned short status_code_t;
 
@@ -80,10 +87,9 @@ public:
 
 	ReqHeader recvRequest()
 	{
-		int method = 0;
-		static int count = 0;
-		ssize_t	byte = 0;
-		string	content;
+		int		method	= 0;
+		string	content = "";
+		ssize_t	byte	= 0;
 		bzero(recvbuf, sizeof(recvbuf));
 		while ((byte = read(this->sock, this->recvbuf, sizeof(recvbuf))) > 0)
 		{
@@ -102,47 +108,78 @@ public:
 			case DELETE:cerr << "NOT SUPPORT DELETE" << endl;	break;
 			}
 			bzero(recvbuf, sizeof(recvbuf));
-			// memset(recvbuf, 0, sizeof(recvbuf));
 		}
 	exitloop:
 		ReqHeader req(content);
 		if (byte == -1)
 		{
 			cout << req.getContent() << endl;
-			if (errno != EAGAIN && errno != EWOULDBLOCK) exit(100);
-			else { cout << RED("RECV REQUEST COUNT ") << count++ << endl; return req;}
-
-		}
-		else if (byte == 0)	//TODO: closed by CLIENT
-		{
-			cout << PURPLE("CLIENT EXIT") << endl;
 			if (errno != EAGAIN && errno != EWOULDBLOCK)
 				throw something_wrong(strerror(errno));
-		}
+			else
+			{
+				TAG(ConnSocket, recvRequest) << YELLOW("No data to read") << endl;
+				return req;
+			}
 
+		}
+		else if (byte == 0)	// closed by CLIENT
+		{
+			TAG(ConnSocket, recvRequest); cout << GRAY("CLIENT EXIT ") << this->sock << endl;
+			return req;
+		}
 
 		return req;
 	}
 
-	void	send(const string& content)
+	void	send(const string& content, map<int, undone>& buf)
 	{
-		ssize_t	status;
-		status = write(this->sock, content.data(), content.length());
-		if (status == -1)
-			cerr << RED("ConnSocket#write() bad") << endl;
+
+		try						{ buf.at(this->sock); }
+		catch (exception& e)	{ buf[this->sock] = (struct undone){"",0};
+								  buf[this->sock].content.append(content.data(), content.length());	}
+
+		string&		rContent	= buf[this->sock].content;
+		ssize_t&	rWrited		= buf[this->sock].totalWrited;
+		ssize_t		rContentLen	= rContent.length();
+		ssize_t		byte		= 0;
+
+		while ( true )
+		{
+			byte = write( this->sock,
+						  rContent.data() + rWrited,
+						  rContentLen - rWrited );
+
+			if (byte <= 0)				break;
+
+			rWrited += byte;
+			if (rWrited == rContentLen)	break; //@ send GOOD, stop write()
+
+		}
+
+		if (byte == -1)
+		{
+			if (errno == EWOULDBLOCK || errno == EAGAIN)
+			{
+				if (rWrited == rContentLen)	//! means all data sended. cannot reach here?
+					TAG(ConnSocket, send) << _NOTE(No data to write) << endl;
+				else						//' not all data sended. have to be buffered.
+					TAG(ConnSocket, send) << _NOTE(Not all data sended to) << this->sock << ": " << rWrited << " / " << rContentLen  << " bytes" << endl;
+				throw exception();
+			}
+			else
+				TAG(ConnSocket, send) << _FAIL(unexpected error) << errno << endl;
+		}
+		else if (rWrited == rContentLen)
+		{
+			TAG(ConnSocket, send) << _GOOD(all data sended to) << this->sock << ": " << rWrited << " / " << rContentLen << " bytes" << endl;
+			buf.erase(this->sock);
+		}
 		else
-			cout << CYAN("ConnSocket#send() good") << endl;
+			TAG(ConnSocket, send) << GRAY("WHY YOU HERE?") << endl;
+
 	}
 
-	void	send(const string& content, int fd)
-	{
-		ssize_t	status;
-		status = write(fd, content.data(), content.length());
-		if (status == -1)
-			cerr << RED("ConnSocket#write() bad") << endl;
-		else
-			cout << CYAN("ConnSocket#send() good") << endl;
-	}
 private:
 	void			dummy() {}
 };

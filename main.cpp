@@ -26,6 +26,7 @@ int main()
 	PollSet				set;
 	PollSet::iterator	it;
 
+	map<int, undone>	undoneBuf;
 	root += "/static_file";
 
 	try						{ serv.bind(); }
@@ -36,28 +37,40 @@ int main()
 	set.enroll(&serv);
 	while (1)
 	{
-		try						{ it = set.examine(serv); }
-		catch (exception& e)	{ continue; }
+		try							{ it = set.examine(serv); }
+		catch	(exception& e)		{ continue; }
+		if		(it == set.begin())	{ continue; }	// begin == servSocket
 
 		connected.setFD(it->fd);
-		try						{ ReqH = connected.recvRequest(); }
-		catch (exception& e)	{ connected.close(); set.drop(it); continue; }
-		ReqH.setPath();
-		ReqH.checkFile();
+		if (it->revents & POLLOUT)	{ it->events &= ~POLLOUT;
+									  goto resend; }
+
+		try							{ ReqH = connected.recvRequest(); }
+		catch	(exception& e)		{ continue; }
+		if		(ReqH.empty())		{ connected.close();
+									  set.drop(it);
+									  continue; }	// client exit
+
+		ReqH.setPath(),	ReqH.checkFile();
+
 		ResH = makeResponseHeader(ReqH);
 
-		cout << ReqH.path << " is Requested by " << it->fd << endl;
+		// cout << ReqH.path.substr(ReqH.path.find_last_of("/")) << " is Requested by " << it->fd << endl;
 		switch (ReqH.getStatus())
 		{
 		case 200: ResB.readFile(ReqH.path);				break;
 		case 404: ResB.readFile(root+"/404/404.html");	break;
 		}
-		connected.send(ResH.getContent());
-		connected.send(ResB.getContent());
 
-		ReqH.clear();
-		ResH.clear();
-		ResB.clear();
+resend:	//' undone Header? Body?
+		//' what if Connection: keep-alive?
+		try						{ connected.send(ResH.getContent(), undoneBuf); }
+		catch (exception& e)	{ it->events |= POLLOUT; }	// not all data sended
+		try						{ connected.send(ResB.getContent(), undoneBuf); }
+		catch (exception& e)	{ it->events |= POLLOUT; }	// not all data sended
+
+
+		ReqH.clear(), ResH.clear(), ResB.clear();
 	}
 }
 

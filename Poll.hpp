@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/10 16:56:25 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/17 18:55:32 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/18 18:43:12 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,8 @@
 # include "color.hpp"
 
 
+
+
 typedef struct pollfd Poll;
 class PollSet: private vector<Poll>
 {
@@ -34,6 +36,7 @@ private:
 
 public:
 	typedef _Vp::iterator		iterator;
+	using _Vp::begin;
 
 	PollSet(): vector() {}
 	PollSet( const PollSet& src ): vector(src) {}
@@ -53,56 +56,85 @@ public:
 		p.events	= POLLIN;
 		p.revents	= 0;
 
-		cout << "enroll [" << p.fd << "] to pollset" <<endl;
 		this->push_back(p);
 	}
 
 	void	drop( iterator it )
 	{
-		cout << "drop" <<endl;
+		TAG(PollSet, drop); cout << GRAY("Drop ") << it->fd << endl;
 		this->erase(it);
 	}
 
-	_Vp::iterator	examine( const ServerSocket& serv)
+	iterator	examine( const ServerSocket& serv)
 	{
-		ConnSocket* 	connected = NULL;
-		int				numReady = 0;
+		int	numReady = 0;
+
+		// TAG(PollSet, examine); this->print();
 
 		switch (numReady = ::poll(this->data(), this->size(), -1/*time-out*/))
 		{
-		case -1: cerr << RED("poll() ERROR: ")	<< strerror(errno) << endl;	break;
-		case 0 : cerr << RED("poll() TIMEOUT")	<< endl;					break;
+		case -1: TAG(PollSet, examine); cerr << RED("poll() ERROR: ")	<< strerror(errno) << endl;	break;
+		case  0: TAG(PollSet, examine); cerr << RED("poll() TIMEOUT")	<< endl;					break;
 		default:;
 		}
 
-		for (_Vp::iterator it = this->begin(); it<this->end(); it++)
+		for (iterator it = this->begin(); it<this->end(); it++)
 		{
-			if (it->revents == 0)		continue;
-			if (!(it->revents & POLLIN)) { cout << it->revents << endl; exit(123); }
-
-			if (it == this->begin())
-			{
-				while(1)	// accept() will throw exception if not readied
-				{
-					try
-					{
-						connected = new ConnSocket(serv.accept());
-						this->enroll(connected);
-
-						cout << GREEN("got new connection") << endl;
-						delete connected;
-					}
-					catch (exception& e) { continue; }	// accept() not ready
-					throw exception();	// enroll OK, Cannot return NULL :(
-				}
-			}
-			else
-			{
-				cout << GREEN("new to read")  " => " << it->fd << endl;
-				return it;
-			}
+			if		(it->revents == 0)			continue;
+			else if (it->revents & POLLIN)		return readRoutine(it, serv);
+			else if (it->revents & POLLOUT)		return writeRoutine(it);
 		}
 		throw exception();
+	}
+
+
+private:
+	void	print()
+	{
+		int i = 0;
+		for (iterator it = this->begin(); it<this->end(); it++, i++)
+		{
+			cout << "[" << i << "] ";
+			cout << it->fd << " ( ";
+			if (it->events & POLLIN) cout << "IN ";
+			if (it->events & POLLOUT) cout << "OUT ";
+			cout << ") ";
 		}
+		cout << endl;
+	}
+
+	iterator	readRoutine(iterator it, const ServerSocket& serv)
+	{
+		ConnSocket* connected = NULL;
+
+		if (it == this->begin())
+		{
+			while(1)	// accept() will throw exception if not readied
+			{
+				try
+				{
+					connected = new ConnSocket(serv.accept());
+					this->enroll(connected);
+					TAG(PollSet, examine); cout << GREEN("Got new connection, enroll ") << connected->getFD() << endl;
+					delete connected;
+				}
+				catch (exception& e)	// accept() not ready
+				{	continue;	}
+
+				return (this->begin());
+			}
+		}
+		else
+		{
+			TAG(PollSet, examine); cout << GREEN("New data to read on ")  << it->fd << endl;
+			return it;
+		}
+	}
+
+	iterator	writeRoutine(iterator it)
+	{
+		TAG(PollSet, examine); cout << GREEN("Can write to ") << it->fd << endl;
+		return it;
+	}
 };
 #endif

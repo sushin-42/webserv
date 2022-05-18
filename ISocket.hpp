@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/06 10:32:52 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/11 15:33:44 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/18 17:13:17 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,7 @@ public:
 	string			getIP() const		{ return inet_ntoa(info.sin_addr); }
 	unsigned short	getPort() const		{ return ntohs(info.sin_port); }
 	int				getFD()	const		{ return sock; }
-	void			close()				{ ::close(sock); cout << RED("close ") << sock << endl; }
+	void			close()				{ ::close(sock); }
 
 	//! do not set connected-socket
 	void			setIP( const string& ip )				{ if (ip ==  "")	this->info.sin_addr.s_addr = INADDR_ANY;

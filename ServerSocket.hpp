@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/06 10:46:37 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/11 11:00:19 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/18 16:34:34 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ public:
 			if (errno != EWOULDBLOCK && errno != EAGAIN)	exit(-1);
 			else											throw something_wrong(strerror(errno));
 		}
-		cout << "accept OK :" << c.sock << endl;
+		// cout << "accept OK :" << c.sock << endl;
 		return c;
 	}
 private:
