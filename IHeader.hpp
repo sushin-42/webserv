@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/09 18:26:49 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/19 15:02:19 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/19 15:48:19 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,13 +14,6 @@
 # define IHEADER_HPP
 # include "IText.hpp"
 
-// * example header
-string headerTemplate = "#HTTP-VERSION #STATUS #REASON-PHARSE\n"
-    					"Date: Fri, 01 Feb 2002 01:34:56 GMT\n"
-    					"Server: webserv42\n"
-    					"Connection: #CONNECTION\n"
-    					"Content-Length: #CONTENT-LENGTH\n"
-    					"Content-Type: #MIME-TYPE\n\n";
 class IHeader: public IText
 {
 public:

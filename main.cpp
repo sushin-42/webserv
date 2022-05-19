@@ -54,14 +54,20 @@ int main()
 
 		ReqH.setPath(),	ReqH.checkFile();
 
-		// cout << ReqH.path.substr(ReqH.path.find_last_of("/")) << " is Requested by " << it->fd << endl;
 		switch (ReqH.getStatus())
 		{
 		case 200: ResB.readFile(ReqH.path);				break;
 		case 404: ResB.readFile(root+"/404/404.html");	break;
 		}
-		ResH = makeResponseHeader(ReqH);
-		ResH.replaceToken("#CONTENT-LENGTH", toString(ResB.getContent().length()));
+		ResH["http-version"]	= "HTTP/1.1";
+		ResH["status-code"]		= ReqH.getStatus();
+		ResH["reason-phrase"]	= ReqH.reason;
+		ResH.makeStatusLine();
+
+		ResH["Content-Type"]	= MIME[getExt(ReqH.path)];
+		ResH["Connection"]		= "close";
+		ResH["Content-Length"]	= toString(ResB.getContent().length());
+		ResH.integrate();
 //@									make end								@//
 
 resend:
@@ -69,7 +75,6 @@ resend:
 		catch (exception& e)	{ it->events |= POLLOUT; }	// not all data sended
 		try						{ connected.send(ResB.getContent(), undoneBuf); }
 		catch (exception& e)	{ it->events |= POLLOUT; }	// not all data sended
-
 
 		ReqH.clear(), ResH.clear(), ResB.clear();
 	}

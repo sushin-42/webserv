@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/09 18:36:49 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/11 16:29:03 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/19 15:46:17 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,17 +21,21 @@ class ReqHeader;
 class ResHeader : public IHeader
 {
 private:
+	map<string, string>	table;
 
 public:
-	ResHeader(): IHeader() {}
-	ResHeader( const string& s): IHeader(s) {}
-	ResHeader( const ResHeader& src ): IHeader(src) {}	//TODO
+	ResHeader(): IHeader(), table() {}
+	ResHeader( const string& s): IHeader(s), table() {}
+	ResHeader( const ResHeader& src ): IHeader(src), table(src.table) {}	//TODO
 	~ResHeader() {}
 
 	ResHeader&	operator=( const ResHeader& src )
 	{
 		if (this != &src)
-			this->content = src.content;
+		{
+			this->content	= src.content;
+			this->table		= src.table;
+		}
 		return *this;
 	}
 
@@ -39,17 +43,34 @@ public:
 	{
 		content.replace(content.find(token), token.length(), value);
 	}
-};
 
-ResHeader	makeResponseHeader(const ReqHeader& req)
-{
-	ResHeader	res(headerTemplate);
-	res.replaceToken("#HTTP-VERSION", "HTTP/1.1");
-	res.replaceToken("#STATUS", toString(req.getStatus()));
-	res.replaceToken("#REASON-PHARSE", req.reason);
-	res.replaceToken("#MIME-TYPE", MIME[getExt(req.path)]);
-	res.replaceToken("#CONNECTION", "keep-alive");
-	return res;
-}
+	string& operator[](const string& key)
+	{
+		return table[key];
+	}
+
+	void	makeStatusLine()
+	{
+		content.append(
+						table["http-version"] + " " +
+						table["status-code"] + " " +
+						table["reason-phrase"] + "\n"
+					);
+	}
+	void	integrate()
+	{
+		map<string, string>::iterator it;
+		map<string, string>::iterator ite = table.end();
+		for (it = table.begin(); it != ite; it++ )
+		{
+			if (it->first == "http-version"	||
+				it->first == "status-code"	||
+				it->first == "reason-phrase")
+				continue;
+			content.append(it->first + ": " + it->second + "\r\n");
+		}
+		content.append("\r\n");
+	}
+};
 
 #endif
