@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/09 18:36:49 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/19 15:46:17 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/19 15:52:02 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,7 @@ public:
 		content.append(
 						table["http-version"] + " " +
 						table["status-code"] + " " +
-						table["reason-phrase"] + "\n"
+						table["reason-phrase"] + "\r\n"
 					);
 	}
 	void	integrate()
