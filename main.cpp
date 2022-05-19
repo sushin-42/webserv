@@ -45,6 +45,7 @@ int main()
 		if (it->revents & POLLOUT)	{ it->events &= ~POLLOUT;
 									  goto resend; }
 
+//@							make response header, body						@//
 		try							{ ReqH = connected.recvRequest(); }
 		catch	(exception& e)		{ continue; }
 		if		(ReqH.empty())		{ connected.close();
@@ -53,17 +54,17 @@ int main()
 
 		ReqH.setPath(),	ReqH.checkFile();
 
-		ResH = makeResponseHeader(ReqH);
-
 		// cout << ReqH.path.substr(ReqH.path.find_last_of("/")) << " is Requested by " << it->fd << endl;
 		switch (ReqH.getStatus())
 		{
 		case 200: ResB.readFile(ReqH.path);				break;
 		case 404: ResB.readFile(root+"/404/404.html");	break;
 		}
+		ResH = makeResponseHeader(ReqH);
+		ResH.replaceToken("#CONTENT-LENGTH", toString(ResB.getContent().length()));
+//@									make end								@//
 
-resend:	//' undone Header? Body?
-		//' what if Connection: keep-alive?
+resend:
 		try						{ connected.send(ResH.getContent(), undoneBuf); }
 		catch (exception& e)	{ it->events |= POLLOUT; }	// not all data sended
 		try						{ connected.send(ResB.getContent(), undoneBuf); }
