@@ -6,20 +6,22 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/09 18:26:49 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/19 15:48:19 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/21 13:39:40 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef IHEADER_HPP
 # define IHEADER_HPP
 # include "IText.hpp"
+#include <map>
 
 class IHeader: public IText
 {
 public:
 	typedef unsigned short status_code_t;
 protected:
-	status_code_t	status;
+	string				HTTPversion;
+	map<string, string>	headerField;
 
 public:
 	IHeader() : IText() {}
@@ -30,11 +32,30 @@ public:
 	IHeader&	operator=( const IHeader& src )
 	{
 		if (this != &src)
-			content = src.content;
+		{
+			content		= src.content;
+			headerField	= src.headerField;
+
+		}
 		return *this;
 	}
 
-	void			clear()				{ content.clear(); status = -1; }
-	status_code_t	getStatus()	const	{ return status; }
+	string& operator[](const string& key)
+	{
+		return headerField[key];
+	}
+
+	void			clear()							{ content.clear(); headerField.clear(); }
+	void			setHTTPversion(const string& v)	{ this->HTTPversion = v; }
+	const string&	getHTTPversion() const			{ return this->HTTPversion; }
+
+	void	integrate()
+	{
+		map<string, string>::iterator it;
+		map<string, string>::iterator ite = headerField.end();
+		for (it = headerField.begin(); it != ite; it++ )
+			content.append(it->first + ": " + it->second + "\r\n");
+		content.append("\r\n");
+	}
 };
 #endif

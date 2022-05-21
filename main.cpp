@@ -30,13 +30,14 @@ int main()
 	root += "/static_file";
 
 	try						{ serv.bind(); }
-	catch (exception& e)	{ cerr << e.what() << endl; }
+	catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
 	try						{ serv.listen(10 /*backlog*/); }
-	catch (exception& e)	{ cerr << e.what() << endl; }
+	catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
 
 	set.enroll(&serv);
 	while (1)
 	{
+//'----------------------catch and parse request header----------------------'//
 		try							{ it = set.examine(serv); }
 		catch	(exception& e)		{ continue; }
 		if		(it == set.begin())	{ continue; }	// begin == servSocket
@@ -45,38 +46,45 @@ int main()
 		if (it->revents & POLLOUT)	{ it->events &= ~POLLOUT;
 									  goto resend; }
 
-//@							make response header, body						@//
 		try							{ ReqH = connected.recvRequest(); }
 		catch	(exception& e)		{ continue; }
 		if		(ReqH.empty())		{ connected.close();
 									  set.drop(it);
 									  continue; }	// client exit
+//'-------------------------------- catch end--------------------------------'//
 
-		ReqH.setPath(),	ReqH.checkFile();
+//@------------------------make response header, body------------------------@//
+		ReqH.setHTTPversion("HTTP/1.1");
+		ReqH.setRequsetTarget();
+		ResH.setHTTPversion("HTTP/1.1");
+		ResH.setStatusCode(checkFile(root + ReqH.getRequsetTarget()));
 
-		switch (ReqH.getStatus())
+		switch (ResH.getStatusCode())
 		{
-		case 200: ResB.readFile(ReqH.path);				break;
-		case 404: ResB.readFile(root+"/404/404.html");	break;
+		case 200:
+			ResH.setReasonPhrase("OK");
+			ResB.readFile(root + ReqH.getRequsetTarget());
+			break;
+		case 404:
+			ResH.setReasonPhrase("Not Found");
+			ResB.readFile(root + "/404/404.html");
+			break;
 		}
-		ResH["http-version"]	= "HTTP/1.1";
-		ResH["status-code"]		= ReqH.getStatus();
-		ResH["reason-phrase"]	= ReqH.reason;
 		ResH.makeStatusLine();
 
-		ResH["Content-Type"]	= MIME[getExt(ReqH.path)];
+		ResH["Content-Type"]	= MIME[getExt(ReqH.getRequsetTarget())];
 		ResH["Connection"]		= "close";
 		ResH["Content-Length"]	= toString(ResB.getContent().length());
 		ResH.integrate();
-//@									make end								@//
+//@---------------------------------make end---------------------------------@//
 
+//.------------------------send response header, body------------------------.//
 resend:
-		try						{ connected.send(ResH.getContent(), undoneBuf); }
-		catch (exception& e)	{ it->events |= POLLOUT; }	// not all data sended
-		try						{ connected.send(ResB.getContent(), undoneBuf); }
+		try						{ connected.send(ResH.getContent() + ResB.getContent(), undoneBuf); }
 		catch (exception& e)	{ it->events |= POLLOUT; }	// not all data sended
 
 		ReqH.clear(), ResH.clear(), ResB.clear();
+//.---------------------------------send end---------------------------------.//
 	}
 }
 

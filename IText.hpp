@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/11 15:43:28 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/18 18:49:06 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/21 13:33:49 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,9 @@ public:
 		return *this;
 	}
 
-	bool			empty() const		{ return this->content.empty(); }
-	string			getContent() const	{ return this->content; }
+	bool			empty() const					{ return this->content.empty(); }
+	void			setContent(const string& c)		{ this->content = c; }
+	string			getContent() const				{ return this->content; }	// return copied string, not source.
 	virtual void	clear() = 0;
 };
 #endif

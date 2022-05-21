@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/09 18:36:49 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/19 15:52:02 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/21 13:52:51 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,62 +15,64 @@
 
 #include "IHeader.hpp"
 # include "ReqHeader.hpp"
+#include <string>
 
 
 class ReqHeader;
 class ResHeader : public IHeader
 {
 private:
-	map<string, string>	table;
+	status_code_t	statusCode;
+	string			reasonPhrase;
 
 public:
-	ResHeader(): IHeader(), table() {}
-	ResHeader( const string& s): IHeader(s), table() {}
-	ResHeader( const ResHeader& src ): IHeader(src), table(src.table) {}	//TODO
+	ResHeader()
+	: IHeader(), statusCode(), reasonPhrase() {}
+	ResHeader( const string& content )
+	: IHeader(content), statusCode(), reasonPhrase() {}
+	ResHeader( const ResHeader& src )
+	: IHeader(src), statusCode(src.statusCode), reasonPhrase(src.reasonPhrase) {}
 	~ResHeader() {}
 
 	ResHeader&	operator=( const ResHeader& src )
 	{
 		if (this != &src)
 		{
-			this->content	= src.content;
-			this->table		= src.table;
+			this->IHeader::operator=(src);
+			this->statusCode	= src.statusCode;
+			this->reasonPhrase	= src.reasonPhrase;
 		}
 		return *this;
 	}
 
-	void	replaceToken(const string& token, const string& value)
-	{
-		content.replace(content.find(token), token.length(), value);
-	}
 
-	string& operator[](const string& key)
-	{
-		return table[key];
-	}
+	void			setStatusCode(status_code_t s)		{ this->statusCode = s; }
+	status_code_t	getStatusCode() const				{ return this->statusCode; }
+
+	void			setReasonPhrase(const string& r)	{ this->reasonPhrase = r; }
+	const string&	getReasonPhrase() const				{ return this->reasonPhrase; }
+
 
 	void	makeStatusLine()
 	{
 		content.append(
-						table["http-version"] + " " +
-						table["status-code"] + " " +
-						table["reason-phrase"] + "\r\n"
+						HTTPversion + " " +
+						toString(statusCode) + " " +
+						reasonPhrase + "\r\n"
 					);
 	}
-	void	integrate()
-	{
-		map<string, string>::iterator it;
-		map<string, string>::iterator ite = table.end();
-		for (it = table.begin(); it != ite; it++ )
-		{
-			if (it->first == "http-version"	||
-				it->first == "status-code"	||
-				it->first == "reason-phrase")
-				continue;
-			content.append(it->first + ": " + it->second + "\r\n");
-		}
-		content.append("\r\n");
-	}
+
 };
+
+IHeader::status_code_t	checkFile(const string& path)
+{
+	int	requested	= open(path.c_str(), O_RDONLY);
+	if (requested == -1)
+	{
+		if (errno == ENOENT) { return 404; }
+	}
+	close(requested);
+	return 200;
+}
 
 #endif

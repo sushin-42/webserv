@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/06 12:03:16 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/18 18:47:35 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/21 13:41:55 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,11 +85,12 @@ public:
 		return -1;
 	}
 
-	ReqHeader recvRequest()
+	ReqHeader recvRequest()	//TODO: seperate and return both Header and Body
 	{
-		int		method	= 0;
-		string	content = "";
-		ssize_t	byte	= 0;
+		ReqHeader	req;
+		int			method	= 0;
+		string		content = "";
+		ssize_t		byte	= 0;
 		bzero(recvbuf, sizeof(recvbuf));
 		while ((byte = read(this->sock, this->recvbuf, sizeof(recvbuf))) > 0)
 		{
@@ -99,18 +100,19 @@ public:
 			switch (method)
 			{
 			case GET:
+				req.setMethod("GET");
 				if (content.substr(content.length() - 4) == "\r\n\r\n")
 					goto exitloop;		// ' 'break' do not exit the loop due to switch
 										// ! read() will return EAGAIN if no to read, need 'break'
 				break;
-			case PUT:	cerr << "NOT SUPPORT PUT" << endl;		break;
-			case POST:	cerr << "NOT SUPPORT POST" << endl;		break;
-			case DELETE:cerr << "NOT SUPPORT DELETE" << endl;	break;
+			case PUT:	req.setMethod("PUT");	cerr << "NOT SUPPORT PUT" << endl;		break;
+			case POST:	req.setMethod("POST");	cerr << "NOT SUPPORT POST" << endl;		break;
+			case DELETE:req.setMethod("DELETE");cerr << "NOT SUPPORT DELETE" << endl;	break;
 			}
 			bzero(recvbuf, sizeof(recvbuf));
 		}
 	exitloop:
-		ReqHeader req(content);
+		req.setContent(content);
 		if (byte == -1)
 		{
 			cout << req.getContent() << endl;
@@ -121,14 +123,12 @@ public:
 				TAG(ConnSocket, recvRequest) << YELLOW("No data to read") << endl;
 				return req;
 			}
-
 		}
 		else if (byte == 0)	// closed by CLIENT
 		{
 			TAG(ConnSocket, recvRequest); cout << GRAY("CLIENT EXIT ") << this->sock << endl;
 			return req;
 		}
-
 		return req;
 	}
 
