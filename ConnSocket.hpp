@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/06 12:03:16 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/21 13:41:55 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/24 00:18:44 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,6 +113,8 @@ public:
 		}
 	exitloop:
 		req.setContent(content);
+		req.setHeaderField(extractHeader(content));
+
 		if (byte == -1)
 		{
 			cout << req.getContent() << endl;

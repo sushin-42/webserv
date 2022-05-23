@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/06 15:03:17 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/23 08:27:05 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/24 00:12:11 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 # include <sstream>
 # include <fstream>
 #include <string>
+#include <unistd.h>
 using namespace std;
 
 template <class T>
@@ -93,7 +94,7 @@ inline std::string trim(std::string s, const char* t)
     return ltrim(rtrim(s, t), t);
 }
 
-map<string, string>	extractHeader(string content)	//NOTE: what if line endswith \r\n
+map<string, string>	extractHeader(string content)
 {
 	const char*			ws		= " \t\n\r\f\v";
 	string::size_type	pStart	= 0;
@@ -102,22 +103,21 @@ map<string, string>	extractHeader(string content)	//NOTE: what if line endswith 
 	string				line;
 	map<string, string>	ret;
 
-
 	while ((pEnd = content.find('\n', pStart)) != string::npos)
 	{
-		line = content.substr(pStart, pEnd-pStart);
-		if (line.empty() || line == "\r")	break;
+		line = trim(content.substr(pStart, pEnd-pStart), "\r");
+		if (line.empty())	break;
+		pStart = pEnd + 1;
 
 		pDelim = line.find_first_of(":");
 		if (pDelim == string::npos)	continue;
 		ret[trim(line.substr(0,pDelim), ws)] = trim(line.substr(pDelim+1), ws);
-
-		pStart = pEnd + 1;
 	}
 	return ret;
 }
 
-string lowerlize(const string& s)
+
+string lowerize(const string& s)
 {
 	string				ret(s);
 	string::iterator	it;
@@ -127,5 +127,20 @@ string lowerlize(const string& s)
 		if (isupper(*it))
 			*it = tolower(*it);
 	return ret;
+}
+
+ssize_t				readFrom(int fd, string& content)
+{
+	ssize_t byte = 0;
+	char readbuf[1024];
+	bzero(readbuf, sizeof(readbuf));
+	while ((byte = read(fd, readbuf, sizeof(readbuf))) >0)
+	{
+		// cout << "keep reading.." << endl;
+		// cout << "byte = " << byte << endl;
+		content.append(readbuf, byte);
+		bzero(readbuf, sizeof(readbuf));
+	}
+	return byte;
 }
 #endif
