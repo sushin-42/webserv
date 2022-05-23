@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/06 15:03:17 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/23 08:27:05 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/23 08:45:31 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 # include <sstream>
 # include <fstream>
 #include <string>
+#include <unistd.h>
 using namespace std;
 
 template <class T>
@@ -128,4 +129,18 @@ string lowerlize(const string& s)
 			*it = tolower(*it);
 	return ret;
 }
+
+int				readFrom(int fd, string& content)
+	{
+		ssize_t byte = 0;
+		char readbuf[1024];
+
+		bzero(readbuf, sizeof(readbuf));
+		while ((byte = read(fd, readbuf, sizeof(readbuf))) >0)
+		{
+			content.append(readbuf, byte);
+			bzero(readbuf, sizeof(readbuf));
+		}
+		return byte;
+	}
 #endif
