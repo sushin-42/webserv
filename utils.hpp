@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/06 15:03:17 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/24 13:50:21 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/24 15:59:29 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,19 +94,16 @@ inline std::string trim(std::string s, const char* t)
     return ltrim(rtrim(s, t), t);
 }
 
-string	extractHeader(const string& content)
+string lowerize(const string& s)
 {
-	string::size_type	pStart	= 0;
-	string::size_type	pEnd	= string::npos;
+	string				ret(s);
+	string::iterator	it;
+	string::iterator	ite = ret.end();
 
-	while ((pEnd = content.find('\n', pStart)) != string::npos)
-	{
-		if	((content[pEnd + 1] == '\n') ||
-			 (content[pEnd + 1] == '\r' && content[pEnd + 2] == '\n'))
-			break;
-		pStart = pEnd + 1;
-	}
-	return (content.substr(0, pEnd));
+	for (it = ret.begin(); it < ite; it++)
+		if (isupper(*it))
+			*it = tolower(*it);
+	return ret;
 }
 
 map<string, string>	KVtoMap(const string& content, char delim)
@@ -126,9 +123,24 @@ map<string, string>	KVtoMap(const string& content, char delim)
 
 		pDelim = line.find_first_of(delim);
 		if (pDelim == string::npos)	continue;
-		ret[trim(line.substr(0,pDelim), ws)] = trim(line.substr(pDelim+1), ws);
+		ret[lowerize(trim(line.substr(0,pDelim), ws))] = trim(line.substr(pDelim+1), ws);
 	}
 	return ret;
+}
+
+string	extractHeader(const string& content)
+{
+	string::size_type	pStart	= 0;
+	string::size_type	pEnd	= string::npos;
+
+	while ((pEnd = content.find('\n', pStart)) != string::npos)
+	{
+		if	((content[pEnd + 1] == '\n') ||
+			 (content[pEnd + 1] == '\r' && content[pEnd + 2] == '\n'))
+			break;
+		pStart = pEnd + 1;
+	}
+	return (content.substr(0, pEnd));
 }
 
 string	extractBody(const string& content)
@@ -145,19 +157,6 @@ string	extractBody(const string& content)
 		pStart = pEnd + 1;
 	}
 	return (content.substr(pEnd + offset + 1));
-}
-
-
-string lowerize(const string& s)
-{
-	string				ret(s);
-	string::iterator	it;
-	string::iterator	ite = ret.end();
-
-	for (it = ret.begin(); it < ite; it++)
-		if (isupper(*it))
-			*it = tolower(*it);
-	return ret;
 }
 
 ssize_t				readFrom(int fd, string& content)

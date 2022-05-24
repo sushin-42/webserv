@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/09 18:26:49 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/24 13:26:13 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/24 15:50:08 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ public:
 		if (this != &src)
 		{
 			content		= src.content;
+			HTTPversion	= src.HTTPversion;
 			headerField	= src.headerField;
 		}
 		return *this;
@@ -49,10 +50,15 @@ public:
 		return headerField[lowerize(key)];
 	}
 
+	const string& operator[](const string& key) const
+	{
+		return headerField.at(lowerize(key));	// MAY throw exception if key not exists.
+	}
+
 	void						clear()											{ content.clear(); headerField.clear(); }
 	void						setHTTPversion(const string& v)					{ this->HTTPversion = v; }
 	const string&				getHTTPversion() const							{ return this->HTTPversion; }
-	void						setHeaderField(const _Map& hf)	{ this->headerField = hf; }
+	void						setHeaderField(const _Map& hf)					{ this->headerField = hf; }
 	const map<string, string>&	getHeaderField() const							{ return this->headerField; }
 	void						removeKey(const string& key)					{ this->headerField.erase(lowerize(key)); }
 	void						insertRange(iterator from, iterator to)			{ this->headerField.insert(from, to); }
