@@ -5,10 +5,7 @@ import cgitb
 # print("Location: /es.png")
 # print()
 
-# input_data = cgi.FieldStorage()
-print("Status: 511 Not Found")
-print("Status: 511 Not Found")
-print("Status: 511 Not Found")
+input_data = cgi.FieldStorage()
 print("Content-type: text/html;charset=utf-8")
 print()
 # # print('hello')
@@ -18,7 +15,11 @@ print()
 # # 	print(k, input_data[k])
 # print("<html>")
 # print("<body>")
-# cgi.print_environ()
+if input_data.getvalue("name"):
+	print("name is", input_data.getvalue("name"))
+else:
+	print("no name")
+cgi.print_environ()
 # print("</body>")
 # print("</html>")
 

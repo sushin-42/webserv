@@ -3,6 +3,7 @@
 #include <signal.h>
 #include <poll.h>
 
+#include "CGI.hpp"
 #include "Config.hpp"
 #include "ConnSocket.hpp"
 #include "Poll.hpp"
@@ -28,6 +29,9 @@ int main()
 
 	PollSet				set;
 	PollSet::iterator	it;
+
+	map<string, string>::const_iterator mit;
+	map<string, string>::const_iterator mite;
 
 	map<int, undone>	undoneBuf;
 	root += "/static_file";
@@ -72,12 +76,15 @@ int main()
 			break;
 		}
 		ResH.makeStatusLine();
+		if (getExt(ReqH.getRequsetTarget()) == "py")
+			CGIRoutines(ReqH, ReqB, ResH, ResB);
 
 		ResH["Content-Type"]	= MIME[getExt(ReqH.getRequsetTarget())];
 		ResH["Connection"]		= "close";
 		ResH["Content-Length"]	= toString(ResB.getContent().length());
 		ResH.integrate();
 //@---------------------------------make end---------------------------------@//
+
 
 //.------------------------send response header, body------------------------.//
 resend:
