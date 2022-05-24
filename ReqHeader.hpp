@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/09 18:30:30 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/21 13:40:18 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/24 13:08:40 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ public:
 		return *this;
 	}
 
-	void	setRequsetTarget()
+	void	setRequsetTarget(const string& content)
 	{
 		string::size_type start = content.find(" ") + 1;
 		string::size_type end	= content.find(" ", start);
