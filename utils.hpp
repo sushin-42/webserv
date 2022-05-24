@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/06 15:03:17 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/24 00:12:11 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/24 13:34:12 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,7 +94,22 @@ inline std::string trim(std::string s, const char* t)
     return ltrim(rtrim(s, t), t);
 }
 
-map<string, string>	extractHeader(string content)
+string	extractHeader(const string& content)
+{
+	string::size_type	pStart	= 0;
+	string::size_type	pEnd	= string::npos;
+
+	while ((pEnd = content.find('\n', pStart)) != string::npos)
+	{
+		if	((content[pEnd + 1] == '\n') ||
+			 (content[pEnd + 1] == '\r' && content[pEnd + 2] == '\n'))
+			break;
+		pStart = pEnd + 1;
+	}
+	return (content.substr(0, pEnd));
+}
+
+map<string, string>	KVtoMap(const string& content, char delim)
 {
 	const char*			ws		= " \t\n\r\f\v";
 	string::size_type	pStart	= 0;
@@ -109,11 +124,27 @@ map<string, string>	extractHeader(string content)
 		if (line.empty())	break;
 		pStart = pEnd + 1;
 
-		pDelim = line.find_first_of(":");
+		pDelim = line.find_first_of(delim);
 		if (pDelim == string::npos)	continue;
 		ret[trim(line.substr(0,pDelim), ws)] = trim(line.substr(pDelim+1), ws);
 	}
 	return ret;
+}
+
+string	extractBody(const string& content)
+{
+	string::size_type	pStart	= 0;
+	string::size_type	pEnd	= string::npos;
+	string::size_type	offset	= 0;
+
+	while ((pEnd = content.find('\n', pStart)) != string::npos)
+	{
+		if		(content[pEnd + 1] == '\n')	{offset = 1; break;}
+		else if	(content[pEnd + 1] == '\r' &&
+				 content[pEnd + 2] == '\n')	{offset = 2; break;}
+		pStart = pEnd + 1;
+	}
+	return (content.substr(pEnd + offset + 1));
 }
 
 

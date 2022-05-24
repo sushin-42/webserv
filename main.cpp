@@ -6,6 +6,7 @@
 #include "Config.hpp"
 #include "ConnSocket.hpp"
 #include "Poll.hpp"
+#include "ReqBody.hpp"
 #include "ResBody.hpp"
 #include "ReqHeader.hpp"
 #include "ResHeader.hpp"
@@ -19,9 +20,11 @@ int main()
 
 	ServerSocket		serv("", 8888);	// put your IP, "" means ANY
 	ConnSocket			connected;
-	ReqHeader			ReqH;
-	ResHeader			ResH;
-	ResBody				ResB;
+	pair<ReqHeader, ReqBody>	Req;
+	ReqHeader					ReqH;
+	ReqBody						ReqB;
+	ResHeader					ResH;
+	ResBody						ResB;
 
 	PollSet				set;
 	PollSet::iterator	it;
@@ -46,7 +49,7 @@ int main()
 		if (it->revents & POLLOUT)	{ it->events &= ~POLLOUT;
 									  goto resend; }
 
-		try							{ ReqH = connected.recvRequest(); }
+		try							{ Req = connected.recvRequest(); ReqH = Req.first; ReqB = Req.second; }
 		catch	(exception& e)		{ continue; }
 		if		(ReqH.empty())		{ connected.close();
 									  set.drop(it);
@@ -54,8 +57,6 @@ int main()
 //'-------------------------------- catch end--------------------------------'//
 
 //@------------------------make response header, body------------------------@//
-		ReqH.setHTTPversion("HTTP/1.1");
-		ReqH.setRequsetTarget();
 		ResH.setHTTPversion("HTTP/1.1");
 		ResH.setStatusCode(checkFile(root + ReqH.getRequsetTarget()));
 

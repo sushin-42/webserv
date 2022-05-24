@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/06 12:03:16 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/24 00:18:44 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/24 13:34:32 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@
 
 # include "ISocket.hpp"
 # include "Config.hpp"
+#include "ReqBody.hpp"
 # include "color.hpp"
 
 # include "utils.hpp"
@@ -85,9 +86,10 @@ public:
 		return -1;
 	}
 
-	ReqHeader recvRequest()	//TODO: seperate and return both Header and Body
+	pair<ReqHeader, ReqBody> recvRequest()	//TODO: seperate and return both Header and Body
 	{
-		ReqHeader	req;
+		ReqHeader	ReqH;
+		ReqBody		ReqB;
 		int			method	= 0;
 		string		content = "";
 		ssize_t		byte	= 0;
@@ -99,39 +101,35 @@ public:
 			if (!method)	method = checkMethod(content);
 			switch (method)
 			{
-			case GET:
-				req.setMethod("GET");
-				if (content.substr(content.length() - 4) == "\r\n\r\n")
-					goto exitloop;		// ' 'break' do not exit the loop due to switch
-										// ! read() will return EAGAIN if no to read, need 'break'
-				break;
-			case PUT:	req.setMethod("PUT");	cerr << "NOT SUPPORT PUT" << endl;		break;
-			case POST:	req.setMethod("POST");	cerr << "NOT SUPPORT POST" << endl;		break;
-			case DELETE:req.setMethod("DELETE");cerr << "NOT SUPPORT DELETE" << endl;	break;
+			case GET:	ReqH.setMethod("GET");		break;
+			case PUT:	ReqH.setMethod("PUT");		break;
+			case POST:	ReqH.setMethod("POST");		break;
+			case DELETE:ReqH.setMethod("DELETE");	break;
 			}
 			bzero(recvbuf, sizeof(recvbuf));
 		}
-	exitloop:
-		req.setContent(content);
-		req.setHeaderField(extractHeader(content));
+		ReqH.setHTTPversion("HTTP/1.1");
+		ReqH.setRequsetTarget(content);
+		ReqH.setContent(extractHeader(content));
+		ReqB.setContent(extractBody(content));
+		ReqH.setHeaderField(KVtoMap(content, ':'));
 
 		if (byte == -1)
 		{
-			cout << req.getContent() << endl;
 			if (errno != EAGAIN && errno != EWOULDBLOCK)
 				throw something_wrong(strerror(errno));
 			else
 			{
 				TAG(ConnSocket, recvRequest) << YELLOW("No data to read") << endl;
-				return req;
+				return make_pair(ReqH, ReqB);
 			}
 		}
 		else if (byte == 0)	// closed by CLIENT
 		{
 			TAG(ConnSocket, recvRequest); cout << GRAY("CLIENT EXIT ") << this->sock << endl;
-			return req;
+			return make_pair(ReqH, ReqB);
 		}
-		return req;
+		return make_pair(ReqH, ReqB);
 	}
 
 	void	send(const string& content, map<int, undone>& buf)

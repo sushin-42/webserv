@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/09 18:26:49 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/24 00:17:41 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/24 13:26:13 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,10 +18,10 @@
 
 class IHeader: public IText
 {
-public:
-	typedef unsigned short status_code_t;
 protected:
 	typedef	map<string, string>	_Map;
+public:
+	typedef unsigned short		status_code_t;
 	typedef	_Map::iterator		iterator;
 
 	string				HTTPversion;
@@ -30,7 +30,8 @@ protected:
 public:
 	IHeader() : IText() {}
 	IHeader( const string& s ) : IText(s) {}
-	IHeader( const IHeader& src ) : IText(src.content) {}
+	IHeader( const IHeader& src )
+	: IText(src.content), HTTPversion(src.HTTPversion), headerField(src.headerField) {}
 	virtual ~IHeader() {}
 
 	IHeader&	operator=( const IHeader& src )
@@ -39,7 +40,6 @@ public:
 		{
 			content		= src.content;
 			headerField	= src.headerField;
-
 		}
 		return *this;
 	}
