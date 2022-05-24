@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/06 12:03:16 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/24 13:34:32 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/24 15:57:42 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,7 +108,7 @@ public:
 			}
 			bzero(recvbuf, sizeof(recvbuf));
 		}
-		ReqH.setHTTPversion("HTTP/1.1");
+		ReqH.setHTTPversion("HTTP/1.1");	//TODO: parse from request
 		ReqH.setRequsetTarget(content);
 		ReqH.setContent(extractHeader(content));
 		ReqB.setContent(extractBody(content));
