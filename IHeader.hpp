@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/09 18:26:49 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/24 16:04:27 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/25 15:52:49 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,6 +62,8 @@ public:
 	const map<string, string>&	getHeaderField() const							{ return this->headerField; }
 	void						removeKey(const string& key)					{ this->headerField.erase(lowerize(key)); }
 	void						insertRange(iterator from, iterator to)			{ this->headerField.insert(from, to); }
+	bool						exist(const string& key)						{ return this->headerField.find(lowerize(key)) != this->headerField.end(); }
+	void						append(const string& key, const string& value)	{ this->headerField[lowerize(key)] += (", " + value); }
 
 	void	integrate()
 	{
