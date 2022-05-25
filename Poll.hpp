@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/10 16:56:25 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/18 18:43:12 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/25 21:45:56 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,33 +21,51 @@
 
 # include "ConnSocket.hpp"
 # include "ISocket.hpp"
+# include "iterator_pair.hpp"
 # include "ResBody.hpp"
 # include "ServerSocket.hpp"
 # include "color.hpp"
 
 
 
-
 typedef struct pollfd Poll;
-class PollSet: private vector<Poll>
+class PollSet
 {
 private:
-	typedef vector<Poll>		_Vp;
+	typedef vector<Poll>			_Vp;
+	typedef vector<ISocket*>		_Vs;
+	typedef _Vp::iterator			iterator_p;
+	typedef _Vs::iterator			iterator_s;
+	typedef _Vp::const_iterator		const_iterator_p;
+	typedef _Vs::const_iterator		const_iterator_s;
+
+	vector<Poll>		pollVec;
+	vector<ISocket*>	sockVec;
 
 public:
-	typedef _Vp::iterator		iterator;
-	using _Vp::begin;
 
-	PollSet(): vector() {}
-	PollSet( const PollSet& src ): vector(src) {}
+	typedef iterator_pair<iterator_p, iterator_s>				iterator;
+	typedef iterator_pair<const_iterator_p,const_iterator_s>	const_iterator;
+
+
+	PollSet(): pollVec(), sockVec() {}
+	PollSet( const PollSet& src ): pollVec(src.pollVec), sockVec(src.sockVec) {}
 	~PollSet() {}
 
 	PollSet&	operator=( const PollSet& src )
 	{
 		if (this != &src)
-			this->assign(src.begin(), src.end());
+		{
+			pollVec.assign(src.begin().first, src.end().first);
+			sockVec.assign(src.begin().second, src.end().second);
+		}
 		return *this;
 	}
+
+	iterator		begin()			{ return make_iterator_pair(pollVec.begin(), sockVec.begin()); }
+	iterator		end()			{ return make_iterator_pair(pollVec.end(), sockVec.end()); }
+	const_iterator	begin() const	{ return make_iterator_pair(pollVec.begin(), sockVec.begin()); }
+	const_iterator	end() const		{ return make_iterator_pair(pollVec.end(), sockVec.end()); }
 
 	void	enroll( ISocket* sock )
 	{
@@ -56,13 +74,19 @@ public:
 		p.events	= POLLIN;
 		p.revents	= 0;
 
-		this->push_back(p);
+		pollVec.push_back(p);
+		sockVec.push_back(sock);
 	}
 
 	void	drop( iterator it )
 	{
-		TAG(PollSet, drop); cout << GRAY("Drop ") << it->fd << endl;
-		this->erase(it);
+		TAG(PollSet, drop); cout << GRAY("Drop ") << it.first->fd << endl;
+
+		delete (*it.second);
+		pollVec.erase(it.first);
+		sockVec.erase(it.second);
+
+
 	}
 
 	iterator	examine( const ServerSocket& serv)
@@ -71,7 +95,7 @@ public:
 
 		// TAG(PollSet, examine); this->print();
 
-		switch (numReady = ::poll(this->data(), this->size(), -1/*time-out*/))
+		switch (numReady = ::poll(pollVec.data(), pollVec.size(), -1/*time-out*/))
 		{
 		case -1: TAG(PollSet, examine); cerr << RED("poll() ERROR: ")	<< strerror(errno) << endl;	break;
 		case  0: TAG(PollSet, examine); cerr << RED("poll() TIMEOUT")	<< endl;					break;
@@ -80,9 +104,9 @@ public:
 
 		for (iterator it = this->begin(); it<this->end(); it++)
 		{
-			if		(it->revents == 0)			continue;
-			else if (it->revents & POLLIN)		return readRoutine(it, serv);
-			else if (it->revents & POLLOUT)		return writeRoutine(it);
+			if		(it.first->revents == 0)			continue;
+			else if (it.first->revents & POLLIN)		return readRoutine(it, serv);
+			else if (it.first->revents & POLLOUT)		return writeRoutine(it);
 		}
 		throw exception();
 	}
@@ -95,9 +119,9 @@ private:
 		for (iterator it = this->begin(); it<this->end(); it++, i++)
 		{
 			cout << "[" << i << "] ";
-			cout << it->fd << " ( ";
-			if (it->events & POLLIN) cout << "IN ";
-			if (it->events & POLLOUT) cout << "OUT ";
+			cout << it.first->fd << " ( ";
+			if (it.first->events & POLLIN) cout << "IN ";
+			if (it.first->events & POLLOUT) cout << "OUT ";
 			cout << ") ";
 		}
 		cout << endl;
@@ -116,7 +140,6 @@ private:
 					connected = new ConnSocket(serv.accept());
 					this->enroll(connected);
 					TAG(PollSet, examine); cout << GREEN("Got new connection, enroll ") << connected->getFD() << endl;
-					delete connected;
 				}
 				catch (exception& e)	// accept() not ready
 				{	continue;	}
@@ -126,14 +149,14 @@ private:
 		}
 		else
 		{
-			TAG(PollSet, examine); cout << GREEN("New data to read on ")  << it->fd << endl;
+			TAG(PollSet, examine); cout << GREEN("New data to read on ")  << it.first->fd << endl;
 			return it;
 		}
 	}
 
 	iterator	writeRoutine(iterator it)
 	{
-		TAG(PollSet, examine); cout << GREEN("Can write to ") << it->fd << endl;
+		TAG(PollSet, examine); cout << GREEN("Can write to ") << it.first->fd << endl;
 		return it;
 	}
 };

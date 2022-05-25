@@ -18,8 +18,8 @@ int main()
  {
 	signal(SIGPIPE, SIG_IGN);
 
-	ServerSocket		serv("", 8888);	// put your IP, "" means ANY
-	ConnSocket			connected;
+	ServerSocket				serv("", 8888);	// put your IP, "" means ANY
+	ConnSocket*					connected;
 	pair<ReqHeader, ReqBody>	Req;
 	ReqHeader					ReqH;
 	ReqBody						ReqB;
@@ -45,15 +45,17 @@ int main()
 		catch	(exception& e)		{ continue; }
 		if		(it == set.begin())	{ continue; }	// begin == servSocket
 
-		connected.setFD(it->fd);
-		if (it->revents & POLLOUT)	{ it->events &= ~POLLOUT;
-									  goto resend; }
+		connected = dynamic_cast<ConnSocket*>(*it.second);
 
-		try							{ Req = connected.recvRequest(); ReqH = Req.first; ReqB = Req.second; }
+		if (it.first->revents & POLLOUT)	{ it.first->events &= ~POLLOUT;
+									  		  goto resend; }
+
+		try							{ Req = connected->recvRequest(); ReqH = Req.first; ReqB = Req.second; }
 		catch	(exception& e)		{ continue; }
-		if		(ReqH.empty())		{ connected.close();
+		if		(ReqH.empty())		{ connected->close();
 									  set.drop(it);
 									  continue; }	// client exit
+
 //'-------------------------------- catch end--------------------------------'//
 
 //@------------------------make response header, body------------------------@//
@@ -81,8 +83,8 @@ int main()
 
 //.------------------------send response header, body------------------------.//
 resend:
-		try						{ connected.send(ResH.getContent() + ResB.getContent(), undoneBuf); }
-		catch (exception& e)	{ it->events |= POLLOUT; }	// not all data sended
+		try						{ connected->send(ResH.getContent() + ResB.getContent(), undoneBuf); }
+		catch (exception& e)	{ it.first->events |= POLLOUT; }	// not all data sended
 
 		ReqH.clear(), ResH.clear(), ResB.clear();
 //.---------------------------------send end---------------------------------.//
