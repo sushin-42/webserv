@@ -51,7 +51,7 @@ public:
 		{
 		case 0:			return 200;
 		case ENOENT:	return 404;
-		default:		return 0;
+		default:		return 200;
 		}
 	}
 

@@ -3,6 +3,7 @@
 #include <signal.h>
 #include <poll.h>
 
+#include "CGI.hpp"
 #include "Config.hpp"
 #include "ConnSocket.hpp"
 #include "Poll.hpp"
@@ -59,7 +60,7 @@ int main()
 
 //'-------------------------------- catch end--------------------------------'//
 
-		core(ResH, ResB, ReqH.getRequsetTarget());	//@ make response header, body//
+		core_wrapper(&serv, connected, ReqH, ReqB, ResH, ResB);	//@ make response header, body//
 
 //.------------------------send response header, body------------------------.//
 resend:

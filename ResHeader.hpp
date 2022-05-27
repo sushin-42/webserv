@@ -43,6 +43,7 @@ public:
 
 	void	makeStatusLine()
 	{
+		content.clear();
 		content.append(
 						HTTPversion + " " +
 						toString(statusCode) + " " +

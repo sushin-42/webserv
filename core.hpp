@@ -1,21 +1,52 @@
+#include "CGI.hpp"
+#include "Config.hpp"
 #include "ConnSocket.hpp"
 # include "ResBody.hpp"
 # include "ResHeader.hpp"
+#include "utils.hpp"
 
 status_code_t	writeResponseBody(ResBody& ResB, const string& filepath);
 void			writeResponseHeader(ResHeader& ResH, status_code_t status);
 
-void	core(ResHeader& ResH, ResBody& ResB, const string& filepath)
+void	core(ServerSocket *serv, ConnSocket *connected,
+			 ReqHeader &ReqH, const ReqBody &ReqB,
+			 ResHeader &ResH, ResBody &ResB)
 {
-	status_code_t status;
+	status_code_t	status = 42;
+	string	filepath = ReqH.getRequsetTarget();
+	string	ext	= getExt(filepath);
+
+
 	status = writeResponseBody(ResB, filepath);
-	ResH["Content-Type"]		= MIME[getExt(filepath)];
-	ResH["Content-Length"]		= toString(ResB.getContent().length());
-	/*---------------- exec CGI here ----------------*/
-	//1.client-redir	: content-type and length set in localRedir()
-	//2.document		: content-type and length set by script, if exists. else, APACHE: chunk LIGHTTPD: get length
-	//3.local-redir		: content-type and length set by redir-page. but if script say Status : not 200  , it does not redirected. and ct, cl set by script.
+	if (MIME.find(ext) != MIME.end())	ResH["Content-Type"]	= MIME[ext];	// No matching MIME
+	if (!ResB.getContent().empty())		ResH["Content-Length"]	= toString(ResB.getContent().length());
+	if (getExt(filepath) == "py")		CGIRoutines(serv, connected, ReqH, ReqB, ResH, ResB);
+	//1.client-redir	: if no Status -> set 302, Found	//@
+	//					  if Content-length not in script, set in clientRedir() //@
+	//            		  if CL in script and not matched with body, timeout occur (see LIGHTTPD / what if APACHE?) //!
+
+	//2.document		: Content-length set by script, if exists. //@
+	//		   			  else, APACHE: chunk-encoding
+	// 							LIGHTTPD: get length of CGI body //@
+	// 					  if CL in script not matched with body, timeout occur (see LIGHTTPD what if APACHE?) //!
+
+	//3.local-redir		: if (Status := 200 | "" ) Content-Length, Type are newly set by local-redir-page. Location removed.
+	//					  else:	 no redirection. if no redir, No header modification.
+
 	writeResponseHeader(ResH, status);
+
+}
+
+
+
+void	core_wrapper(ServerSocket *serv, ConnSocket *connected,
+			 		ReqHeader &ReqH, const ReqBody &ReqB,
+			 		ResHeader &ResH, ResBody &ResB)
+{
+
+	core(serv, connected, ReqH, ReqB, ResH, ResB);
+	ResH.makeStatusLine();
+	ResH.integrate();
 }
 
 
@@ -33,10 +64,10 @@ void	writeResponseHeader(ResHeader& ResH, status_code_t status)
 	ResH.setHTTPversion("HTTP/1.1");
 	if (ResH.exist("status") == true)
 	{
-		// pair<status_code_t, string>	sr = checkStatusField(ResH["Status"]);
-		// ResH.setStatusCode(sr.first);
-		// ResH.setReasonPhrase(sr.second);
-		// ResH.removeKey("Status");
+		pair<status_code_t, string>	sr = checkStatusField(ResH["Status"]);
+		ResH.setStatusCode(sr.first);
+		ResH.setReasonPhrase(sr.second);
+		ResH.removeKey("Status");
 	}
 	else
 	{
@@ -55,8 +86,6 @@ void	writeResponseHeader(ResHeader& ResH, status_code_t status)
 	// ResH["Last-Modified"]		=
 	// ResH["E-Tag"]				=
 	// ResH["Transfer-Encoding"]	=
-	ResH.makeStatusLine();
-	ResH.integrate();
 }
 
 //@------------------------make response header, body------------------------@//

@@ -2,50 +2,71 @@
 import cgi
 import cgitb
 
-# print("Location: /es.png")
-# print()
+#. client redir
+# print("Location: http://localhost:8080/FUCKYOU")
+# without body:
+#	lighttpd : test.py=302 dummy.txt=200
+#	apache : test.py=302 dummy.txt=200
 
-# input_data = cgi.FieldStorage()
-print("Status: 511 Not Found")
-print("Status: 511 Not Found")
-print("Status: 511 Not Found")
-print("Content-type: text/html;charset=utf-8")
+	# if other header exists,
+	# 	lighttpd : add to dummy.txt response header
+	# 	apache : add to dummy.txt response header
+
+# with body:
+#	lighttpd : test.py=302 dummy.txt=200, discard body
+#	apache : test.py=302 dummy.txt=200, discard body
+# print("Location: http://localhost:8282/es.png")
+
+#% server redir
+print("Location: /es.png")
+# without body:
+#	lighttpd : test.py=302 dummy.txt=200 (client redir to dummy.txt)
+#	apache: test.py = 200
+	# if other header exists,
+	# 	lighttpd : add to test.py response header, client redir to dummy.txt
+	# 	apache : add to test.py (response of dummy.txt) response header
+
+# with body:
+#	lighttpd: test.py = 302, dummy.txt = 200, discard body
+#	apache: only test.py = 200, discard body
+
+# print("Status: 203 \v\f\nFUCK:123")
+print("Status:  220 Found")
+print("Content-type: text/KOLL")
+print("Content-length: 2022")
+print("Accept: text/abcd")
+# print("Date: Wed, 25 May 2012 12:34:56 GMT")
+# print("Keep-Alive: timeout=99, max=77")
+
 print()
-# # print('hello')
-# # for i in range(10):
-# # 	print(i**2)
-# # for k in input_data:
-# # 	print(k, input_data[k])
-# print("<html>")
-# print("<body>")
-# cgi.print_environ()
-# print("</body>")
-# print("</html>")
+cgi.print_environ()
 
 
 
-'''
-#@ Server specific variables:
-- SERVER_SOFTWARE: name/version of HTTP server.
-- SERVER_NAME: host name of the server, may be dot-decimal IP address.
-- GATEWAY_INTERFACE: CGI/version.
-#@ Request specific variables:
-- SERVER_PROTOCOL: HTTP/version.
-- SERVER_PORT: TCP port (decimal).
-- REQUEST_METHOD: name of HTTP method (see above).
-- PATH_INFO: path suffix, if appended to URL after program name and a slash.
-- PATH_TRANSLATED: corresponding full path as supposed by server, if PATH_INFO is present.
-- SCRIPT_NAME: relative path to the program, like /cgi-bin/script.cgi.
-- QUERY_STRING: the part of URL after ? character. The query string may be composed of *name=value pairs separated with ampersands (such as var1=val1&var2=val2...) when used to submit form data transferred via GET method as defined by HTML application/x-www-form-urlencoded.
-- REMOTE_HOST: host name of the client, unset if server did not perform such lookup.
-- REMOTE_ADDR: IP address of the client (dot-decimal).
-- AUTH_TYPE: identification type, if applicable.
-- REMOTE_USER used for certain AUTH_TYPEs.
-- REMOTE_IDENT: see ident, only if server performed such lookup.
-- CONTENT_TYPE: Internet media type of input data if PUT or POST method are used, as provided via HTTP header.
-- CONTENT_LENGTH: similarly, size of input data (decimal, in octets) if provided via HTTP header.
 
-#@ Variables passed by user agent
-#  (HTTP_ACCEPT, HTTP_ACCEPT_LANGUAGE, HTTP_USER_AGENT, HTTP_COOKIE and possibly others) contain values of corresponding HTTP headers and therefore have the same sense.
 
-'''
+
+# @OK
+# %NOT YET
+
+# if Location:
+#	if Server redirect:
+#		Content-type and Content-length from script replaced. (other can be replaced. need to inspect)
+#		other field from script added. (ex/ Accept)
+
+#	elif client redirect:
+#		test.py =>	#@ Content-type is replaced to : text/html; charset=iso-8859-1
+#					#@ Content-Length is replaced to : 212 (302 docs)
+
+#					Content-Range is removed if  status is not 206 / 416  ( in apache )
+#					Content-Range is not removed, and multiple fields allowd ( in lighttpd )
+
+					# ' No Multiple (last value)			: Content-type, Status, Location, Content-Length, Content-Range, Transfer-Encoding, ETag
+					# * Allow Multiple (Append new value)	: anything else
+
+					# Last-Modified ->  If the script gave us a Last-Modified header, we can't just pass it on blindly because of restrictions on future values.
+					# Date, Keep-Alive, Server -> following server config
+					# Connection is little bit confusing
+#					other fields like Accept are not replaced.
+#		es.png	=> it's own response.
+
