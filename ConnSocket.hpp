@@ -101,7 +101,30 @@ public:
 		ReqH.setContent(extractHeader(content));
 		ReqB.setContent(extractBody(content));
 		ReqH.setHeaderField(KVtoMap(content, ':'));
-
+		if (ReqH.headerField["transfer-encoding"] == "chunked")
+		{
+			try
+			{
+				ReqB.decodingChunk();
+				// 아래는 확인 차 출력
+				cout << ReqB.getContent() << endl;
+			}
+			catch(const std::exception& e)
+			{
+				std::cerr << e.what() << '\n';
+			}
+		}
+		else if (ReqH.headerField.find("content-length") != ReqH.headerField.end())
+		{
+			try
+			{
+				ReqB.checkContentLength(ReqH.headerField["content-length"]);
+			}
+			catch(const std::exception& e)
+			{
+				std::cerr << e.what() << '\n';
+			}
+		}
 		if (byte == -1)
 		{
 			if (errno != EAGAIN && errno != EWOULDBLOCK)
