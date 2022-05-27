@@ -31,9 +31,6 @@ int main()
 	PollSet				set;
 	PollSet::iterator	it;
 
-	map<string, string>::const_iterator mit;
-	map<string, string>::const_iterator mite;
-
 	map<int, undone>	undoneBuf;
 	root += "/static_file";
 
@@ -63,8 +60,7 @@ int main()
 
 //'-------------------------------- catch end--------------------------------'//
 
-		core(ResH, ResB, ReqH.getRequsetTarget());	//@ make response header, body//
-
+		core_wrapper(&serv, connected, ReqH, ReqB, ResH, ResB);	//@ make response header, body//
 
 //.------------------------send response header, body------------------------.//
 resend:

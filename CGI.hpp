@@ -6,19 +6,53 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/24 14:47:48 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/24 15:33:57 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/27 16:02:50 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+
+//!   The script MUST return one of either
+//.		a document response,
+//*		a local redirect response
+//'		a client redirect response (with optional document)
+
+//@--------------------------------------------------------------------------@//
+//@ CGI-Response = document-response | local-redir-response |			     @//
+//@                client-redir-response | client-redirdoc-response          @//
+//@--------------------------------------------------------------------------@//
+
+
+
+
+//#   script-URI = <scheme> "://" <server-name> ":" <server-port>
+//#  				<script-path> <extra-path> "?" <query-string>
+//#
+//#   where <scheme> is found from SERVER_PROTOCOL, <server-name>,
+//#   <server-port> and <query-string> are the values of the respective
+//#   meta-variables.  The SCRIPT_NAME and PATH_INFO values, URL-encoded
+//#   with ";", "=" and "?"  reserved, give <script-path> and <extra-path>.
+
+// http://localhost:8080/test.py/additional/path
+// REQUEST_URI	=> /test.py/additional/path
+// SCRIPT_NAME => /test.py
+// PATH_INFO => /additional/path
+
+// PATH_TRANSLATED => /Users/shin/Desktop/Git/webserv/static_file/additional/path
+// QUERY_STRING
+// SCRIPT_FILENAME => /Users/shin/Desktop/Git/webserv/static_file/test.py
 
 #ifndef CGI_HPP
 # define CGI_HPP
 
-
-
+#include <_ctype.h>
 # include <cstddef>
 # include <cstring>
 # include <string>
+// #include <sys/_types/_pid_t.h>
 # include <vector>
+
+#include "ConnSocket.hpp"
+# include "ServerSocket.hpp"
 # include "ReqBody.hpp"
 # include "ReqHeader.hpp"
 # include "ResBody.hpp"
@@ -26,6 +60,43 @@
 # include "utils.hpp"
 using namespace std;
 
+status_code_t	writeResponseBody(ResBody& ResB, const string& filepath);
+void	writeResponseHeader(ResHeader& ResH, status_code_t status);
+
+void	documentResponse(ResHeader& ResH, ResBody& ResB);
+void	clientRedir(ResHeader& ResH, ResBody& ResB);
+void	localRedir(
+					ServerSocket* serv, ConnSocket* connected,
+					ReqHeader& ReqH, const ReqBody& ReqB,
+					ResHeader& ResH, ResBody& ResB
+				);
+void	core(ServerSocket *serv, ConnSocket *connected,
+			 ReqHeader &ReqH, const ReqBody &ReqB,
+			 ResHeader &ResH, ResBody &ResB);
+
+pair<status_code_t, string>	checkStatusField(const string& status)
+{
+	status_code_t	statusCode = 502;
+	string			mayStatusCode;
+	string			reasonPhrase = "";
+
+	string::size_type posSP = status.find(' ');
+	mayStatusCode = status.substr(0, posSP);
+	mayStatusCode = ltrim(mayStatusCode, " \t");
+
+	if (mayStatusCode.length() == 3)
+	{
+		if (	isdigit(mayStatusCode[0]) &&
+				isdigit(mayStatusCode[1]) &&
+				isdigit(mayStatusCode[2])	)
+			statusCode = atoi(mayStatusCode.c_str());
+
+		string::size_type posTEXT = status.find_first_not_of(" \r\v\f\t", posSP);
+		if	(posTEXT != string::npos)
+			reasonPhrase = status.substr(posTEXT);
+	}
+	return make_pair(statusCode, reasonPhrase);
+}
 string	toMetaVar(const string& s, string scheme)
 {
 	string				ret(scheme + "_" + s);
@@ -42,14 +113,14 @@ string	toMetaVar(const string& s, string scheme)
 	return ret;
 }
 
-map<string, string>	makeCGIEnv(const ReqHeader& ReqH, const ReqBody& ReqB)
+map<string, string>	makeCGIEnv(ServerSocket* serv, ConnSocket* connected,
+							   const ReqHeader& ReqH, const ReqBody& ReqB)
 {
 		map<string, string>				envs;
 		map<string, string>				hf = ReqH.getHeaderField();
 		map<string, string>::iterator	it = hf.begin();
 		map<string, string>::iterator	ite = hf.end();
 		envs["REQUEST_METHOD"] = ReqH.getMethod();
-		envs["AUTH_TYPE"] = ""; // | auth-scheme
 		if (ReqB.getContent() == "")
 			cout << "NO BODY" << endl;
 		else
@@ -57,7 +128,7 @@ map<string, string>	makeCGIEnv(const ReqHeader& ReqH, const ReqBody& ReqB)
 			envs["CONTENT_TYPE"] = ReqH["content-type"];
 			envs["CONTENT_LENGTH"] = toString(ReqB.getContent().length());
 		}
-		//if body MUST, else NULL (after the server has removed any transfer-codings or content-codings.)
+		// if body exist, MUST, else NULL (after the server has removed any transfer-codings or content-codings.)
 		// The server MUST set this meta-variable if an HTTP Content-Type field is present in the client request header.
 		// If the server receives a request with an attached entity but no Content-Type header field,
 		// it MAY attempt to determine the correct content type, otherwise it should omit this meta-variable.
@@ -67,20 +138,23 @@ map<string, string>	makeCGIEnv(const ReqHeader& ReqH, const ReqBody& ReqB)
 		// "PATH_TRANSLATED" = ,
 		// "QUERY_STRING" = "" | query,
 
-		// "REMOTE_ADDR" = client-ip,					//! NEED TO REFACTOR POLLSET. NEED TO KNOW CLIENT SOCK INFO.
-		// "REMOTE_HOST" = if not exist, client-ip
-		// envs["REMOTE_USER"] = "",
-		// envs["REMOTE_IDENT"] = "",
 		envs["SERVER_PROTOCOL"] = ReqH.getHTTPversion();
 		envs["SERVER_SOFTWARE"] = "webserv";
+		envs["SERVER_NAME"] = serv->getIP();
+		envs["SERVER_PORT"] = serv->getPort();
+		envs["REMOTE_ADDR"] = envs["REMOTE_HOST"] = connected->getIP();	// if host name exists, host == name
 
-		// "SCRIPT_NAME" = ""
-		//The SCRIPT_NAME variable MUST be set to a URI path (not URL-encoded) which could identify the CGI script,
-		//       SCRIPT_NAME = "" | ( "/" path )
-   		// The leading "/" is not part of the path.  It is optional if the path is NULL; however, the variable MUST still be set in that case.
 
-		// "SERVER_NAME" = hostname | ipv4-address | ( "[" ipv6-address "]" ),
-		// "SERVER_PORT" = port number,
+		// envs["AUTH_TYPE"] = auth-scheme ( Basic, Digest )
+		// envs["REMOTE_USER"] = "",	// if AUTH_TYPE (Authorization )
+		// envs["REMOTE_IDENT"] = ""	// if supports Ident protocol
+
+		// envs["SCRIPT_NAME"] = ""
+		// The SCRIPT_NAME variable MUST be set to a URI path (not URL-encoded) which could identify the CGI script,
+		//  SCRIPT_NAME = "" | ( "/" path )
+   		// The leading "/" is not part of the path.
+		// It is optional if the path is NULL; however, the variable MUST still be set in that case.
+
 		for (; it != ite; it++)
 		{
 			if (it->first == "content-type" ||
@@ -101,83 +175,234 @@ map<string, string>	makeCGIEnv(const ReqHeader& ReqH, const ReqBody& ReqB)
 };
 
 
-//@ CGI routines
+pid_t	forkCGI(
+				ServerSocket* serv, ConnSocket* connected,
+				ReqHeader& ReqH, const ReqBody& ReqB,
+				vector<char *>& argv, vector<char *>& envp
+			)
+{
+	string							path = ReqH.getRequsetTarget();
+	map<string,string>				envm = makeCGIEnv(serv, connected, ReqH, ReqB);
+	map<string,string>::iterator	it	= envm.begin();
+	map<string,string>::iterator	ite	= envm.end();
+
+	vector<string> envps;
+	vector<string>::iterator vit;
+	vector<string>::iterator vite;
+	for (; it != ite; it++)
+		envps.push_back(it->first+ "=" + it->second);
+
+	envp.reserve(envps.size() + 1);
+	vit=envps.begin(), vite=envps.end();
+	for (; vit != vite; vit++)
+		envp.push_back(const_cast<char*> (vit->c_str()));
+	envp.push_back(NULL);
+
+	argv.push_back(const_cast<char*>(path.data()));
+	argv.push_back(NULL);
+
+	return fork();
+}
+
+int childRoutine(
+				int PtoC[2],
+				int CtoP[2],
+				const string& path,
+				vector<char*> argv,
+				vector<char*> envp
+			)
+{
+	dup2(CtoP[1], STDOUT_FILENO), close(CtoP[0]), close(CtoP[1]);
+	dup2(PtoC[0], STDIN_FILENO), close(PtoC[1]), close(PtoC[1]);
+	sleep(1);
+	if (execve(
+				(root+path).c_str(),
+				(char * const*)(argv.data()),
+				(char * const*)(envp.data())
+			) == -1)	cerr << "exec error: " << strerror(errno) << errno <<endl;
+	return -1;
+}
+
+string parentRoutine(
+					pid_t pid,
+					int PtoC[2],
+					int CtoP[2],
+					const string& reqbody
+				)
+{
+		string	output;
+		int		status = 0;
+		close(PtoC[0]), close(CtoP[1]);
+		write(PtoC[1], reqbody.c_str(), reqbody.length());
+		close(PtoC[1]);
+		waitpid(pid, &status, 0);
+
+		readFrom(CtoP[0], output);
+
+		close(CtoP[0]), close(CtoP[1]);
+		return output;
+}
+
 void	CGIRoutines(
-					const ReqHeader& ReqH,
+					ServerSocket* serv,
+					ConnSocket* connected,
+					ReqHeader& ReqH,	//NOTE: no const ReqHeader
 					const ReqBody& ReqB,
 					ResHeader& ResH,
 					ResBody& ResB
 				)
 {
+	int				PtoC[2], CtoP[2];
+	pid_t			pid;
+	vector<char*>	argv;
+	vector<char*>	envp;
+	string			output;
+	pipe(PtoC), pipe(CtoP);
 
-		pid_t							pid;
-		int								PtoC[2], CtoP[2];
-		string							path = ReqH.getRequsetTarget();
-		map<string,string>				envm = makeCGIEnv(ReqH, ReqB);
-		map<string,string>::iterator	it	= envm.begin();
-		map<string,string>::iterator	ite	= envm.end();
 
+	pid = forkCGI(serv, connected, ReqH, ReqB, argv, envp);
+	if (pid == 0)	childRoutine(PtoC, CtoP, ReqH.getRequsetTarget(), argv, envp);	//TODO: check return value -1
+	else			output = parentRoutine(pid, PtoC, CtoP, ReqB.getContent());
 
-		vector<char*> argv;
-		vector<char*> envp;
-		vector<string> envps;
-		vector<string>::iterator vit;
-		vector<string>::iterator vite;
-		for (; it != ite; it++)
-			envps.push_back(it->first+ "=" + it->second);
+	// read header & body from forked process
+	map<string,string>				tmp(KVtoMap(output, ':'));
+	map<string,string>::iterator	it, ite;
+	it = tmp.begin(), ite = tmp.end();
+	for (; it != ite; it++)
+	{
+		if (it->first == lowerize("Content-type")||
+			it->first == lowerize("Status")||
+			it->first == lowerize("Location")||
+			it->first == lowerize("Content-Length")||
+			it->first == lowerize("Content-Range")||
+			it->first == lowerize("Transfer-Encoding")||
+			it->first == lowerize("ETag")||
+			ResH.exist(it->first) == false	)	ResH[it->first] = it->second;
 
-		envp.reserve(envps.size() + 1);
-		vit=envps.begin(), vite=envps.end();
-		for (; vit != vite; vit++)
-			envp.push_back(const_cast<char*> (vit->c_str()));
-		envp.push_back(NULL);
+		else									ResH.append(it->first, it->second);
+	}
 
-		pipe(PtoC);
-		pipe(CtoP);
-
-		argv.push_back(const_cast<char*>(path.data()));
-		argv.push_back(NULL);
-
-		pid = fork();
-		if (pid == 0)	//. Child
-		{
-			dup2(CtoP[1], STDOUT_FILENO), close(CtoP[0]), close(CtoP[1]);
-			dup2(PtoC[0], STDIN_FILENO), close(PtoC[1]), close(PtoC[1]);
-			sleep(1);
-			if (execve(
-						(root+path).c_str(),
-						(char * const*)(argv.data()),
-						(char * const*)(envp.data())
-					) == -1)	cerr << "exec error: " << strerror(errno) << errno <<endl;
-		}
-		else		//%	Parent
-		{
-			// read header & body from forked process
-			close(PtoC[0]);
-			close(CtoP[1]);
-			int stat = 0;
-			write(PtoC[1], ReqB.getContent().c_str(), ReqB.getContent().length());
-			close(PtoC[1]);
-			waitpid(pid, &stat, 0);
-
-			string	content;
-			ssize_t byte = readFrom(CtoP[0], content);
-			cout << byte << endl;
-			cout << content << endl;
-			map<string, string>	tmp	= KVtoMap(content, ':');
-
-			it = tmp.begin(), ite = tmp.end();
-			for (; it != ite; it++)
-				ResH[it->first] = it->second;
-			ResB.setContent(content.substr(content.find("\n\n") + 1));
-
-			close(CtoP[0]), close(CtoP[1]);
-			close(PtoC[0]), close(PtoC[1]);
-
-		}
+	ResB.setContent(extractBody(output));
+	if (ResH.exist("location"))
+	{
+		if (ResH["location"][0] == '/')	localRedir(serv, connected, ReqH, ReqB, ResH, ResB);
+		else							clientRedir(ResH, ResB);
+	}
+	else								documentResponse(ResH, ResB);
 }
 
 
 
 
+//*--------------------------------------------------------------------------*//
+//* local-redir-response = local-Location NL                                 *//
+//*                                                                          *//
+//*  The CGI script can return a URI path and query-string                   *//
+//*	 ('local-pathquery') for a local resource in a Location header field.    *//
+//*  This indicates to the server that it should reprocess the request       *//
+//*  using the path specified.                                               *//
+//*                                                                          *//
+//*  The script MUST NOT return any other header fields or a message-body,   *//
+//*  and the server MUST generate the response that it would have produced   *//
+//*  in response to a request containing the URL                             *//
+//*                                                                          *//
+//*  scheme "://" server-name ":" server-port local-pathquery                *//
+//*--------------------------------------------------------------------------*//
+
+
+//3.local-redir		: if (Status := 200 | "" ) Content-Length, Type are newly set by local-redir-page. Location removed.
+//					  else:	 no redirection. if no redir, No header modification.
+void	localRedir(
+					ServerSocket* serv, ConnSocket* connected,
+					ReqHeader& ReqH, const ReqBody& ReqB,
+					ResHeader& ResH, ResBody& ResB
+				)
+{
+	if (ResH.exist("Status") && checkStatusField(ResH["Status"]).first != 200)
+		return ;
+
+	//@ regard as request to Location, but some header-fields from CGI remain @//
+	ReqH.setRequsetTarget(ResH["location"]);
+	ResH.removeKey("location");
+
+	core(serv, connected, ReqH, ReqB, ResH, ResB);
+}
+
+
+//'--------------------------------------------------------------------------'//
+//' client-redir-response = client-Location *extension-field NL              '//
+//'                                                                          '//
+//'   The CGI script can return an absolute URI path in a Location header    '//
+//'	 field, to indicate to the client that it should reprocess the request   '//
+//'  using the URI specified.                                                '//
+//'                                                                          '//
+//'   The script MUST not provide any other header fields, except for        '//
+//'  server-defined CGI extension fields.  For an HTTP client request, the   '//
+//'  server MUST generate a 302 'Found' HTTP response message.               '//
+//'--------------------------------------------------------------------------'//
+
+//%--------------------------------------------------------------------------%//
+//% client-redirdoc-response = client-Location Status Content-Type           %//
+//%                            *other-field NL response-body                 %//
+//%                                                                          %//
+//%   The CGI script can return an absolute URI path in a Location header    %//
+//%	 field together with an attached document, to indicate to the client     %//
+//%  that it should reprocess the request using the URI specified.           %//
+//%                                                                          %//
+//%   The Status header field MUST be supplied and MUST contain a status     %//
+//%  value of 302 'Found', or it MAY contain an extension-code, that is,     %//
+//%  another valid status code that means client redirection.  The server    %//
+//%  MUST make any appropriate modifications to the script's output to       %//
+//%  ensure that the response to the client complies with the response       %//
+//%  protocol version.                                                       %//
+//%--------------------------------------------------------------------------%//
+
+void	clientRedir(ResHeader& ResH, ResBody& ResB)
+{
+	if (!ResH.exist("Status"))
+	{
+		ResH["Status"] = "302 Found";
+		ResB.setContent(
+						errorpage(
+								"302 Found",
+								"Found",
+								"<p>The document has moved <a href=\"" + ResH["location"] + "\">here</a>.</p>"
+							)
+						);
+		ResH["Content-type"] = "text/html; charset=iso-8859-1";
+	}
+	if (!ResH.exist("Content-Length"))
+		ResH["Content-Length"] = toString(ResB.getContent().length());
+
+	// set timeout for case that not matched CL
+
+	// if (ResH.getStatusCode() != 206 || ResH.getStatusCode() != 416)
+		// erase Content-Range
+}
+
+
+//.--------------------------------------------------------------------------.//
+//. document-response = Content-Type [ Status ] *other-field NL              .//
+//.                          response-body                                   .//
+//.                                                                          .//
+//.  The script MUST return a Content-Type header field.                     .//
+//.	 A Status header field is optional, and status 200 'OK' if omitted.      .//
+//.  The server MUST make any appropriate modifications to the script output .//
+//.  to ensure that the response to the client                               .//
+//.  complies with the response protocol version.                            .//
+//.--------------------------------------------------------------------------.//
+
+void	documentResponse(ResHeader& ResH, ResBody& ResB)
+{
+	if (!ResH.exist("Status"))
+		ResH["Status"] = "200 OK";
+	if (!ResH.exist("Content-length"))
+		ResH["Content-Length"] = toString(ResB.getContent().length());
+
+	/*TODO*/
+	//	content-length would not be removed.
+	//	if given content-length by script is not accurate, browser wait infinitely.
+	//	need to handle.
+
+}
 #endif

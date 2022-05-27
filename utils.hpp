@@ -1,5 +1,6 @@
 #ifndef UTILS_HPP
 # define UTILS_HPP
+#include <cctype>
 #include <iostream>
 #include <map>
 # include <sstream>
@@ -224,5 +225,6 @@ string	errorpage(const string& title, const string& header, const string& messag
 	"#MESSAGE", message);
 
 	return ret;
+	//The document has moved <a href=\"http://localhost:8080/es.png\">here</a>.
 }
 #endif
