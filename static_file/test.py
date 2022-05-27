@@ -1,9 +1,9 @@
 #!/usr/local/bin/python3
 import cgi
 import cgitb
+import time
 
 #. client redir
-# print("Location: http://localhost:8080/FUCKYOU")
 # without body:
 #	lighttpd : test.py=302 dummy.txt=200
 #	apache : test.py=302 dummy.txt=200
@@ -18,7 +18,7 @@ import cgitb
 # print("Location: http://localhost:8282/es.png")
 
 #% server redir
-print("Location: /es.png")
+
 # without body:
 #	lighttpd : test.py=302 dummy.txt=200 (client redir to dummy.txt)
 #	apache: test.py = 200
@@ -30,16 +30,20 @@ print("Location: /es.png")
 #	lighttpd: test.py = 302, dummy.txt = 200, discard body
 #	apache: only test.py = 200, discard body
 
-# print("Status: 203 \v\f\nFUCK:123")
-print("Status:  220 Found")
-print("Content-type: text/KOLL")
-print("Content-length: 2022")
+
+# print("Location: /es.png")
+# print("Status:  302 Found")
+# print("Content-type: text/html")
+# print("Content-length: 2022")
 print("Accept: text/abcd")
-# print("Date: Wed, 25 May 2012 12:34:56 GMT")
-# print("Keep-Alive: timeout=99, max=77")
+
+
 
 print()
-cgi.print_environ()
+for i in range(10):
+	time.sleep(1)
+	print(i)
+# cgi.print_environ()
 
 
 

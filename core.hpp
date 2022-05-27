@@ -18,9 +18,12 @@ void	core(ServerSocket *serv, ConnSocket *connected,
 
 
 	status = writeResponseBody(ResB, filepath);
-	if (MIME.find(ext) != MIME.end())	ResH["Content-Type"]	= MIME[ext];	// No matching MIME
-	if (!ResB.getContent().empty())		ResH["Content-Length"]	= toString(ResB.getContent().length());
-	if (getExt(filepath) == "py")		CGIRoutines(serv, connected, ReqH, ReqB, ResH, ResB);
+	if (MIME.find(ext) != MIME.end())
+		ResH["Content-Type"]	= MIME[ext];	// No matching MIME
+	if (getExt(filepath) == "py")
+		CGIRoutines(serv, connected, ReqH, ReqB, ResH, ResB);
+	if (!ResB.getContent().empty() && !ResH.exist("content-length"))
+		ResH["Content-Length"]	= toString(ResB.getContent().length());
 	//1.client-redir	: if no Status -> set 302, Found	//@
 	//					  if Content-length not in script, set in clientRedir() //@
 	//            		  if CL in script and not matched with body, timeout occur (see LIGHTTPD / what if APACHE?) //!
