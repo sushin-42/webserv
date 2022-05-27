@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/09 18:26:49 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/25 15:52:49 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/27 11:39:28 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,7 +70,7 @@ public:
 		map<string, string>::iterator it;
 		map<string, string>::iterator ite = headerField.end();
 		for (it = headerField.begin(); it != ite; it++ )
-			content.append(it->first + ": " + it->second + "\r\n");
+			content.append(capitalize(it->first, '-') + ": " + it->second + "\r\n");
 		content.append("\r\n");
 	}
 };

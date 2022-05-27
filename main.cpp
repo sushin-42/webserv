@@ -12,6 +12,7 @@
 #include "ReqHeader.hpp"
 #include "ResHeader.hpp"
 #include "ServerSocket.hpp"
+#include "core.hpp"
 
 
 
@@ -62,30 +63,7 @@ int main()
 
 //'-------------------------------- catch end--------------------------------'//
 
-//@------------------------make response header, body------------------------@//
-		ResH.setHTTPversion("HTTP/1.1");
-		ResH.setStatusCode(checkFile(root + ReqH.getRequsetTarget()));
-
-		switch (ResH.getStatusCode())
-		{
-		case 200:
-			ResH.setReasonPhrase("OK");
-			ResB.readFile(root + ReqH.getRequsetTarget());
-			break;
-		case 404:
-			ResH.setReasonPhrase("Not Found");
-			ResB.readFile(root + "/404/404.html");
-			break;
-		}
-		ResH.makeStatusLine();
-		if (getExt(ReqH.getRequsetTarget()) == "py")
-			CGIRoutines(ReqH, ReqB, ResH, ResB);
-
-		ResH["Content-Type"]	= MIME[getExt(ReqH.getRequsetTarget())];
-		ResH["Connection"]		= "close";
-		ResH["Content-Length"]	= toString(ResB.getContent().length());
-		ResH.integrate();
-//@---------------------------------make end---------------------------------@//
+		core(ResH, ResB, ReqH.getRequsetTarget());	//@ make response header, body//
 
 
 //.------------------------send response header, body------------------------.//

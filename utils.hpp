@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/06 15:03:17 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/24 16:04:19 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/27 11:39:35 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,7 +108,7 @@ string lowerize(const string& s)
 
 map<string, string>	KVtoMap(const string& content, char delim)
 {
-	const char*			ws		= " \t\n\r\f\v";
+	const char*			ws		= " \t\r\f\v";
 	string::size_type	pStart	= 0;
 	string::size_type	pEnd	= string::npos;
 	string::size_type	pDelim	= 0;
@@ -172,5 +172,70 @@ ssize_t				readFrom(int fd, string& content)
 		bzero(readbuf, sizeof(readbuf));
 	}
 	return byte;
+}
+
+string&	replaceToken(string& content, const string& token, const string& value)
+{
+	content.replace(content.find(token), token.length(), value);
+	return content;
+}
+
+
+string	capitalize(const string& s)
+{
+	string ret = lowerize(s);
+	char   offset = 'a' - 'A';
+
+	if (ret[0] && isalpha(ret[0]))
+		ret[0] -= offset;
+
+	return ret;
+}
+
+string	capitalize(const string& s, char delim)
+{
+	string::size_type	pStart	= 0;
+	string::size_type	pDelim	= 0;
+
+	char	offset = 'a' - 'A';
+	string	ret	= capitalize(s);
+	while (1)
+	{
+		pDelim = ret.find(delim, pStart);
+
+		if (pDelim == string::npos)
+			break;
+		else
+		{
+			if (islower(ret[pDelim + 1]))
+				ret[pDelim + 1] -= offset;
+		}
+
+		pStart = pDelim + 1;
+	}
+	return ret;
+}
+
+string	errorpage(const string& title, const string& header, const string& message)
+{
+	static string tmpl= "<!DOCTYPE HTML>\n"
+						"<html>\n"
+							"<head>\n"
+								"<title>#TITLE</title>\n"
+							"</head>\n"
+							"<body>\n"
+								"<h1>#HEADER</h1>\n"
+								"<p>#MESSAGE</p>\n"
+							"</body>\n"
+						"</html>\n";
+	string ret(tmpl);
+	replaceToken(
+		replaceToken(
+			replaceToken(ret,
+				 "#TITLE", title),
+		 "#HEADER", header),
+	"#MESSAGE", message);
+
+	return ret;
 }
 #endif

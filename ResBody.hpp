@@ -6,16 +6,19 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/09 19:22:25 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/11 15:54:05 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/27 10:45:26 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef RESBODY_HPP
 # define RESBODY_HPP
 
+#include "ConnSocket.hpp"
 #include "IText.hpp"
+#include "color.hpp"
 #include <iostream>
 # include <string>
+#include <sys/errno.h>
 # include <sys/fcntl.h>
 # include <unistd.h>
 # include <fstream>
@@ -40,15 +43,28 @@ public:
 		return *this;
 	}
 
-	void	readFile( const string& path )
+	status_code_t	readFile( const string& path )
 	{
 		ifstream input_file(path);
-	    if (!input_file.is_open())
+
+		if (!input_file.is_open())
 		{
-			cout << path << endl;
-			exit(EXIT_FAILURE);	//FIXME
+			int	fd;
+			errno = 0;
+			fd = open(path.c_str(), O_RDONLY);
+			if (fd == -1)
+				TAG(ResBody, readFile) << RED("open Fail: ") << path << " => " << strerror(errno) << endl;
+			else
+				close(fd);	// NOREACH
 		}
-    	content = string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
+		else
+    		content = string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
+		switch (errno)
+		{
+		case 0:			return 200;
+		case ENOENT:	return 404;
+		default:		return 0;
+		}
 	}
 
 	void	clear() { content.clear(); /*IText::clear();*/ }
