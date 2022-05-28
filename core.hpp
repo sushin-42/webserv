@@ -6,26 +6,24 @@
 # include "ResHeader.hpp"
 #include "utils.hpp"
 
-status_code_t	writeResponseBody(ResBody& ResB, const string& filepath);
-void			writeResponseHeader(ResHeader& ResH, status_code_t status);
+status_code_t	writeResponseBody(ConnSocket* connected, const string& filepath);
+void			writeResponseHeader(ConnSocket* connected, status_code_t status);
 
-void	core(PollSet& pollset,
-			 ServerSocket *serv, ConnSocket *connected,
-			 ReqHeader &ReqH, const ReqBody &ReqB,
-			 ResHeader &ResH, ResBody &ResB)
+void	core(PollSet& pollset, ServerSocket *serv, ConnSocket *connected)
 {
 	status_code_t	status = 42;
-	string	filepath = ReqH.getRequsetTarget();
+	string	filepath = connected->ReqH.getRequsetTarget();
 	string	ext	= getExt(filepath);
 
 
-	status = writeResponseBody(ResB, filepath);
+	status = writeResponseBody(connected, filepath);
 	if (MIME.find(ext) != MIME.end())
-		ResH["Content-Type"]	= MIME[ext];	// No matching MIME
+		connected->ResH["Content-Type"]	= MIME[ext];	// No matching MIME
 	if (getExt(filepath) == "py")
-		CGIRoutines(pollset, serv, connected, ReqH, ReqB, ResH, ResB);
-	if (!ResB.getContent().empty() && !ResH.exist("content-length"))
-		ResH["Content-Length"]	= toString(ResB.getContent().length());
+		CGIRoutines(pollset, serv, connected);
+	if (!connected->ResB.getContent().empty() &&
+		!connected->ResH.exist("content-length"))
+		connected->ResH["Content-Length"]	= toString(connected->ResB.getContent().length());
 	//1.client-redir	: if no Status -> set 302, Found	//@
 	//					  if Content-length not in script, set in clientRedir() //@
 	//            		  if CL in script and not matched with body, timeout occur (see LIGHTTPD / what if APACHE?) //!
@@ -38,63 +36,55 @@ void	core(PollSet& pollset,
 	//3.local-redir		: if (Status := 200 | "" ) Content-Length, Type are newly set by local-redir-page. Location removed.
 	//					  else:	 no redirection. if no redir, No header modification.
 
-	writeResponseHeader(ResH, status);
+	writeResponseHeader(connected, status);
 
 }
 
 
 
-void	core_wrapper(PollSet& pollset,
-					ServerSocket *serv, ConnSocket *connected,
-			 		ReqHeader &ReqH, const ReqBody &ReqB,
-			 		ResHeader &ResH, ResBody &ResB)
+void	core_wrapper(PollSet& pollset, ServerSocket *serv, ConnSocket *connected)
 {
 
-	core(pollset, serv, connected, ReqH, ReqB, ResH, ResB);
-	ResH.makeStatusLine();
-	ResH.integrate();
+	core(pollset, serv, connected);
+	connected->ResH.makeStatusLine();
+	connected->ResH.integrate();
 }
 
 
-status_code_t	writeResponseBody(ResBody& ResB, const string& filepath)
+status_code_t	writeResponseBody(ConnSocket* connected, const string& filepath)
 {
-	status_code_t	status = ResB.readFile(root + filepath);
+	status_code_t	status = connected->ResB.readFile(root + filepath);
 	if (status == 404)
-		ResB.readFile(root + "/404/404.html");
+		connected->ResB.readFile(root + "/404/404.html");
 
 	return status;
 }
 
-void	writeResponseHeader(ResHeader& ResH, status_code_t status)
+void	writeResponseHeader(ConnSocket* connected, status_code_t status)
 {
-	ResH.setHTTPversion("HTTP/1.1");
-	if (ResH.exist("status") == true)
+	connected->ResH.setHTTPversion("HTTP/1.1");
+	if (connected->ResH.exist("status") == true)
 	{
-		pair<status_code_t, string>	sr = checkStatusField(ResH["Status"]);
-		ResH.setStatusCode(sr.first);
-		ResH.setReasonPhrase(sr.second);
-		ResH.removeKey("Status");
+		pair<status_code_t, string>	sr = checkStatusField(connected->ResH["Status"]);
+		connected->ResH.setStatusCode(sr.first);
+		connected->ResH.setReasonPhrase(sr.second);
+		connected->ResH.removeKey("Status");
 	}
 	else
 	{
-		ResH.setStatusCode(status);
-		switch (ResH.getStatusCode())
+		connected->ResH.setStatusCode(status);
+		switch (connected->ResH.getStatusCode())
 		{
-		case 200:	ResH.setReasonPhrase("OK");			break;
-		case 404:	ResH.setReasonPhrase("Not Found");	break;
+		case 200:	connected->ResH.setReasonPhrase("OK");			break;
+		case 404:	connected->ResH.setReasonPhrase("Not Found");	break;
 		/* and so on ... */
 		}
 
 	}
-	ResH["Connection"]			= "close";
-	ResH["Server"]				= "Webserv 0.1";
+	connected->ResH["Connection"]			= "close";
+	connected->ResH["Server"]				= "Webserv 0.1";
 	// ResH["Keep-Alive"]			=
 	// ResH["Last-Modified"]		=
 	// ResH["E-Tag"]				=
 	// ResH["Transfer-Encoding"]	=
 }
-
-//@------------------------make response header, body------------------------@//
-
-
-//@---------------------------------make end---------------------------------@//
