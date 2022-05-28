@@ -60,7 +60,7 @@ int main()
 
 //'-------------------------------- catch end--------------------------------'//
 
-		core_wrapper(&serv, connected, ReqH, ReqB, ResH, ResB);	//@ make response header, body//
+		core_wrapper(pollset, &serv, connected, ReqH, ReqB, ResH, ResB);	//@ make response header, body//
 
 //.------------------------send response header, body------------------------.//
 resend:

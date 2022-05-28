@@ -1,6 +1,7 @@
 #include "CGI.hpp"
 #include "Config.hpp"
 #include "ConnSocket.hpp"
+#include "Poll.hpp"
 # include "ResBody.hpp"
 # include "ResHeader.hpp"
 #include "utils.hpp"
@@ -8,7 +9,8 @@
 status_code_t	writeResponseBody(ResBody& ResB, const string& filepath);
 void			writeResponseHeader(ResHeader& ResH, status_code_t status);
 
-void	core(ServerSocket *serv, ConnSocket *connected,
+void	core(PollSet& pollset,
+			 ServerSocket *serv, ConnSocket *connected,
 			 ReqHeader &ReqH, const ReqBody &ReqB,
 			 ResHeader &ResH, ResBody &ResB)
 {
@@ -21,7 +23,7 @@ void	core(ServerSocket *serv, ConnSocket *connected,
 	if (MIME.find(ext) != MIME.end())
 		ResH["Content-Type"]	= MIME[ext];	// No matching MIME
 	if (getExt(filepath) == "py")
-		CGIRoutines(serv, connected, ReqH, ReqB, ResH, ResB);
+		CGIRoutines(pollset, serv, connected, ReqH, ReqB, ResH, ResB);
 	if (!ResB.getContent().empty() && !ResH.exist("content-length"))
 		ResH["Content-Length"]	= toString(ResB.getContent().length());
 	//1.client-redir	: if no Status -> set 302, Found	//@
@@ -42,12 +44,13 @@ void	core(ServerSocket *serv, ConnSocket *connected,
 
 
 
-void	core_wrapper(ServerSocket *serv, ConnSocket *connected,
+void	core_wrapper(PollSet& pollset,
+					ServerSocket *serv, ConnSocket *connected,
 			 		ReqHeader &ReqH, const ReqBody &ReqB,
 			 		ResHeader &ResH, ResBody &ResB)
 {
 
-	core(serv, connected, ReqH, ReqB, ResH, ResB);
+	core(pollset, serv, connected, ReqH, ReqB, ResH, ResB);
 	ResH.makeStatusLine();
 	ResH.integrate();
 }

@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/24 14:47:48 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/27 16:02:50 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/28 18:18:51 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,7 @@
 # include <vector>
 
 #include "ConnSocket.hpp"
+#include "Poll.hpp"
 # include "ServerSocket.hpp"
 # include "ReqBody.hpp"
 # include "ReqHeader.hpp"
@@ -66,11 +67,13 @@ void	writeResponseHeader(ResHeader& ResH, status_code_t status);
 void	documentResponse(ResHeader& ResH, ResBody& ResB);
 void	clientRedir(ResHeader& ResH, ResBody& ResB);
 void	localRedir(
+					PollSet& pollset,
 					ServerSocket* serv, ConnSocket* connected,
 					ReqHeader& ReqH, const ReqBody& ReqB,
 					ResHeader& ResH, ResBody& ResB
 				);
-void	core(ServerSocket *serv, ConnSocket *connected,
+void	core(PollSet& pollset,
+			 ServerSocket *serv, ConnSocket *connected,
 			 ReqHeader &ReqH, const ReqBody &ReqB,
 			 ResHeader &ResH, ResBody &ResB);
 
@@ -224,12 +227,14 @@ int childRoutine(
 }
 
 string parentRoutine(
+					PollSet& pollset,
 					pid_t pid,
 					int PtoC[2],
 					int CtoP[2],
 					const string& reqbody
 				)
 {
+		(void)pollset;
 		string	output;
 		int		status = 0;
 		close(PtoC[0]), close(CtoP[1]);
@@ -244,6 +249,7 @@ string parentRoutine(
 }
 
 void	CGIRoutines(
+					PollSet& pollset,
 					ServerSocket* serv,
 					ConnSocket* connected,
 					ReqHeader& ReqH,	//NOTE: no const ReqHeader
@@ -262,7 +268,7 @@ void	CGIRoutines(
 
 	pid = forkCGI(serv, connected, ReqH, ReqB, argv, envp);
 	if (pid == 0)	childRoutine(PtoC, CtoP, ReqH.getRequsetTarget(), argv, envp);	//TODO: check return value -1
-	else			output = parentRoutine(pid, PtoC, CtoP, ReqB.getContent());
+	else			output = parentRoutine(pollset, pid, PtoC, CtoP, ReqB.getContent());
 
 	// read header & body from forked process
 	map<string,string>				tmp(KVtoMap(output, ':'));
@@ -285,7 +291,7 @@ void	CGIRoutines(
 	ResB.setContent(extractBody(output));
 	if (ResH.exist("location"))
 	{
-		if (ResH["location"][0] == '/')	localRedir(serv, connected, ReqH, ReqB, ResH, ResB);
+		if (ResH["location"][0] == '/')	localRedir(pollset, serv, connected, ReqH, ReqB, ResH, ResB);
 		else							clientRedir(ResH, ResB);
 	}
 	else								documentResponse(ResH, ResB);
@@ -313,6 +319,7 @@ void	CGIRoutines(
 //3.local-redir		: if (Status := 200 | "" ) Content-Length, Type are newly set by local-redir-page. Location removed.
 //					  else:	 no redirection. if no redir, No header modification.
 void	localRedir(
+					PollSet& pollset,
 					ServerSocket* serv, ConnSocket* connected,
 					ReqHeader& ReqH, const ReqBody& ReqB,
 					ResHeader& ResH, ResBody& ResB
@@ -325,7 +332,7 @@ void	localRedir(
 	ReqH.setRequsetTarget(ResH["location"]);
 	ResH.removeKey("location");
 
-	core(serv, connected, ReqH, ReqB, ResH, ResB);
+	core(pollset, serv, connected, ReqH, ReqB, ResH, ResB);
 }
 
 
