@@ -12,6 +12,7 @@ protected:
 
 public:
 	IStream() {};
+	IStream( int _fd ): fd(_fd) {};
 	IStream( const IStream& src ): fd(src.fd) {};
 	virtual ~IStream() {};
 

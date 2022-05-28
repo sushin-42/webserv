@@ -66,6 +66,15 @@ public:
 
 		pollVec.push_back(p);
 		streamVec.push_back(stream);
+
+		ServerSocket*	serv		= dynamic_cast<ServerSocket*>((stream));
+		ConnSocket*		connected	= dynamic_cast<ConnSocket*>((stream));
+		Pipe*			P			= dynamic_cast<Pipe*>((stream));
+
+		TAG(PollSet, enroll); cout << GRAY("Enroll ") << stream->getFD()
+		<< (serv		? CYAN( " (ServerSocket)") :
+			connected	? BLUE( " (ConnSocket)") :
+			P			? PURPLE( " (Pipe)") : "") << endl;
 	}
 
 	void	drop( iterator it )
@@ -75,8 +84,6 @@ public:
 		delete (*it.second);
 		pollVec.erase(it.first);
 		streamVec.erase(it.second);
-
-
 	}
 
 	iterator	examine()
@@ -130,13 +137,13 @@ private:
 				try
 				{
 					connected = new ConnSocket(serv->accept());
-					this->enroll(connected);
 					TAG(PollSet, examine); cout << GREEN("Got new connection, enroll ") << connected->getFD() << endl;
+					this->enroll(connected);
 				}
 				catch (exception& e)	// accept() not ready
 				{	continue;	}
 
-				return (this->begin());
+				return (it);
 			}
 		}
 		else if (connected)

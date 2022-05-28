@@ -11,6 +11,9 @@ public:
 	Pipe()
 	: IStream(), content() {};
 
+	Pipe( int fd )
+	:IStream(fd), content() {};
+
 	Pipe( const Pipe& src )
 	: IStream(src), content(src.content) {}
 
@@ -25,6 +28,8 @@ public:
 		}
 		return *this;
 	}
+private:
+	void dummy() {}
 };
 
 
