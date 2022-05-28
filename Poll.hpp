@@ -143,7 +143,7 @@ private:
 				catch (exception& e)	// accept() not ready
 				{	continue;	}
 
-				return (it);
+				return (this->begin());
 			}
 		}
 		else if (connected)
