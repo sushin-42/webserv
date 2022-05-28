@@ -53,14 +53,12 @@ public:
 
 	string			getIP() const		{ return inet_ntoa(info.sin_addr); }
 	unsigned short	getPort() const		{ return ntohs(info.sin_port); }
-	int				getFD()	const		{ return fd; }
 	void			close()				{ ::close(fd); }
 
 	//! do not set connected-socket
 	void			setIP( const string& ip )				{ if (ip ==  "")	this->info.sin_addr.s_addr = INADDR_ANY;
 															  else				this->info.sin_addr.s_addr = inet_addr(ip.c_str()); }
 	void			setPort( const unsigned short& port)	{ this->info.sin_port = htons(port); }
-	void			setFD( int fd )							{ this->fd = fd; }
 
 	class something_wrong: public exception
 	{
