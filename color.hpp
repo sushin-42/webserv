@@ -4,15 +4,23 @@
 # include <iomanip>
 // # include <iostream>
 
-# define RED(s) 				"\033[1;31m"s"\033[0m"
-# define BLUE(s) 				"\033[1;34m"s"\033[0m"
-# define GRAY(s) 				"\033[0;90m"s"\033[0m"
-# define CYAN(s) 				"\033[1;36m"s"\033[0m"
-# define GREEN(s)				"\033[0;32m"s"\033[0m"
-# define YELLOW(s)				"\033[0;33m"s"\033[0m"
-# define PURPLE(s)				"\033[0;35m"s"\033[0m"
-// # define NC(s)					"\033[0m"
-# define UL(s)					"\033[4m"s"\033[0m"
+# define _NC				"\033[0m"
+# define _UL				"\033[4m"
+# define _RED 				"\033[1;31m"
+# define _BLUE 				"\033[1;34m"
+# define _GRAY 				"\033[0;90m"
+# define _CYAN 				"\033[1;36m"
+# define _GREEN				"\033[0;32m"
+# define _YELLOW			"\033[0;33m"
+# define _PURPLE			"\033[0;35m"
+# define UL(s)				_UL s _NC
+# define RED(s) 			_RED s _NC
+# define BLUE(s) 			_BLUE s _NC
+# define GRAY(s) 			_GRAY s _NC
+# define CYAN(s) 			_CYAN s _NC
+# define GREEN(s)			_GREEN s _NC
+# define YELLOW(s)			_YELLOW s _NC
+# define PURPLE(s)			_PURPLE s _NC
 
 # define TAG(CLASS, METHOD)		cout << "[ " << PURPLE(#CLASS) << "#"  << UL(#METHOD) <<"() ] "
 # define _NOTE(s)				"\033[0;33m" << "NOTE: " #s << " \033[0m"

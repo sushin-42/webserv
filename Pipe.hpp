@@ -1,24 +1,26 @@
 #ifndef PIPE_HPP
 # define PIPE_HPP
+# include "ConnSocket.hpp"
 # include "IStream.hpp"
 #include <sys/_types/_pid_t.h>
 
 class Pipe : public IStream
 {
 public:
-	string	content;
+	string	output;
 	pid_t	pid;
 	int		status;
+	ConnSocket*	linkConn;
 
 public:
 	Pipe()
-	: IStream(), content(), pid(0), status(0) {};
+	: IStream(-1), output(), pid(0), status(0), linkConn(NULL) {};
 
 	Pipe( int fd, pid_t p )
-	:IStream(fd), content(), pid(p), status(0) {};
+	:IStream(fd), output(), pid(p), status(0), linkConn(NULL) {};
 
 	Pipe( const Pipe& src )
-	: IStream(src), content(src.content) {}
+	: IStream(src), output(src.output), pid(src.pid), status(src.status), linkConn(src.linkConn) {}
 
 	~Pipe() {};
 
@@ -27,13 +29,27 @@ public:
 		if (this != &src)
 		{
 			this->IStream::operator=(src);
-			this->content = src.content;
+			this->output 	= src.output;
+			this->pid	 	= src.pid;
+			this->status 	= src.status;
+			this->linkConn	= src.linkConn;
 		}
 		return *this;
 	}
+
+	ssize_t	read()
+	{
+		ssize_t	byte = readFrom(this->fd, this->output);
+
+		//NOTE: 왜 몰아서 출력되지 ? ㅎ  아! 버퍼링되는구나. print(flush=true)
+
+		return byte;
+	}
+
+	bool	isProcessing()	{ return (fd != -1); }
+
 private:
 	void dummy() {}
 };
-
 
 #endif

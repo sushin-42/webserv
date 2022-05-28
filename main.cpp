@@ -6,6 +6,7 @@
 #include "CGI.hpp"
 #include "Config.hpp"
 #include "ConnSocket.hpp"
+#include "Pipe.hpp"
 #include "Poll.hpp"
 #include "ReqBody.hpp"
 #include "ResBody.hpp"
@@ -22,6 +23,7 @@ int main()
 
 	ServerSocket		serv("", 8888);	// put your IP, "" means ANY
 	ConnSocket*			connected;
+	Pipe*				CGIpipe;
 
 	PollSet				pollset;
 	PollSet::iterator	it;
@@ -42,7 +44,13 @@ int main()
 		catch	(exception& e)				{ continue; }
 		if		((*it.second) == &serv)		{ continue; }	// servSocket
 
-		connected = dynamic_cast<ConnSocket*>(*it.second);
+		connected	= dynamic_cast<ConnSocket*>(*it.second);
+		CGIpipe		= dynamic_cast<Pipe*>(*it.second);
+		if (CGIpipe)
+		{
+			connected =  CGIpipe->linkConn;
+			goto corew;
+		}
 
 		if (it.first->revents & POLLOUT)	{ it.first->events &= ~POLLOUT;
 									  		  goto resend; }
@@ -54,8 +62,11 @@ int main()
 									  		  continue; }	// client exit
 
 //'-------------------------------- catch end--------------------------------'//
-
-		core_wrapper(pollset, &serv, connected);	//@ make response header, body//
+corew:
+		core_wrapper(pollset, &serv, connected, CGIpipe);	//@ make response header, body//
+		if (connected->pending)
+			continue;
+		else if (CGIpipe) pollset.drop(it);	// pended CGI output ends.
 
 //.------------------------send response header, body------------------------.//
 resend:

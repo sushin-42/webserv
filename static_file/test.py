@@ -31,8 +31,8 @@ import time
 #	apache: only test.py = 200, discard body
 
 
-# print("Location: /es.png")
-# print("Status:  302 Found")
+# print("Location:  /es.png")
+# print("Status:  202 Found")
 # print("Content-type: text/html")
 # print("Content-length: 2022")
 print("Accept: text/abcd")
@@ -40,10 +40,12 @@ print("Accept: text/abcd")
 
 
 print()
+print("Hello world")
+
 for i in range(10):
 	time.sleep(1)
 	print(i)
-# cgi.print_environ()
+cgi.print_environ()
 
 
 

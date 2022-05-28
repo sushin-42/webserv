@@ -53,9 +53,10 @@ public:
 	ReqBody		ReqB;
 	ResHeader	ResH;
 	ResBody		ResB;
+	bool		pending;
 
 public:
-	ConnSocket() : ISocket(), len(sizeof(info)), ReqH(), ReqB(), ResH(), ResB() {}
+	ConnSocket() : ISocket(), len(sizeof(info)), ReqH(), ReqB(), ResH(), ResB(), pending(false) {}
 	~ConnSocket() {}
 
 	ConnSocket&	operator=( const ConnSocket& src )
@@ -67,6 +68,7 @@ public:
 			this->ReqB		= src.ReqB;
 			this->ResH		= src.ResH;
 			this->ResB		= src.ResB;
+			this->pending	= src.pending;
 			//NOTE: no buf copy
 		}
 		return *this;
@@ -154,7 +156,6 @@ public:
 
 	void	send(const string& content, map<int, undone>& buf)
 	{
-
 		try						{ buf.at(this->fd); }
 		catch (exception& e)	{ buf[this->fd] = (struct undone){"",0};
 								  buf[this->fd].content.append(content.data(), content.length());	}

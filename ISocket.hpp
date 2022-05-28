@@ -53,7 +53,6 @@ public:
 
 	string			getIP() const		{ return inet_ntoa(info.sin_addr); }
 	unsigned short	getPort() const		{ return ntohs(info.sin_port); }
-	void			close()				{ ::close(fd); }
 
 	//! do not set connected-socket
 	void			setIP( const string& ip )				{ if (ip ==  "")	this->info.sin_addr.s_addr = INADDR_ANY;

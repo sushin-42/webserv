@@ -1,5 +1,6 @@
 #ifndef POLL_HPP
 # define POLL_HPP
+#include <exception>
 # include <poll.h>
 # include <sys/_types/_size_t.h>
 #include <sys/poll.h>
@@ -128,7 +129,7 @@ private:
 	{
 		ServerSocket*	serv		= dynamic_cast<ServerSocket*>(*(it.second));
 		ConnSocket*		connected	= dynamic_cast<ConnSocket*>(*(it.second));
-		Pipe*			P			= dynamic_cast<Pipe*>(*(it.second));
+		Pipe*			CGIpipe		= dynamic_cast<Pipe*>(*(it.second));
 
 		if (serv)
 		{
@@ -148,14 +149,20 @@ private:
 		}
 		else if (connected)
 		{
-			TAG(PollSet, examine); cout << GREEN("New data to read on ")  << it.first->fd << endl;
+			TAG(PollSet, examine); cout << GREEN("New data to read ")
+			<< it.first->fd << BLUE(" (ConnSocket)") <<endl;
+			return it;
+		}
+		else if (CGIpipe)
+		{
+			TAG(PollSet, examine); cout << GREEN("New data to read ")
+			<< it.first->fd << PURPLE(" (Pipe)") <<endl;
 			return it;
 		}
 		else
 		{
-			(void)P;
-			cout << "It is a pipe." << endl;
-			return it;
+			TAG(PollSet, examine); cout << RED("Unknown type: ") << endl;
+			throw exception();
 		}
 	}
 

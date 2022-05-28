@@ -1,12 +1,16 @@
 #ifndef UTILS_HPP
 # define UTILS_HPP
+
 #include <cctype>
 #include <iostream>
 #include <map>
 # include <sstream>
 # include <fstream>
 #include <string>
+#include <sys/_types/_ssize_t.h>
 #include <unistd.h>
+#include "color.hpp"
+
 using namespace std;
 
 template <class T>
@@ -147,15 +151,14 @@ string	extractBody(const string& content)
 	return (content.substr(pEnd + offset + 1));
 }
 
-ssize_t				readFrom(int fd, string& content)
+ssize_t	readFrom(int fd, string& content)
 {
 	ssize_t byte = 0;
 	char readbuf[1024];
 	bzero(readbuf, sizeof(readbuf));
-	while ((byte = read(fd, readbuf, sizeof(readbuf))) >0)
+	while ((byte = read(fd, readbuf, sizeof(readbuf))) > 0)
 	{
-		// cout << "keep reading.." << endl;
-		// cout << "byte = " << byte << endl;
+		TAG(utils, readFrom); cout << GRAY ("read ") << _UL << byte << _NC << GRAY(" bytes from ") << _UL << fd  << _NC << endl;
 		content.append(readbuf, byte);
 		bzero(readbuf, sizeof(readbuf));
 	}

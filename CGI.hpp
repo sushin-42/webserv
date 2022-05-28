@@ -36,6 +36,7 @@
 # include <cstring>
 # include <string>
 // #include <sys/_types/_pid_t.h>
+#include <sys/_types/_ssize_t.h>
 #include <sys/fcntl.h>
 #include <sys/wait.h>
 # include <vector>
@@ -101,9 +102,7 @@ map<string, string>	makeCGIEnv(ServerSocket* serv, ConnSocket* connected)
 		map<string, string>::iterator	it = hf.begin();
 		map<string, string>::iterator	ite = hf.end();
 		envs["REQUEST_METHOD"] = connected->ReqH.getMethod();
-		if (connected->ReqB.getContent() == "")
-			cout << "NO BODY" << endl;
-		else
+		if (!connected->ReqB.getContent().empty())
 		{
 			envs["CONTENT_TYPE"] = connected->ReqH["content-type"];
 			envs["CONTENT_LENGTH"] = toString(connected->ReqB.getContent().length());
@@ -202,50 +201,46 @@ int childRoutine(
 	return -1;
 }
 
-string parentRoutine(
+void parentRoutine(
 					PollSet& pollset,
+					ConnSocket* connected,
 					pid_t pid,
 					int PtoC[2],
-					int CtoP[2],
-					const string& reqbody
+					int CtoP[2]
 				)
 {
-		(void)pollset;
-		string	output;
-		int		status = 0;
+
+		string	ReqB = connected->ReqB.getContent();
+		Pipe*	p = new Pipe(CtoP[0], pid);
+		p->linkConn = connected;
+
 		close(PtoC[0]), close(CtoP[1]);
-		write(PtoC[1], reqbody.c_str(), reqbody.length());
+		write(PtoC[1], ReqB.c_str(), ReqB.length());
 		close(PtoC[1]);
 
-		waitpid(pid, &status, WNOHANG);
-
-		readFrom(CtoP[0], output);
-
-		close(CtoP[0]), close(CtoP[1]);
-		return output;
+		pollset.enroll(p);
+		// waitpid(p->pid, &p->status, WNOHANG);
 }
 
-void	CGIRoutines(
-					PollSet& pollset,
-					ServerSocket* serv,
-					ConnSocket* connected
-				)
+void	newProc(PollSet& pollset, ServerSocket* serv, ConnSocket* connected)
 {
 	int				PtoC[2], CtoP[2];
 	pid_t			pid;
 	vector<char*>	argv;
 	vector<char*>	envp;
-	string			output;
+
 	pipe(PtoC), pipe(CtoP);
 	fcntl(CtoP[0], F_SETFL, fcntl(CtoP[0], F_GETFL, 0) | O_NONBLOCK);
 
-
 	pid = forkCGI(serv, connected, argv, envp);
 	if (pid == 0)	childRoutine(PtoC, CtoP, connected->ReqH.getRequsetTarget(), argv, envp);	//TODO: check return value -1
-	else			output = parentRoutine(pollset, pid, PtoC, CtoP, connected->ReqB.getContent());
+	else			parentRoutine(pollset, connected, pid, PtoC, CtoP);			// produce non-blocking pipe and poll.enroll(pipe)
+}
 
-	// read header & body from forked process
-	map<string,string>				tmp(KVtoMap(output, ':'));
+
+void	processOutput(PollSet& pollset, ServerSocket* serv, ConnSocket* connected, Pipe* CGIpipe)
+{
+	map<string,string>				tmp(KVtoMap(CGIpipe->output, ':'));
 	map<string,string>::iterator	it, ite;
 	it = tmp.begin(), ite = tmp.end();
 	for (; it != ite; it++)
@@ -265,13 +260,55 @@ void	CGIRoutines(
 				connected->ResH.append(it->first, it->second);
 	}
 
-	connected->ResB.setContent(extractBody(output));
+	connected->ResB.setContent(extractBody(CGIpipe->output));
 	if (connected->ResH.exist("location"))
 	{
 		if (connected->ResH["location"][0] == '/')	localRedir(pollset, serv, connected);
 		else										clientRedir(connected);
 	}
 	else											documentResponse(connected);
+}
+
+void	CGIRoutines(
+					PollSet& pollset,
+					ServerSocket* serv,
+					ConnSocket* connected,
+					Pipe* CGIpipe
+				)
+{
+	ssize_t	byte = 0;
+	connected->pending = true;
+	if (!CGIpipe)
+		newProc(pollset, serv, connected);
+	else
+	{
+		byte = CGIpipe->read();
+
+		if		(byte == -1)	// output appended, go back main loop,
+		{
+			return;
+		}
+
+		else if (byte == 0)		// close pipe, process output
+		{
+			TAG(CGI#, CGIroutines()); cout << GRAY("Pipe closed: ") << CGIpipe->getFD() << endl;
+			CGIpipe->close();
+			CGIpipe->setFD(-1);
+			processOutput(pollset, serv, connected, CGIpipe);
+		}
+
+	}
+
+	//1.client-redir	: if no Status -> set 302, Found	//@
+	//					  if Content-length not in script, set in clientRedir() //@
+	//            		  if CL in script and not matched with body, timeout occur (see LIGHTTPD / what if APACHE?) //!
+
+	//2.document		: Content-length set by script, if exists. //@
+	//		   			  else, APACHE: chunk-encoding
+	// 							LIGHTTPD: get length of CGI body //@
+	// 					  if CL in script not matched with body, timeout occur (see LIGHTTPD / what if APACHE?) //!
+
+	//3.local-redir		: if (Status := 200 | "" ) Content-Length, Type are newly set by local-redir-page. Location removed.
 }
 
 
@@ -293,7 +330,7 @@ void	CGIRoutines(
 //*--------------------------------------------------------------------------*//
 
 
-//3.local-redir		: if (Status := 200 | "" ) Content-Length, Type are newly set by local-redir-page. Location removed.
+//3.local-redir		: if (Status := 200 | None ) Content-Length, Type are newly set by local-redir-page. Location removed.
 //					  else:	 no redirection. if no redir, No header modification.
 void	localRedir(PollSet& pollset, ServerSocket* serv, ConnSocket* connected)
 {
@@ -337,7 +374,7 @@ void	localRedir(PollSet& pollset, ServerSocket* serv, ConnSocket* connected)
 //%  protocol version.                                                       %//
 //%--------------------------------------------------------------------------%//
 
-void	clientRedir(ConnSocket* connected)
+void	clientRedir(ConnSocket* connected)		//check 303
 {
 	if (!connected->ResH.exist("Status"))
 	{
