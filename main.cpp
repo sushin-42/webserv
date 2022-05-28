@@ -28,7 +28,7 @@ int main()
 	ResHeader					ResH;
 	ResBody						ResB;
 
-	PollSet				set;
+	PollSet				pollset;
 	PollSet::iterator	it;
 
 	map<int, undone>	undoneBuf;
@@ -39,11 +39,11 @@ int main()
 	try						{ serv.listen(10 /*backlog*/); }
 	catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
 
-	set.enroll(&serv);
+	pollset.enroll(&serv);
 	while (1)
 	{
 //'----------------------catch and parse request header----------------------'//
-		try								{ it = set.examine(); }
+		try								{ it = pollset.examine(); }
 		catch	(exception& e)			{ continue; }
 		if		((*it.second) == &serv)	{ continue; }	// servSocket
 
@@ -55,7 +55,7 @@ int main()
 		try							{ Req = connected->recvRequest(); ReqH = Req.first; ReqB = Req.second; }
 		catch	(exception& e)		{ continue; }
 		if		(ReqH.empty())		{ connected->close();
-									  set.drop(it);
+									  pollset.drop(it);
 									  continue; }	// client exit
 
 //'-------------------------------- catch end--------------------------------'//
