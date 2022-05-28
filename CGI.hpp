@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/24 14:47:48 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/28 18:18:51 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/28 18:43:35 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,8 @@
 # include <cstring>
 # include <string>
 // #include <sys/_types/_pid_t.h>
+#include <sys/fcntl.h>
+#include <sys/wait.h>
 # include <vector>
 
 #include "ConnSocket.hpp"
@@ -240,7 +242,8 @@ string parentRoutine(
 		close(PtoC[0]), close(CtoP[1]);
 		write(PtoC[1], reqbody.c_str(), reqbody.length());
 		close(PtoC[1]);
-		waitpid(pid, &status, 0);
+
+		waitpid(pid, &status, WNOHANG);
 
 		readFrom(CtoP[0], output);
 
@@ -264,6 +267,7 @@ void	CGIRoutines(
 	vector<char*>	envp;
 	string			output;
 	pipe(PtoC), pipe(CtoP);
+	fcntl(CtoP[0], F_SETFL, fcntl(CtoP[0], F_GETFL, 0) | O_NONBLOCK);
 
 
 	pid = forkCGI(serv, connected, ReqH, ReqB, argv, envp);
