@@ -13,6 +13,8 @@
 # include "ISocket.hpp"
 # include "Config.hpp"
 #include "ReqBody.hpp"
+#include "ReqHeader.hpp"
+#include "ResBody.hpp"
 # include "color.hpp"
 
 # include "utils.hpp"
@@ -37,8 +39,6 @@ struct undone
 	ssize_t	totalWrited;
 };
 
-typedef unsigned short status_code_t;
-
 class ConnSocket : public ISocket
 {
 friend class ServerSocket;
@@ -49,7 +49,13 @@ private:
 	// char		sendbuf[1024];	//' is required?
 
 public:
-	ConnSocket() : ISocket(), len(sizeof(info)) {}
+	ReqHeader	ReqH;
+	ReqBody		ReqB;
+	ResHeader	ResH;
+	ResBody		ResB;
+
+public:
+	ConnSocket() : ISocket(), len(sizeof(info)), ReqH(), ReqB(), ResH(), ResB() {}
 	~ConnSocket() {}
 
 	ConnSocket&	operator=( const ConnSocket& src )
@@ -57,7 +63,10 @@ public:
 		if (this != &src)
 		{
 			this->ISocket::operator=(src);
-			this->len		= src.len;
+			this->ReqH		= src.ReqH;
+			this->ReqB		= src.ReqB;
+			this->ResH		= src.ResH;
+			this->ResB		= src.ResB;
 			//NOTE: no buf copy
 		}
 		return *this;
@@ -74,10 +83,10 @@ public:
 		return -1;
 	}
 
-	pair<ReqHeader, ReqBody> recvRequest()	//TODO: seperate and return both Header and Body
+	void	recvRequest()	//TODO: seperate and return both Header and Body
 	{
-		ReqHeader	ReqH;
-		ReqBody		ReqB;
+		// ReqHeader	ReqH;
+		// ReqBody		ReqB;
 		int			method	= 0;
 		string		content = "";
 		ssize_t		byte	= 0;
@@ -132,15 +141,15 @@ public:
 			else
 			{
 				TAG(ConnSocket, recvRequest) << YELLOW("No data to read") << endl;
-				return make_pair(ReqH, ReqB);
+				// return make_pair(ReqH, ReqB);
 			}
 		}
 		else if (byte == 0)	// closed by CLIENT
 		{
 			TAG(ConnSocket, recvRequest); cout << GRAY("CLIENT EXIT ") << this->fd << endl;
-			return make_pair(ReqH, ReqB);
+			// return make_pair(ReqH, ReqB);
 		}
-		return make_pair(ReqH, ReqB);
+		// return make_pair(ReqH, ReqB);
 	}
 
 	void	send(const string& content, map<int, undone>& buf)

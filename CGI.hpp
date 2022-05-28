@@ -6,7 +6,7 @@
 /*   By: mishin <mishin@student.42seoul.kr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/24 14:47:48 by mishin            #+#    #+#             */
-/*   Updated: 2022/05/27 16:02:50 by mishin           ###   ########.fr       */
+/*   Updated: 2022/05/28 21:30:57 by mishin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,19 +60,10 @@
 # include "utils.hpp"
 using namespace std;
 
-status_code_t	writeResponseBody(ResBody& ResB, const string& filepath);
-void	writeResponseHeader(ResHeader& ResH, status_code_t status);
-
-void	documentResponse(ResHeader& ResH, ResBody& ResB);
-void	clientRedir(ResHeader& ResH, ResBody& ResB);
-void	localRedir(
-					ServerSocket* serv, ConnSocket* connected,
-					ReqHeader& ReqH, const ReqBody& ReqB,
-					ResHeader& ResH, ResBody& ResB
-				);
-void	core(ServerSocket *serv, ConnSocket *connected,
-			 ReqHeader &ReqH, const ReqBody &ReqB,
-			 ResHeader &ResH, ResBody &ResB);
+void	documentResponse(ConnSocket* connected);
+void	clientRedir(ConnSocket* connected);
+void	localRedir(ServerSocket* serv, ConnSocket* connected);
+void	core(ServerSocket *serv, ConnSocket *connected);
 
 pair<status_code_t, string>	checkStatusField(const string& status)
 {
@@ -113,20 +104,19 @@ string	toMetaVar(const string& s, string scheme)
 	return ret;
 }
 
-map<string, string>	makeCGIEnv(ServerSocket* serv, ConnSocket* connected,
-							   const ReqHeader& ReqH, const ReqBody& ReqB)
+map<string, string>	makeCGIEnv(ServerSocket* serv, ConnSocket* connected)
 {
 		map<string, string>				envs;
-		map<string, string>				hf = ReqH.getHeaderField();
+		map<string, string>				hf = connected->ReqH.getHeaderField();
 		map<string, string>::iterator	it = hf.begin();
 		map<string, string>::iterator	ite = hf.end();
-		envs["REQUEST_METHOD"] = ReqH.getMethod();
-		if (ReqB.getContent() == "")
+		envs["REQUEST_METHOD"] = connected->ReqH.getMethod();
+		if (connected->ReqB.getContent() == "")
 			cout << "NO BODY" << endl;
 		else
 		{
-			envs["CONTENT_TYPE"] = ReqH["content-type"];
-			envs["CONTENT_LENGTH"] = toString(ReqB.getContent().length());
+			envs["CONTENT_TYPE"] = connected->ReqH["content-type"];
+			envs["CONTENT_LENGTH"] = toString(connected->ReqB.getContent().length());
 		}
 		// if body exist, MUST, else NULL (after the server has removed any transfer-codings or content-codings.)
 		// The server MUST set this meta-variable if an HTTP Content-Type field is present in the client request header.
@@ -138,7 +128,7 @@ map<string, string>	makeCGIEnv(ServerSocket* serv, ConnSocket* connected,
 		// "PATH_TRANSLATED" = ,
 		// "QUERY_STRING" = "" | query,
 
-		envs["SERVER_PROTOCOL"] = ReqH.getHTTPversion();
+		envs["SERVER_PROTOCOL"] = connected->ReqH.getHTTPversion();
 		envs["SERVER_SOFTWARE"] = "webserv";
 		envs["SERVER_NAME"] = serv->getIP();
 		envs["SERVER_PORT"] = serv->getPort();
@@ -177,12 +167,11 @@ map<string, string>	makeCGIEnv(ServerSocket* serv, ConnSocket* connected,
 
 pid_t	forkCGI(
 				ServerSocket* serv, ConnSocket* connected,
-				ReqHeader& ReqH, const ReqBody& ReqB,
 				vector<char *>& argv, vector<char *>& envp
 			)
 {
-	string							path = ReqH.getRequsetTarget();
-	map<string,string>				envm = makeCGIEnv(serv, connected, ReqH, ReqB);
+	string							path = connected->ReqH.getRequsetTarget();
+	map<string,string>				envm = makeCGIEnv(serv, connected);
 	map<string,string>::iterator	it	= envm.begin();
 	map<string,string>::iterator	ite	= envm.end();
 
@@ -245,11 +234,7 @@ string parentRoutine(
 
 void	CGIRoutines(
 					ServerSocket* serv,
-					ConnSocket* connected,
-					ReqHeader& ReqH,	//NOTE: no const ReqHeader
-					const ReqBody& ReqB,
-					ResHeader& ResH,
-					ResBody& ResB
+					ConnSocket* connected
 				)
 {
 	int				PtoC[2], CtoP[2];
@@ -260,9 +245,9 @@ void	CGIRoutines(
 	pipe(PtoC), pipe(CtoP);
 
 
-	pid = forkCGI(serv, connected, ReqH, ReqB, argv, envp);
-	if (pid == 0)	childRoutine(PtoC, CtoP, ReqH.getRequsetTarget(), argv, envp);	//TODO: check return value -1
-	else			output = parentRoutine(pid, PtoC, CtoP, ReqB.getContent());
+	pid = forkCGI(serv, connected, argv, envp);
+	if (pid == 0)	childRoutine(PtoC, CtoP, connected->ReqH.getRequsetTarget(), argv, envp);	//TODO: check return value -1
+	else			output = parentRoutine(pid, PtoC, CtoP, connected->ReqB.getContent());
 
 	// read header & body from forked process
 	map<string,string>				tmp(KVtoMap(output, ':'));
@@ -277,18 +262,21 @@ void	CGIRoutines(
 			it->first == lowerize("Content-Range")||
 			it->first == lowerize("Transfer-Encoding")||
 			it->first == lowerize("ETag")||
-			ResH.exist(it->first) == false	)	ResH[it->first] = it->second;
+			connected->ResH.exist(it->first) == false	)
 
-		else									ResH.append(it->first, it->second);
+				connected->ResH[it->first] = it->second;
+
+		else
+				connected->ResH.append(it->first, it->second);
 	}
 
-	ResB.setContent(extractBody(output));
-	if (ResH.exist("location"))
+	connected->ResB.setContent(extractBody(output));
+	if (connected->ResH.exist("location"))
 	{
-		if (ResH["location"][0] == '/')	localRedir(serv, connected, ReqH, ReqB, ResH, ResB);
-		else							clientRedir(ResH, ResB);
+		if (connected->ResH["location"][0] == '/')	localRedir(serv, connected);
+		else										clientRedir(connected);
 	}
-	else								documentResponse(ResH, ResB);
+	else											documentResponse(connected);
 }
 
 
@@ -312,20 +300,17 @@ void	CGIRoutines(
 
 //3.local-redir		: if (Status := 200 | "" ) Content-Length, Type are newly set by local-redir-page. Location removed.
 //					  else:	 no redirection. if no redir, No header modification.
-void	localRedir(
-					ServerSocket* serv, ConnSocket* connected,
-					ReqHeader& ReqH, const ReqBody& ReqB,
-					ResHeader& ResH, ResBody& ResB
-				)
+void	localRedir(ServerSocket* serv, ConnSocket* connected)
 {
-	if (ResH.exist("Status") && checkStatusField(ResH["Status"]).first != 200)
+	if (connected->ResH.exist("Status") &&
+		checkStatusField(connected->ResH["Status"]).first != 200)
 		return ;
 
 	//@ regard as request to Location, but some header-fields from CGI remain @//
-	ReqH.setRequsetTarget(ResH["location"]);
-	ResH.removeKey("location");
+	connected->ReqH.setRequsetTarget(connected->ResH["location"]);
+	connected->ResH.removeKey("location");
 
-	core(serv, connected, ReqH, ReqB, ResH, ResB);
+	core(serv, connected);
 }
 
 
@@ -357,22 +342,22 @@ void	localRedir(
 //%  protocol version.                                                       %//
 //%--------------------------------------------------------------------------%//
 
-void	clientRedir(ResHeader& ResH, ResBody& ResB)
+void	clientRedir(ConnSocket* connected)
 {
-	if (!ResH.exist("Status"))
+	if (!connected->ResH.exist("Status"))
 	{
-		ResH["Status"] = "302 Found";
-		ResB.setContent(
+		connected->ResH["Status"] = "302 Found";
+		connected->ResB.setContent(
 						errorpage(
 								"302 Found",
 								"Found",
-								"<p>The document has moved <a href=\"" + ResH["location"] + "\">here</a>.</p>"
+								"<p>The document has moved <a href=\"" + connected->ResH["location"] + "\">here</a>.</p>"
 							)
 						);
-		ResH["Content-type"] = "text/html; charset=iso-8859-1";
+		connected->ResH["Content-type"] = "text/html; charset=iso-8859-1";
 	}
-	if (!ResH.exist("Content-Length"))
-		ResH["Content-Length"] = toString(ResB.getContent().length());
+	if (!connected->ResH.exist("Content-Length"))
+		connected->ResH["Content-Length"] = toString(connected->ResB.getContent().length());
 
 	// set timeout for case that not matched CL
 
@@ -392,12 +377,12 @@ void	clientRedir(ResHeader& ResH, ResBody& ResB)
 //.  complies with the response protocol version.                            .//
 //.--------------------------------------------------------------------------.//
 
-void	documentResponse(ResHeader& ResH, ResBody& ResB)
+void	documentResponse(ConnSocket* connected)
 {
-	if (!ResH.exist("Status"))
-		ResH["Status"] = "200 OK";
-	if (!ResH.exist("Content-length"))
-		ResH["Content-Length"] = toString(ResB.getContent().length());
+	if (!connected->ResH.exist("Status"))
+		connected->ResH["Status"] = "200 OK";
+	if (!connected->ResH.exist("Content-length"))
+		connected->ResH["Content-Length"] = toString(connected->ResB.getContent().length());
 
 	/*TODO*/
 	//	content-length would not be removed.

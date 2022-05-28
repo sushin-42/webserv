@@ -1,7 +1,6 @@
 #ifndef RESBODY_HPP
 # define RESBODY_HPP
 
-#include "ConnSocket.hpp"
 #include "IText.hpp"
 #include "color.hpp"
 #include <iostream>
@@ -11,6 +10,8 @@
 # include <unistd.h>
 # include <fstream>
 using namespace std;
+
+typedef unsigned short status_code_t;
 
 class ResBody : public IText
 {

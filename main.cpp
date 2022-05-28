@@ -20,13 +20,8 @@ int main()
  {
 	signal(SIGPIPE, SIG_IGN);
 
-	ServerSocket				serv("", 8888);	// put your IP, "" means ANY
-	ConnSocket*					connected;
-	pair<ReqHeader, ReqBody>	Req;
-	ReqHeader					ReqH;
-	ReqBody						ReqB;
-	ResHeader					ResH;
-	ResBody						ResB;
+	ServerSocket		serv("", 8888);	// put your IP, "" means ANY
+	ConnSocket*			connected;
 
 	PollSet				pollset;
 	PollSet::iterator	it;
@@ -43,31 +38,36 @@ int main()
 	while (1)
 	{
 //'----------------------catch and parse request header----------------------'//
-		try								{ it = pollset.examine(); }
-		catch	(exception& e)			{ continue; }
-		if		((*it.second) == &serv)	{ continue; }	// servSocket
+		try									{ it = pollset.examine(); }
+		catch	(exception& e)				{ continue; }
+		if		((*it.second) == &serv)		{ continue; }	// servSocket
 
 		connected = dynamic_cast<ConnSocket*>(*it.second);
 
 		if (it.first->revents & POLLOUT)	{ it.first->events &= ~POLLOUT;
 									  		  goto resend; }
 
-		try							{ Req = connected->recvRequest(); ReqH = Req.first; ReqB = Req.second; }
-		catch	(exception& e)		{ continue; }
-		if		(ReqH.empty())		{ connected->close();
-									  pollset.drop(it);
-									  continue; }	// client exit
+		try									{ connected->recvRequest();}
+		catch	(exception& e)				{ continue; }
+		if		(connected->ReqH.empty())	{ connected->close();
+									  		  pollset.drop(it);
+									  		  continue; }	// client exit
 
 //'-------------------------------- catch end--------------------------------'//
 
-		core_wrapper(&serv, connected, ReqH, ReqB, ResH, ResB);	//@ make response header, body//
+		core_wrapper(&serv, connected);	//@ make response header, body//
 
 //.------------------------send response header, body------------------------.//
 resend:
-		try						{ connected->send(ResH.getContent() + ResB.getContent(), undoneBuf); }
-		catch (exception& e)	{ it.first->events |= POLLOUT; }	// not all data sended
+		try									{ connected->send(
+																connected->ResH.getContent() +
+																connected->ResB.getContent(),
+																undoneBuf
+															);
+											}
+		catch (exception& e)				{ it.first->events |= POLLOUT; }	// not all data sended
 
-		ReqH.clear(), ResH.clear(), ResB.clear();
+		connected->ReqH.clear(), connected->ResH.clear(), connected->ResB.clear();
 //.---------------------------------send end---------------------------------.//
 	}
 }
