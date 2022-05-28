@@ -10,41 +10,42 @@
 # include <string>
 # include <unistd.h>
 
+#include "IStream.hpp"
 # include "color.hpp"
 
 using namespace std;
 // struct sockaddr_in;
 // struct sockaddr;
 
-class ISocket
+class ISocket : public IStream
 {
 protected:
 	typedef struct sockaddr_in socket_info_t;
-	int				sock;
 	socket_info_t	info;
 
 public:
-	ISocket() {};
+	ISocket() : IStream() {};
 	ISocket( const string& ip, const unsigned short& port )
+	: IStream()
 	{
 		info.sin_family	= PF_INET;
 		setIP(ip);
 		setPort(port);
 		bzero(info.sin_zero, sizeof(info.sin_zero));
 
-		sock = socket(PF_INET, SOCK_STREAM, 0);
-		fcntl(sock, F_SETFL, O_NONBLOCK | SO_REUSEADDR);
+		fd = socket(PF_INET, SOCK_STREAM, 0);
+		fcntl(fd, F_SETFL, O_NONBLOCK | SO_REUSEADDR);
 	}
 	ISocket( const ISocket& src )
-	:sock(src.sock), info(src.info) {}
+	:IStream(src), info(src.info) {}
 
-	virtual ~ISocket() {}
+	~ISocket() {}
 
 	ISocket&	operator=( const ISocket& src )
 	{
 		if (this != &src)
 		{
-			this->sock = src.sock;
+			this->::IStream::operator=(src);
 			this->info = src.info;
 		}
 		return *this;
@@ -52,14 +53,14 @@ public:
 
 	string			getIP() const		{ return inet_ntoa(info.sin_addr); }
 	unsigned short	getPort() const		{ return ntohs(info.sin_port); }
-	int				getFD()	const		{ return sock; }
-	void			close()				{ ::close(sock); }
+	int				getFD()	const		{ return fd; }
+	void			close()				{ ::close(fd); }
 
 	//! do not set connected-socket
 	void			setIP( const string& ip )				{ if (ip ==  "")	this->info.sin_addr.s_addr = INADDR_ANY;
 															  else				this->info.sin_addr.s_addr = inet_addr(ip.c_str()); }
 	void			setPort( const unsigned short& port)	{ this->info.sin_port = htons(port); }
-	void			setFD( int fd )							{ this->sock = fd; }
+	void			setFD( int fd )							{ this->fd = fd; }
 
 	class something_wrong: public exception
 	{

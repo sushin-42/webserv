@@ -18,26 +18,26 @@ public:
 
 	void			bind()
 	{
-		int any =	::bind(this->sock, (struct sockaddr *)&this->info, sizeof(this->info));
+		int any =	::bind(this->fd, (struct sockaddr *)&this->info, sizeof(this->info));
 		if (any)	throw something_wrong(strerror(errno));
 		cout << "bind OK" << endl;
 	}
 	void			listen(int backlog)
 	{
-		int any =	::listen(this->sock, backlog);
+		int any =	::listen(this->fd, backlog);
 		if (any)	throw something_wrong(strerror(errno));
 		cout << "listen OK" << endl;
 	}
 	ConnSocket	accept() const
 	{
 		ConnSocket c;
-		c.sock = ::accept(this->sock, (struct sockaddr *)&c.info, &c.len);
-		if (c.sock == -1)
+		c.fd = ::accept(this->fd, (struct sockaddr *)&c.info, &c.len);
+		if (c.fd == -1)
 		{
 			if (errno != EWOULDBLOCK && errno != EAGAIN)	exit(-1);
 			else											throw something_wrong(strerror(errno));
 		}
-		// cout << "accept OK :" << c.sock << endl;
+		// cout << "accept OK :" << c.fd << endl;
 		return c;
 	}
 private:

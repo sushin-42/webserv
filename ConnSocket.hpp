@@ -82,7 +82,7 @@ public:
 		string		content = "";
 		ssize_t		byte	= 0;
 		bzero(recvbuf, sizeof(recvbuf));
-		while ((byte = read(this->sock, this->recvbuf, sizeof(recvbuf))) > 0)
+		while ((byte = read(this->fd, this->recvbuf, sizeof(recvbuf))) > 0)
 		{
  			content.append(recvbuf, byte);	// '+=' is bad for processing binary data
 
@@ -137,7 +137,7 @@ public:
 		}
 		else if (byte == 0)	// closed by CLIENT
 		{
-			TAG(ConnSocket, recvRequest); cout << GRAY("CLIENT EXIT ") << this->sock << endl;
+			TAG(ConnSocket, recvRequest); cout << GRAY("CLIENT EXIT ") << this->fd << endl;
 			return make_pair(ReqH, ReqB);
 		}
 		return make_pair(ReqH, ReqB);
@@ -146,18 +146,18 @@ public:
 	void	send(const string& content, map<int, undone>& buf)
 	{
 
-		try						{ buf.at(this->sock); }
-		catch (exception& e)	{ buf[this->sock] = (struct undone){"",0};
-								  buf[this->sock].content.append(content.data(), content.length());	}
+		try						{ buf.at(this->fd); }
+		catch (exception& e)	{ buf[this->fd] = (struct undone){"",0};
+								  buf[this->fd].content.append(content.data(), content.length());	}
 
-		string&		rContent	= buf[this->sock].content;
-		ssize_t&	rWrited		= buf[this->sock].totalWrited;
+		string&		rContent	= buf[this->fd].content;
+		ssize_t&	rWrited		= buf[this->fd].totalWrited;
 		ssize_t		rContentLen	= rContent.length();
 		ssize_t		byte		= 0;
 
 		while ( true )
 		{
-			byte = write( this->sock,
+			byte = write( this->fd,
 						  rContent.data() + rWrited,
 						  rContentLen - rWrited );
 
@@ -175,7 +175,7 @@ public:
 				if (rWrited == rContentLen)	//! means all data sended. cannot reach here?
 					TAG(ConnSocket, send) << _NOTE(No data to write) << endl;
 				else						//' not all data sended. have to be buffered.
-					TAG(ConnSocket, send) << _NOTE(Not all data sended to) << this->sock << ": " << rWrited << " / " << rContentLen  << " bytes" << endl;
+					TAG(ConnSocket, send) << _NOTE(Not all data sended to) << this->fd << ": " << rWrited << " / " << rContentLen  << " bytes" << endl;
 				throw exception();
 			}
 			else
@@ -183,8 +183,8 @@ public:
 		}
 		else if (rWrited == rContentLen)
 		{
-			TAG(ConnSocket, send) << _GOOD(all data sended to) << this->sock << ": " << rWrited << " / " << rContentLen << " bytes" << endl;
-			buf.erase(this->sock);
+			TAG(ConnSocket, send) << _GOOD(all data sended to) << this->fd << ": " << rWrited << " / " << rContentLen << " bytes" << endl;
+			buf.erase(this->fd);
 		}
 		else
 			TAG(ConnSocket, send) << GRAY("WHY YOU HERE?") << endl;

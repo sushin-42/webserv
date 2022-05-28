@@ -28,7 +28,7 @@ private:
 	typedef _Vs::const_iterator		const_iterator_s;
 
 	vector<Poll>		pollVec;
-	vector<ISocket*>	sockVec;
+	vector<ISocket*>	streamVec;
 
 public:
 
@@ -36,8 +36,8 @@ public:
 	typedef iterator_pair<const_iterator_p,const_iterator_s>	const_iterator;
 
 
-	PollSet(): pollVec(), sockVec() {}
-	PollSet( const PollSet& src ): pollVec(src.pollVec), sockVec(src.sockVec) {}
+	PollSet(): pollVec(), streamVec() {}
+	PollSet( const PollSet& src ): pollVec(src.pollVec), streamVec(src.streamVec) {}
 	~PollSet() {}
 
 	PollSet&	operator=( const PollSet& src )
@@ -45,15 +45,15 @@ public:
 		if (this != &src)
 		{
 			pollVec.assign(src.begin().first, src.end().first);
-			sockVec.assign(src.begin().second, src.end().second);
+			streamVec.assign(src.begin().second, src.end().second);
 		}
 		return *this;
 	}
 
-	iterator		begin()			{ return make_iterator_pair(pollVec.begin(), sockVec.begin()); }
-	iterator		end()			{ return make_iterator_pair(pollVec.end(), sockVec.end()); }
-	const_iterator	begin() const	{ return make_iterator_pair(pollVec.begin(), sockVec.begin()); }
-	const_iterator	end() const		{ return make_iterator_pair(pollVec.end(), sockVec.end()); }
+	iterator		begin()			{ return make_iterator_pair(pollVec.begin(), streamVec.begin()); }
+	iterator		end()			{ return make_iterator_pair(pollVec.end(), streamVec.end()); }
+	const_iterator	begin() const	{ return make_iterator_pair(pollVec.begin(), streamVec.begin()); }
+	const_iterator	end() const		{ return make_iterator_pair(pollVec.end(), streamVec.end()); }
 
 	void	enroll( ISocket* sock )
 	{
@@ -63,7 +63,7 @@ public:
 		p.revents	= 0;
 
 		pollVec.push_back(p);
-		sockVec.push_back(sock);
+		streamVec.push_back(sock);
 	}
 
 	void	drop( iterator it )
@@ -72,7 +72,7 @@ public:
 
 		delete (*it.second);
 		pollVec.erase(it.first);
-		sockVec.erase(it.second);
+		streamVec.erase(it.second);
 
 
 	}
