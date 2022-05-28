@@ -9,6 +9,8 @@
 
 # include "ConnSocket.hpp"
 # include "ISocket.hpp"
+#include "IStream.hpp"
+# include "Pipe.hpp"
 # include "iterator_pair.hpp"
 # include "ResBody.hpp"
 # include "ServerSocket.hpp"
@@ -21,14 +23,14 @@ class PollSet
 {
 private:
 	typedef vector<Poll>			_Vp;
-	typedef vector<ISocket*>		_Vs;
+	typedef vector<IStream*>		_Vs;
 	typedef _Vp::iterator			iterator_p;
 	typedef _Vs::iterator			iterator_s;
 	typedef _Vp::const_iterator		const_iterator_p;
 	typedef _Vs::const_iterator		const_iterator_s;
 
 	vector<Poll>		pollVec;
-	vector<ISocket*>	streamVec;
+	vector<IStream*>	streamVec;
 
 public:
 
@@ -55,15 +57,15 @@ public:
 	const_iterator	begin() const	{ return make_iterator_pair(pollVec.begin(), streamVec.begin()); }
 	const_iterator	end() const		{ return make_iterator_pair(pollVec.end(), streamVec.end()); }
 
-	void	enroll( ISocket* sock )
+	void	enroll( IStream* stream )
 	{
 		Poll		p;
-		p.fd		= sock->getFD();
+		p.fd		= stream->getFD();
 		p.events	= POLLIN;
 		p.revents	= 0;
 
 		pollVec.push_back(p);
-		streamVec.push_back(sock);
+		streamVec.push_back(stream);
 	}
 
 	void	drop( iterator it )
@@ -77,7 +79,7 @@ public:
 
 	}
 
-	iterator	examine( const ServerSocket& serv)
+	iterator	examine()
 	{
 		int	numReady = 0;
 
@@ -93,7 +95,7 @@ public:
 		for (iterator it = this->begin(); it<this->end(); it++)
 		{
 			if		(it.first->revents == 0)			continue;
-			else if (it.first->revents & POLLIN)		return readRoutine(it, serv);
+			else if (it.first->revents & POLLIN)		return readRoutine(it);
 			else if (it.first->revents & POLLOUT)		return writeRoutine(it);
 		}
 		throw exception();
@@ -115,17 +117,19 @@ private:
 		cout << endl;
 	}
 
-	iterator	readRoutine(iterator it, const ServerSocket& serv)
+	iterator	readRoutine(iterator it)
 	{
-		ConnSocket* connected = NULL;
+		ServerSocket*	serv		= dynamic_cast<ServerSocket*>(*(it.second));
+		ConnSocket*		connected	= dynamic_cast<ConnSocket*>(*(it.second));
+		Pipe*			P			= dynamic_cast<Pipe*>(*(it.second));
 
-		if (it == this->begin())
+		if (serv)
 		{
 			while(1)	// accept() will throw exception if not readied
 			{
 				try
 				{
-					connected = new ConnSocket(serv.accept());
+					connected = new ConnSocket(serv->accept());
 					this->enroll(connected);
 					TAG(PollSet, examine); cout << GREEN("Got new connection, enroll ") << connected->getFD() << endl;
 				}
@@ -135,9 +139,15 @@ private:
 				return (this->begin());
 			}
 		}
-		else
+		else if (connected)
 		{
 			TAG(PollSet, examine); cout << GREEN("New data to read on ")  << it.first->fd << endl;
+			return it;
+		}
+		else
+		{
+			(void)P;
+			cout << "It is a pipe." << endl;
 			return it;
 		}
 	}

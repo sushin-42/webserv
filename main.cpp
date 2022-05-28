@@ -43,9 +43,9 @@ int main()
 	while (1)
 	{
 //'----------------------catch and parse request header----------------------'//
-		try							{ it = set.examine(serv); }
-		catch	(exception& e)		{ continue; }
-		if		(it == set.begin())	{ continue; }	// begin == servSocket
+		try								{ it = set.examine(); }
+		catch	(exception& e)			{ continue; }
+		if		((*it.second) == &serv)	{ continue; }	// servSocket
 
 		connected = dynamic_cast<ConnSocket*>(*it.second);
 
