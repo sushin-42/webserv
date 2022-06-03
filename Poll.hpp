@@ -19,7 +19,17 @@
 
 
 
-typedef struct pollfd Poll;
+class Poll : public pollfd
+{
+public:
+	bool operator==(const Poll& p)
+	{
+		return (
+			this->fd == p.fd
+		);
+	}
+};
+
 class PollSet
 {
 private:
@@ -80,11 +90,38 @@ public:
 
 	void	drop( iterator it )
 	{
-		TAG(PollSet, drop); cout << GRAY("Drop ") << it.first->fd << endl;
+		ConnSocket* connSock = dynamic_cast<ConnSocket*>(*(it.second));
+		Pipe*			link = NULL;
 
+
+		if (connSock && connSock->linkPipe)
+			link = connSock->linkPipe;
+
+		TAG(PollSet, drop); cout << GRAY("Drop ") << it.first->fd << endl;
 		delete (*it.second);
 		pollVec.erase(it.first);
 		streamVec.erase(it.second);
+
+
+		if (link)
+		{
+			Poll			p;
+			p.fd = link->getFD();
+
+			iterator_p		itPoll;
+			iterator_s		itPipe;
+
+			itPipe = find(streamVec.begin(), streamVec.end(), link);
+			itPoll = find(pollVec.begin(), pollVec.end(), p);
+
+			TAG(PollSet, drop); cout << GRAY("Destroy linked pipe ") << (*itPipe)->getFD() << endl;
+			(*itPipe)->close();	//NOTE: need to handle BROKEN PIPE?
+			delete (*itPipe);
+			pollVec.erase(itPoll);
+			streamVec.erase(itPipe);
+		}
+
+
 	}
 
 	iterator	examine()

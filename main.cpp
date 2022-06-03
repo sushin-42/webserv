@@ -2,6 +2,7 @@
 #include <iostream>
 #include <signal.h>
 #include <poll.h>
+#include <sys/poll.h>
 
 #include "CGI.hpp"
 #include "Config.hpp"
@@ -14,7 +15,6 @@
 #include "ResHeader.hpp"
 #include "ServerSocket.hpp"
 #include "core.hpp"
-
 
 
 int main()
@@ -66,7 +66,7 @@ corew:
 		core_wrapper(pollset, &serv, connected, CGIpipe);	//@ make response header, body//
 		if (connected->pending)
 			continue;
-		else if (CGIpipe) pollset.drop(it);	// pended CGI output ends.
+		// else if (CGIpipe) pollset.drop(it);	// pended CGI output ends.
 
 //.------------------------send response header, body------------------------.//
 resend:

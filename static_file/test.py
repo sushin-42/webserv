@@ -15,7 +15,7 @@ import time
 # with body:
 #	lighttpd : test.py=302 dummy.txt=200, discard body
 #	apache : test.py=302 dummy.txt=200, discard body
-# print("Location: http://localhost:8282/es.png")
+# print("Location: http://localhost:8080/es.png")
 
 #% server redir
 
@@ -32,20 +32,26 @@ import time
 
 
 # print("Location:  /es.png")
-# print("Status:  202 Found")
-# print("Content-type: text/html")
+print("Status: 302 Found")
+
+# time.sleep(3)
+print("Content-type: text/htmlss")
 # print("Content-length: 2022")
+# time.sleep(3)
 print("Accept: text/abcd")
+# time.sleep(3)
+# print("Transfer-Encoding: chunked")
 
-
+# print("Transfer-Encoding: gzip")
+# print("Content-length: 2022")
 
 print()
-print("Hello world")
+# print("Hello world")
 
 for i in range(10):
 	time.sleep(1)
-	print(i)
-cgi.print_environ()
+	print(i, flush=True)
+# cgi.print_environ()
 
 
 

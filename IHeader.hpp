@@ -51,7 +51,17 @@ public:
 	void						removeKey(const string& key)					{ this->headerField.erase(lowerize(key)); }
 	void						insertRange(iterator from, iterator to)			{ this->headerField.insert(from, to); }
 	bool						exist(const string& key)						{ return this->headerField.find(lowerize(key)) != this->headerField.end(); }
-	void						append(const string& key, const string& value)	{ this->headerField[lowerize(key)] += (", " + value); }
+
+	void	append(const string& key, const string& value)
+	{
+		if (this->exist(key))
+		{
+			if ((*this)[key] != value)
+				(*this)[key] += (", " + value);
+		}
+		else
+			(*this)[key] = value;
+	}
 
 	void	integrate()
 	{

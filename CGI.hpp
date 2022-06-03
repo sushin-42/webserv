@@ -39,6 +39,7 @@
 #include <sys/_types/_ssize_t.h>
 #include <sys/fcntl.h>
 #include <sys/wait.h>
+#include <utility>
 # include <vector>
 
 #include "ConnSocket.hpp"
@@ -79,6 +80,7 @@ pair<status_code_t, string>	checkStatusField(const string& status)
 	}
 	return make_pair(statusCode, reasonPhrase);
 }
+
 string	toMetaVar(const string& s, string scheme)
 {
 	string				ret(scheme + "_" + s);
@@ -107,30 +109,21 @@ map<string, string>	makeCGIEnv(ServerSocket* serv, ConnSocket* connected)
 			envs["CONTENT_TYPE"] = connected->ReqH["content-type"];
 			envs["CONTENT_LENGTH"] = toString(connected->ReqB.getContent().length());
 		}
-		// if body exist, MUST, else NULL (after the server has removed any transfer-codings or content-codings.)
-		// The server MUST set this meta-variable if an HTTP Content-Type field is present in the client request header.
-		// If the server receives a request with an attached entity but no Content-Type header field,
-		// it MAY attempt to determine the correct content type, otherwise it should omit this meta-variable.
 
 		envs["GATEWAY_INTERFACE"] = "CGI/1.1",
-		// "PATH_INFO" =,
-		// "PATH_TRANSLATED" = ,
-		// "QUERY_STRING" = "" | query,
-
+		// envs["PATH_INFO"]	=,
+		// envs["PATH_TRANSLATED"] = ,
+		// envs["QUERY_STRING"]	= "" | query,
 		envs["SERVER_PROTOCOL"] = connected->ReqH.getHTTPversion();
 		envs["SERVER_SOFTWARE"] = "webserv";
 		envs["SERVER_NAME"] = serv->getIP();
 		envs["SERVER_PORT"] = serv->getPort();
 		envs["REMOTE_ADDR"] = envs["REMOTE_HOST"] = connected->getIP();	// if host name exists, host == name
-
-
 		// envs["AUTH_TYPE"] = auth-scheme ( Basic, Digest )
 		// envs["REMOTE_USER"] = "",	// if AUTH_TYPE (Authorization )
 		// envs["REMOTE_IDENT"] = ""	// if supports Ident protocol
-
-		// envs["SCRIPT_NAME"] = ""
+		// envs["SCRIPT_NAME"] = "" | ( "/" path )
 		// The SCRIPT_NAME variable MUST be set to a URI path (not URL-encoded) which could identify the CGI script,
-		//  SCRIPT_NAME = "" | ( "/" path )
    		// The leading "/" is not part of the path.
 		// It is optional if the path is NULL; however, the variable MUST still be set in that case.
 
@@ -154,50 +147,46 @@ map<string, string>	makeCGIEnv(ServerSocket* serv, ConnSocket* connected)
 };
 
 
-pid_t	forkCGI(
-				ServerSocket* serv, ConnSocket* connected,
-				vector<char *>& argv, vector<char *>& envp
+int childRoutine(
+				int PtoC[2],
+				int CtoP[2],
+				ServerSocket* serv,
+				ConnSocket* connected
 			)
 {
-	string							path = connected->ReqH.getRequsetTarget();
+	vector<char*> argv, envp;
+
+	string				path = root + connected->ReqH.getRequsetTarget();
+	argv.push_back(const_cast<char*>(path.c_str()));
+	argv.push_back(NULL);
+
 	map<string,string>				envm = makeCGIEnv(serv, connected);
 	map<string,string>::iterator	it	= envm.begin();
 	map<string,string>::iterator	ite	= envm.end();
-
-	vector<string> envps;
-	vector<string>::iterator vit;
-	vector<string>::iterator vite;
+	vector<string>					envps;
 	for (; it != ite; it++)
 		envps.push_back(it->first+ "=" + it->second);
 
 	envp.reserve(envps.size() + 1);
-	vit=envps.begin(), vite=envps.end();
+	vector<string>::iterator		vit = envps.begin();
+	vector<string>::iterator		vite = envps.end();
 	for (; vit != vite; vit++)
 		envp.push_back(const_cast<char*> (vit->c_str()));
 	envp.push_back(NULL);
 
-	argv.push_back(const_cast<char*>(path.data()));
-	argv.push_back(NULL);
+//#-----------------------------argv, envp done-----------------------------#//
 
-	return fork();
-}
-
-int childRoutine(
-				int PtoC[2],
-				int CtoP[2],
-				const string& path,
-				vector<char*> argv,
-				vector<char*> envp
-			)
-{
 	dup2(CtoP[1], STDOUT_FILENO), close(CtoP[0]), close(CtoP[1]);
 	dup2(PtoC[0], STDIN_FILENO), close(PtoC[1]), close(PtoC[1]);
-	sleep(1);
+	// sleep(1);
+
 	if (execve(
-				(root+path).c_str(),
+				(path).c_str(),
 				(char * const*)(argv.data()),
 				(char * const*)(envp.data())
-			) == -1)	cerr << "exec error: " << strerror(errno) << errno <<endl;
+			) == -1) {
+				cerr << "exec error: " << strerror(errno) << errno <<endl;
+			}
 	return -1;
 }
 
@@ -213,35 +202,35 @@ void parentRoutine(
 		string	ReqB = connected->ReqB.getContent();
 		Pipe*	p = new Pipe(CtoP[0], pid);
 		p->linkConn = connected;
+		connected->linkPipe = p;
 
 		close(PtoC[0]), close(CtoP[1]);
 		write(PtoC[1], ReqB.c_str(), ReqB.length());
 		close(PtoC[1]);
 
 		pollset.enroll(p);
-		// waitpid(p->pid, &p->status, WNOHANG);
 }
 
 void	newProc(PollSet& pollset, ServerSocket* serv, ConnSocket* connected)
 {
 	int				PtoC[2], CtoP[2];
 	pid_t			pid;
-	vector<char*>	argv;
-	vector<char*>	envp;
 
 	pipe(PtoC), pipe(CtoP);
 	fcntl(CtoP[0], F_SETFL, fcntl(CtoP[0], F_GETFL, 0) | O_NONBLOCK);
 
-	pid = forkCGI(serv, connected, argv, envp);
-	if (pid == 0)	childRoutine(PtoC, CtoP, connected->ReqH.getRequsetTarget(), argv, envp);	//TODO: check return value -1
+	pid = fork();
+	if (pid == 0)	childRoutine(PtoC, CtoP, serv, connected);	//TODO: check return value -1
 	else			parentRoutine(pollset, connected, pid, PtoC, CtoP);			// produce non-blocking pipe and poll.enroll(pipe)
+
+	connected->pending = false;	//@ default == NO pending
 }
 
-
-void	processOutput(PollSet& pollset, ServerSocket* serv, ConnSocket* connected, Pipe* CGIpipe)
+void	moveToResH(const string& output, ConnSocket* connected)
 {
-	map<string,string>				tmp(KVtoMap(CGIpipe->output, ':'));
+	map<string,string>				tmp(KVtoMap(output, ':'));
 	map<string,string>::iterator	it, ite;
+
 	it = tmp.begin(), ite = tmp.end();
 	for (; it != ite; it++)
 	{
@@ -250,24 +239,42 @@ void	processOutput(PollSet& pollset, ServerSocket* serv, ConnSocket* connected, 
 			it->first == lowerize("Location")||
 			it->first == lowerize("Content-Length")||
 			it->first == lowerize("Content-Range")||
-			it->first == lowerize("Transfer-Encoding")||
+			// it->first == lowerize("Transfer-Encoding")||
 			it->first == lowerize("ETag")||
 			connected->ResH.exist(it->first) == false	)
 
 				connected->ResH[it->first] = it->second;
-
 		else
 				connected->ResH.append(it->first, it->second);
 	}
+}
 
-	connected->ResB.setContent(extractBody(CGIpipe->output));
-	if (connected->ResH.exist("location"))
+void	processOutputHeader(PollSet& pollset, ServerSocket* serv, ConnSocket* connected, Pipe* CGIpipe)
+{
+	pair<status_code_t, string>		Status;
+
+	moveToResH(CGIpipe->output, connected);
+
+	if (connected->ResH.exist("Location"))
 	{
-		if (connected->ResH["location"][0] == '/')	localRedir(pollset, serv, connected);
+		if (connected->ResH["Location"][0] == '/')	localRedir(pollset, serv, connected);
 		else										clientRedir(connected);
 	}
 	else											documentResponse(connected);
+
+
+	if (!connected->ResH.exist("Content-Length") &&
+			(!connected->ResH.exist("Transfer-Encoding") ||
+			lowerize(connected->ResH["Transfer-encoding"]) != "chunked"
+		)
+	)
+	{
+		connected->ResH.append("Transfer-encoding",  "chunked");	//@ Server chunk. NOT same with script chunk
+		connected->chunk = true;
+	}
+
 }
+
 
 void	CGIRoutines(
 					PollSet& pollset,
@@ -277,38 +284,57 @@ void	CGIRoutines(
 				)
 {
 	ssize_t	byte = 0;
-	connected->pending = true;
 	if (!CGIpipe)
 		newProc(pollset, serv, connected);
+
 	else
 	{
 		byte = CGIpipe->read();
 
-		if		(byte == -1)	// output appended, go back main loop,
+		if		(byte == -1)	// output appended
 		{
+
+			/* wait full header */
+			if (CGIpipe->headerDone == false &&
+					(CGIpipe->output.rfind("\r\n\r\n") != string::npos ||
+					CGIpipe->output.rfind("\n\n") != string::npos))
+			{
+				processOutputHeader(pollset, serv, connected, CGIpipe);
+				CGIpipe->headerDone = true;							// appended to conn->ResH
+				CGIpipe->output = extractBody(CGIpipe->output);		// store remained after header
+			}
+			if (connected->pending == false)
+			{
+				connected->ResB.setContent(
+											connected->chunk ?
+												makeChunk(CGIpipe->output) :
+												CGIpipe->output
+										);
+				CGIpipe->output.clear();
+			}
 			return;
 		}
 
 		else if (byte == 0)		// close pipe, process output
 		{
-			TAG(CGI#, CGIroutines()); cout << GRAY("Pipe closed: ") << CGIpipe->getFD() << endl;
+			TAG(CGI#, CGIroutines); cout << GRAY("Pipe closed: ") << CGIpipe->getFD() << endl;
 			CGIpipe->close();
-			CGIpipe->setFD(-1);
-			processOutput(pollset, serv, connected, CGIpipe);
+			connected->linkPipe =NULL;
+
+			if (connected->pending == false)
+			{
+				//NOTE: if read 0 byte after n byte ?
+				connected->ResB.setContent(
+											connected->chunk ?
+												makeChunk(CGIpipe->output) :
+												CGIpipe->output
+										);
+			}
+			connected->pending = false;
+			//waitpid(CGIpipe->pid, &CGIpipe->status, WNOHANG);
 		}
 
 	}
-
-	//1.client-redir	: if no Status -> set 302, Found	//@
-	//					  if Content-length not in script, set in clientRedir() //@
-	//            		  if CL in script and not matched with body, timeout occur (see LIGHTTPD / what if APACHE?) //!
-
-	//2.document		: Content-length set by script, if exists. //@
-	//		   			  else, APACHE: chunk-encoding
-	// 							LIGHTTPD: get length of CGI body //@
-	// 					  if CL in script not matched with body, timeout occur (see LIGHTTPD / what if APACHE?) //!
-
-	//3.local-redir		: if (Status := 200 | "" ) Content-Length, Type are newly set by local-redir-page. Location removed.
 }
 
 
@@ -329,20 +355,24 @@ void	CGIRoutines(
 //*  scheme "://" server-name ":" server-port local-pathquery                *//
 //*--------------------------------------------------------------------------*//
 
-
-//3.local-redir		: if (Status := 200 | None ) Content-Length, Type are newly set by local-redir-page. Location removed.
-//					  else:	 no redirection. if no redir, No header modification.
 void	localRedir(PollSet& pollset, ServerSocket* serv, ConnSocket* connected)
 {
-	if (connected->ResH.exist("Status") &&
-		checkStatusField(connected->ResH["Status"]).first != 200)
-		return ;
+	if (connected->ResH.exist("Status") == false ||
+			(connected->ResH.exist("Status") == true &&
+			checkStatusField(connected->ResH["Status"]).first == 200
+		)
+	)
+	{
+		//@ regard as request to Location, but some header-fields from CGI remain @//
+		//@ Content-Length, Content-Type, Transfer-Encoding will be replaced @//
+		connected->pending = true;
+		connected->ReqH.setRequsetTarget(connected->ResH["location"]);
+		connected->ResH.removeKey("location");
+		connected->ResH.removeKey("transfer-encoding");
+		// connected->ResH.print();
+		core(pollset, serv, connected);
+	}
 
-	//@ regard as request to Location, but some header-fields from CGI remain @//
-	connected->ReqH.setRequsetTarget(connected->ResH["location"]);
-	connected->ResH.removeKey("location");
-
-	core(pollset, serv, connected);
 }
 
 
@@ -376,8 +406,14 @@ void	localRedir(PollSet& pollset, ServerSocket* serv, ConnSocket* connected)
 
 void	clientRedir(ConnSocket* connected)		//check 303
 {
-	if (!connected->ResH.exist("Status"))
+	if (connected->ResH.exist("Status") == false ||
+			(connected->ResH.exist("Status") == true &&
+			checkStatusField(connected->ResH["Status"]).first == 200
+		)
+	)
+
 	{
+		connected->pending = true;
 		connected->ResH["Status"] = "302 Found";
 		connected->ResB.setContent(
 						errorpage(
@@ -387,11 +423,10 @@ void	clientRedir(ConnSocket* connected)		//check 303
 							)
 						);
 		connected->ResH["Content-type"] = "text/html; charset=iso-8859-1";
-	}
-	if (!connected->ResH.exist("Content-Length"))
 		connected->ResH["Content-Length"] = toString(connected->ResB.getContent().length());
+		connected->ResH.removeKey("Transfer-Encoding");
 
-	// set timeout for case that not matched CL
+	}
 
 	// if (ResH.getStatusCode() != 206 || ResH.getStatusCode() != 416)
 		// erase Content-Range
@@ -413,13 +448,5 @@ void	documentResponse(ConnSocket* connected)
 {
 	if (!connected->ResH.exist("Status"))
 		connected->ResH["Status"] = "200 OK";
-	if (!connected->ResH.exist("Content-length"))
-		connected->ResH["Content-Length"] = toString(connected->ResB.getContent().length());
-
-	/*TODO*/
-	//	content-length would not be removed.
-	//	if given content-length by script is not accurate, browser wait infinitely.
-	//	need to handle.
-
 }
 #endif

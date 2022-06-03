@@ -6,6 +6,8 @@
 #include <string>
 #include <sys/_types/_ssize_t.h>
 #include <sys/errno.h>
+#include <sys/poll.h>
+#include <typeinfo>
 # include <utility>
 
 # include <sys/fcntl.h>
@@ -39,6 +41,8 @@ struct undone
 	ssize_t	totalWrited;
 };
 
+class Pipe;
+
 class ConnSocket : public ISocket
 {
 friend class ServerSocket;
@@ -54,9 +58,11 @@ public:
 	ResHeader	ResH;
 	ResBody		ResB;
 	bool		pending;
+	bool		chunk;	/* to distinguish script output chunk with server chunk */
+	Pipe*		linkPipe;
 
 public:
-	ConnSocket() : ISocket(), len(sizeof(info)), ReqH(), ReqB(), ResH(), ResB(), pending(false) {}
+	ConnSocket() : ISocket(), len(sizeof(info)), ReqH(), ReqB(), ResH(), ResB(), pending(false), chunk(false), linkPipe(NULL)  {}
 	~ConnSocket() {}
 
 	ConnSocket&	operator=( const ConnSocket& src )
@@ -69,6 +75,8 @@ public:
 			this->ResH		= src.ResH;
 			this->ResB		= src.ResB;
 			this->pending	= src.pending;
+			this->chunk		= src.chunk;
+			this->linkPipe	= src.linkPipe;
 			//NOTE: no buf copy
 		}
 		return *this;
@@ -156,6 +164,7 @@ public:
 
 	void	send(const string& content, map<int, undone>& buf)
 	{
+		cout << "'" << content << "'"<< endl;
 		try						{ buf.at(this->fd); }
 		catch (exception& e)	{ buf[this->fd] = (struct undone){"",0};
 								  buf[this->fd].content.append(content.data(), content.length());	}

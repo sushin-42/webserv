@@ -39,16 +39,15 @@ void	core_wrapper(PollSet& pollset, ServerSocket *serv, ConnSocket *connected, P
 	else
 	{
 		CGIRoutines(pollset, serv, connected, CGIpipe);
-		if (CGIpipe->isProcessing())
+		if (connected->pending)
 			return;
-		if (!connected->ResB.getContent().empty() &&
-			!connected->ResH.exist("Content-Length"))
-			connected->ResH["Content-Length"]	= toString(connected->ResB.getContent().length());
-		connected->pending = false;
 	}
-	writeResponseHeader(connected);
-	connected->ResH.makeStatusLine();
-	connected->ResH.integrate();
+	if (!connected->ResH.getHeaderField().empty())
+	{
+		writeResponseHeader(connected);
+		connected->ResH.makeStatusLine();
+		connected->ResH.integrate();
+	}
 }
 
 

@@ -96,6 +96,7 @@ string lowerize(const string& s)
 		if (isupper(*it))
 			*it = tolower(*it);
 	return ret;
+
 }
 
 map<string, string>	KVtoMap(const string& content, char delim)
@@ -230,4 +231,19 @@ string	errorpage(const string& title, const string& header, const string& messag
 	return ret;
 	//The document has moved <a href=\"http://localhost:8080/es.png\">here</a>.
 }
+
+template <class T>
+string	toHex(T num)
+{
+	stringstream sstream;
+	sstream << std::hex << num;
+	return sstream.str();
+
+}
+
+string	makeChunk(const string& s)
+{
+	return (toHex(s.length()) + "\n" + s + "\n");
+}
 #endif
+
