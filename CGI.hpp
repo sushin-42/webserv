@@ -269,8 +269,16 @@ void	processOutputHeader(PollSet& pollset, ServerSocket* serv, ConnSocket* conne
 		)
 	)
 	{
-		connected->ResH.append("Transfer-encoding",  "chunked");	//@ Server chunk. NOT same with script chunk
+		connected->ResH.append("Transfer-encoding",  "chunked");
 		connected->chunk = true;
+		/**========================================================================
+		 *'  			Server chunk. NOT same with script chunk
+		 *	we encode(chunk) if and only if we set "Transfer-Encoding: chunked".
+		 *	we DO NOT encode even if "Transfer-Encoding: chunked" exists in script output.
+		 *	if we get output with it, body of the output will be send raw.
+		 *	if script wants to be chunked, it MUST be chunked format by itself.
+		 *
+		 *========================================================================**/
 	}
 
 }

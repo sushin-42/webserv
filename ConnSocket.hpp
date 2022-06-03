@@ -164,7 +164,6 @@ public:
 
 	void	send(const string& content, map<int, undone>& buf)
 	{
-		cout << "'" << content << "'"<< endl;
 		try						{ buf.at(this->fd); }
 		catch (exception& e)	{ buf[this->fd] = (struct undone){"",0};
 								  buf[this->fd].content.append(content.data(), content.length());	}
