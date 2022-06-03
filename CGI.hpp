@@ -327,7 +327,7 @@ void	CGIRoutines(
 		{
 			TAG(CGI#, CGIroutines); cout << GRAY("Pipe closed: ") << CGIpipe->getFD() << endl;
 			CGIpipe->close();
-			connected->linkPipe =NULL;
+			// connected->linkPipe =NULL;	// if NULL, cannot detect iterator of pipe when drop connSocket
 
 			if (connected->pending == false)
 			{
