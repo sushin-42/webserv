@@ -19,7 +19,7 @@
 #include "ResBody.hpp"
 # include "color.hpp"
 
-# include "utils.hpp"
+# include "Pipe.hpp"
 # include "ResHeader.hpp"
 
 # define GET	1
@@ -40,8 +40,6 @@ struct undone
 	string	content;
 	ssize_t	totalWrited;
 };
-
-class Pipe;
 
 class ConnSocket : public ISocket
 {

@@ -1,8 +1,10 @@
 #ifndef PIPE_HPP
 # define PIPE_HPP
-# include "ConnSocket.hpp"
+# include "utils.hpp"
 # include "IStream.hpp"
-#include <sys/_types/_pid_t.h>
+# include <sys/_types/_pid_t.h>
+
+class ConnSocket;
 
 class Pipe : public IStream
 {
