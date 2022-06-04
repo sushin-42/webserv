@@ -15,6 +15,7 @@
 #include "ResHeader.hpp"
 #include "ServerSocket.hpp"
 #include "core.hpp"
+#include "utils.hpp"
 
 
 int main()
@@ -40,7 +41,8 @@ int main()
 	while (1)
 	{
 //'----------------------catch and parse request header----------------------'//
-		try									{ it = pollset.examine(); }
+		try									{ whoDied();
+											  it = pollset.examine(); }
 		catch	(exception& e)				{ continue; }
 		if		((*it.second) == &serv)		{ continue; }	// servSocket
 

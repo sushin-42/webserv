@@ -7,6 +7,7 @@
 #include <sys/_types/_ssize_t.h>
 #include <sys/errno.h>
 #include <sys/poll.h>
+#include <sys/wait.h>
 #include <typeinfo>
 # include <utility>
 
@@ -170,6 +171,7 @@ public:
 		ssize_t&	rWrited		= buf[this->fd].totalWrited;
 		ssize_t		rContentLen	= rContent.length();
 		ssize_t		byte		= 0;
+		pid_t		pid			= 0;
 
 		while ( true )
 		{
@@ -201,6 +203,17 @@ public:
 		{
 			TAG(ConnSocket, send) << _GOOD(all data sended to) << this->fd << ": " << rWrited << " / " << rContentLen << " bytes" << endl;
 			buf.erase(this->fd);
+			if (linkPipe)
+			{
+				pid = waitpid(linkPipe->pid, &linkPipe->status, WNOHANG);
+				if (!(pid == linkPipe->pid || pid == -1))
+					return ;
+				else
+					TAG(ConnSocket, send) << _GOOD(waitpid on ) << linkPipe->pid << CYAN(" returns ") << _UL << pid << _NC << endl;
+
+			}
+			TAG(ConnSocket, send) << _GOOD(server send FIN: ) << _UL << this->fd << _NC << endl;
+			shutdown(this->fd, SHUT_WR);
 		}
 		else
 			TAG(ConnSocket, send) << GRAY("WHY YOU HERE?") << endl;

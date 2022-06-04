@@ -245,5 +245,14 @@ string	makeChunk(const string& s)
 {
 	return (toHex(s.length()) + "\n" + s + "\n");
 }
+
+
+/* we will check periodically all process forked. */
+pair<pid_t, int> whoDied()
+{
+	int	status = 0;
+
+	return make_pair(waitpid(-1, &status, WNOHANG), status);
+}
 #endif
 

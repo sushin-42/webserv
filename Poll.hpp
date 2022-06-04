@@ -1,5 +1,6 @@
 #ifndef POLL_HPP
 # define POLL_HPP
+#include <csignal>
 #include <exception>
 # include <poll.h>
 # include <sys/_types/_size_t.h>
@@ -103,7 +104,8 @@ public:
 		streamVec.erase(it.second);
 
 
-		if (link)
+		if (link)	/* if disconnected by client and if it was CGI, child process and Pipe still alive.
+					   we will drop iterator of Pipe and kill child process here.	*/
 		{
 			Poll			p;
 			p.fd = link->getFD();
@@ -115,7 +117,9 @@ public:
 			itPoll = find(pollVec.begin(), pollVec.end(), p);
 
 			TAG(PollSet, drop); cout << GRAY("Destroy linked pipe ") << (*itPipe)->getFD() << endl;
-			(*itPipe)->close();	//NOTE: need to handle BROKEN PIPE?
+			kill(link->pid, SIGKILL);
+			//NOTE: cannot waitpid() here due to delay. we will check every child process later, because we don't want looping or blocking operation.
+			(*itPipe)->close();
 			delete (*itPipe);
 			pollVec.erase(itPoll);
 			streamVec.erase(itPipe);
@@ -127,7 +131,6 @@ public:
 	iterator	examine()
 	{
 		int	numReady = 0;
-
 		// TAG(PollSet, examine); this->print();
 
 		switch (numReady = ::poll(pollVec.data(), pollVec.size(), -1/*time-out*/))
