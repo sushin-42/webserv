@@ -79,9 +79,9 @@ public:
 		pollVec.push_back(p);
 		streamVec.push_back(stream);
 
-		ServerSocket*	serv		= dynamic_cast<ServerSocket*>((stream));
-		ConnSocket*		connected	= dynamic_cast<ConnSocket*>((stream));
-		Pipe*			P			= dynamic_cast<Pipe*>((stream));
+		ServerSocket*	serv		= CONVERT(stream, ServerSocket);
+		ConnSocket*		connected	= CONVERT(stream, ConnSocket);
+		Pipe*			P			= CONVERT(stream, Pipe);
 
 		TAG(PollSet, enroll); cout << GRAY("Enroll ") << stream->getFD()
 		<< (serv		? CYAN( " (ServerSocket)") :
@@ -91,7 +91,7 @@ public:
 
 	void	drop( iterator it )
 	{
-		ConnSocket* connSock = dynamic_cast<ConnSocket*>(*(it.second));
+		ConnSocket* connSock = CONVERT(*(it.second), ConnSocket);
 		Pipe*			link = NULL;
 
 
@@ -167,9 +167,9 @@ private:
 
 	iterator	readRoutine(iterator it)
 	{
-		ServerSocket*	serv		= dynamic_cast<ServerSocket*>(*(it.second));
-		ConnSocket*		connected	= dynamic_cast<ConnSocket*>(*(it.second));
-		Pipe*			CGIpipe		= dynamic_cast<Pipe*>(*(it.second));
+		ServerSocket*	serv		= CONVERT(*(it.second),ServerSocket);
+		ConnSocket*		connected	= CONVERT(*(it.second),ConnSocket);
+		Pipe*			CGIpipe		= CONVERT(*(it.second),Pipe);
 
 		if (serv)
 		{
