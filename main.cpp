@@ -39,6 +39,7 @@ int main()
 	catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
 
 	pollset.enroll(&serv);
+	pollset.startTimer();
 	while (1)
 	{
 //'----------------------catch and parse request header----------------------'//

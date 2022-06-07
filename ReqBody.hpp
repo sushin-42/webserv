@@ -38,22 +38,18 @@ public:
 		while ( true )
 		{
 			end = content.find("\r\n", start);
+			if (end == string::npos) throw exception();
 			line = content.substr(start, end - start);
 			if (line == "0") break;
-
 			lineLength = strtol(line.c_str(), NULL, 16);
 			if (lineLength == 0L) throw exception();
-
 			totalLength += lineLength;
 			start = start + (end - start) + 2;
-
-			end = content.find("\r\n", start);
-			line = content.substr(start, end - start);
-
-			if ((long)line.length() != lineLength) throw exception();
-
+			line = content.substr(start, lineLength);
+			// lenght가 더 긴 경우 std::out_of_range발생
 			decoded.append(line);
 			start = start + lineLength + 2;
+
 		}
 		if ((long)decoded.length() != totalLength) throw exception();
 		this->content = decoded;
