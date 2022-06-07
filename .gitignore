@@ -1,0 +1,4 @@
+client.cpp
+*.out
+*.o
+./webserv
