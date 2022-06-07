@@ -25,6 +25,7 @@ public:
 	bool			empty() const					{ return this->content.empty(); }
 	void			setContent(const string& c)		{ this->content = c; }
 	string			getContent() const				{ return this->content; }	// return copied string, not source.
+	void			append(const string& s)			{ this->content.append(s); }
 	virtual void	clear() = 0;
 };
 #endif

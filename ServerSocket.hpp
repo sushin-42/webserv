@@ -19,13 +19,13 @@ public:
 	void			bind()
 	{
 		int any =	::bind(this->fd, (struct sockaddr *)&this->info, sizeof(this->info));
-		if (any)	throw something_wrong(strerror(errno));
+		if (any)	throw somethingWrong(strerror(errno));
 		cout << "bind OK" << endl;
 	}
 	void			listen(int backlog)
 	{
 		int any =	::listen(this->fd, backlog);
-		if (any)	throw something_wrong(strerror(errno));
+		if (any)	throw somethingWrong(strerror(errno));
 		cout << "listen OK" << endl;
 	}
 	ConnSocket	accept() const
@@ -35,8 +35,11 @@ public:
 		if (c.fd == -1)
 		{
 			if (errno != EWOULDBLOCK && errno != EAGAIN)	exit(-1);
-			else											throw something_wrong(strerror(errno));
+			else											throw somethingWrong(strerror(errno));
 		}
+
+		// struct linger l = {.l_onoff = 1, .l_linger = 15};
+		// setsockopt(this->fd, SOL_SOCKET, SO_LINGER, &l, sizeof(l));
 		// cout << "accept OK :" << c.fd << endl;
 		return c;
 	}

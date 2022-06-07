@@ -10,7 +10,7 @@
 #include <sys/_types/_ssize_t.h>
 #include <unistd.h>
 #include "color.hpp"
-
+#define  CONVERT(X, Y) dynamic_cast<Y*>(X)
 using namespace std;
 
 template <class T>
@@ -241,6 +241,15 @@ string	toHex(T num)
 
 }
 
+template <class T>
+T	toNum(const string& s)
+{
+	std::istringstream sstream(s);
+	T num;
+	sstream >> num;
+	return num;
+}
+
 string	makeChunk(const string& s)
 {
 	return (toHex(s.length()) + "\n" + s + "\n");
@@ -254,5 +263,77 @@ pair<pid_t, int> whoDied()
 
 	return make_pair(waitpid(-1, &status, WNOHANG), status);
 }
+
+
+/*
+	we don't allow obs-fold
+	VCHAR  0x21~0x7E
+*/
+
+inline bool	isVchar(int c)		{ return (0x21 <= c && c <=0x7E); }
+inline bool	isOWS(int c)		{ return (c == ' ' || c == '\t'); }
+inline bool	isFieldchar(int c)	{ return (isVchar(c) || isOWS(c)); }
+
+bool	isValidHeaderField(const string& line)
+{
+	string::size_type	pDelim	= 0;
+	string				name;
+	string				value;
+
+	if (find_if_not(line.begin(),line.end(),isFieldchar) != line.end())
+		return false;
+
+	pDelim = line.find_first_of(':');
+	if (pDelim == string::npos)
+		return false;
+
+	name  = line.substr(0,pDelim);
+	value = line.substr(pDelim+1);
+
+	if (name.find_first_not_of(" \t") != 0)
+		return false;
+
+	if (isspace(name.back()))
+		return false;
+
+	return true;
+}
+
+bool	isValidHeader(const string& content)
+{
+	string::size_type	pStart	= 0;
+	string::size_type	pEnd	= string::npos;
+	string				line;
+
+	if (content.empty())	return false;
+
+	pEnd = content.find("\r\n", pStart);	// parse start-line
+	pStart = pEnd + 2;
+
+	while ((pEnd = content.find("\r\n", pStart)) != string::npos)
+	{
+		line = content.substr(pStart, pEnd-pStart);
+		if (line.empty())	break;
+		if (!isValidHeaderField(line))	return false;
+		pStart = pEnd + 2;
+	}
+	return true;
+}
+
+bool	has2CRLF(const string& content)
+{
+	return (content.find("\r\n\r\n") != string::npos);
+}
+
+bool	isNumber(const string& s)
+{
+
+    string::const_iterator it = s.begin();
+    while (it != s.end() && isdigit(*it)) ++it;
+
+	return (!s.empty() && it == s.end());
+}
+
+
 #endif
 
