@@ -33,11 +33,11 @@ public:
 	void			setTime()			{ gettimeofday(&time, NULL); }
 	void			close()				{ ::close(fd); }
 
-	class something_wrong: public exception
+	class somethingWrong: public exception
 	{
 		private:	string msg;
-		public:		explicit something_wrong(const string& m): msg(m) {}
-					virtual ~something_wrong() throw() {};
+		public:		explicit somethingWrong(const string& m): msg(m) {}
+					virtual ~somethingWrong() throw() {};
 					virtual const char * what() const throw() { return msg.c_str(); }
 	};
 

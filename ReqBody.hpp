@@ -11,12 +11,10 @@ using namespace std;
 
 class ReqBody : public IText
 {
-private:
-	long contentLength;
 public:
 
-	ReqBody(): IText(), contentLength(0) {}
-	ReqBody( const ReqBody& src ): IText(src.content), contentLength(src.contentLength) {}
+	ReqBody(): IText() {}
+	ReqBody( const ReqBody& src ): IText(src.content){}
 	~ReqBody() {}
 
 	ReqBody&	operator=( const ReqBody& src )
@@ -24,27 +22,18 @@ public:
 		if (this != &src)
 		{
 			content = src.content;
-			contentLength = src.contentLength;
 		}
 		return *this;
 	}
 
-	void	setContentLength(long length) { this->contentLength = length; }
-	long	getContentLength() const { return this->contentLength; }
-
-	void	checkContentLength(string len)
-	{
-		long length = strtol(len.c_str(), NULL, 10);
-		if (this->contentLength != length || length == 0L) throw exception();
-	}
-
 	void	decodingChunk()
 	{
-		string decoding ="";
+		string decoded ="";
 		string line;
 		string::size_type start = 0;
 		string::size_type end;
-		long length = 0;
+		long lineLength = 0;
+		long totalLength = 0;
 
 		while ( true )
 		{
@@ -52,17 +41,18 @@ public:
 			if (end == string::npos) throw exception();
 			line = content.substr(start, end - start);
 			if (line == "0") break;
-			length = strtol(line.c_str(), NULL, 16);
-			if (length == 0L) throw exception();
-			contentLength += length;
+			lineLength = strtol(line.c_str(), NULL, 16);
+			if (lineLength == 0L) throw exception();
+			totalLength += lineLength;
 			start = start + (end - start) + 2;
-			line = content.substr(start, length);
+			line = content.substr(start, lineLength);
 			// lenght가 더 긴 경우 std::out_of_range발생
-			decoding.append(line);
-			start = start + length + 2;
+			decoded.append(line);
+			start = start + lineLength + 2;
+
 		}
-		if ((long)decoding.length() != this->contentLength) throw exception();
-		this->content = decoding;
+		if ((long)decoded.length() != totalLength) throw exception();
+		this->content = decoded;
 	}
 
 	void	clear() { content.clear(); /*IText::clear();*/ }

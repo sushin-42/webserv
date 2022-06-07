@@ -60,6 +60,8 @@ status_code_t	writeResponseBody(ConnSocket* connected, const string& filepath)
 	return status;
 }
 
+
+
 void	writeResponseHeader(ConnSocket* connected)
 {
 	connected->ResH.setHTTPversion("HTTP/1.1");
@@ -78,12 +80,6 @@ void	writeResponseHeader(ConnSocket* connected)
 		case 404:	connected->ResH.setReasonPhrase("Not Found");	break;
 		/* and so on ... */
 		}
-
 	}
-	connected->ResH["Connection"]			= "close";
-	connected->ResH["Server"]				= "Webserv 0.1";
-	// ResH["Keep-Alive"]			=
-	// ResH["Last-Modified"]		=
-	// ResH["E-Tag"]				=
-	// ResH["Transfer-Encoding"]	=
+	connected->ResH.setDefaultHeaders();
 }

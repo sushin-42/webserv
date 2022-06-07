@@ -34,7 +34,7 @@ public:
 		bzero(info.sin_zero, sizeof(info.sin_zero));
 
 		fd = socket(PF_INET, SOCK_STREAM, 0);
-		fcntl(fd, F_SETFL, O_NONBLOCK | SO_REUSEADDR);
+		fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK | SO_REUSEADDR);
 	}
 	ISocket( const ISocket& src )
 	:IStream(src), info(src.info) {}
@@ -59,11 +59,12 @@ public:
 															  else				this->info.sin_addr.s_addr = inet_addr(ip.c_str()); }
 	void			setPort( const unsigned short& port)	{ this->info.sin_port = htons(port); }
 
-	class something_wrong: public exception
+	class somethingWrong: public exception
 	{
 		private:	string msg;
-		public:		explicit something_wrong(const string& m): msg(m) {}
-					virtual ~something_wrong() throw() {};
+		public:		explicit somethingWrong(): msg() {}
+					explicit somethingWrong(const string& m): msg(m) {}
+					virtual ~somethingWrong() throw() {};
 					virtual const char * what() const throw() { return msg.c_str(); }
 	};
 
