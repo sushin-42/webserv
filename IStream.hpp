@@ -3,31 +3,34 @@
 
 # include <string>
 #include <unistd.h>
+#include <sys/time.h>
 using namespace std;
 
 class IStream
 {
 protected:
 	int	fd;
+	struct timeval time;
 
 public:
-	IStream() {};
-	IStream( int _fd ): fd(_fd) {};
-	IStream( const IStream& src ): fd(src.fd) {};
+	IStream() { gettimeofday(&time, NULL); };
+	IStream( int _fd ): fd(_fd) { gettimeofday(&time, NULL); };
+	IStream( const IStream& src ): fd(src.fd) { this->time = src.time; };
 	virtual ~IStream() {};
 
 	IStream&	operator=( const IStream& src )
 	{
 		if (this != &src)
 		{
-			;
-
+			this->time = src.time;
 		}
 		return *this;
 	}
 
 	int				getFD()	const		{ return fd; }
 	void			setFD( int fd )		{ this->fd = fd; }
+	struct timeval	getTime() const		{ return time; }
+	void			setTime()			{ gettimeofday(&time, NULL); }
 	void			close()				{ ::close(fd); }
 
 	class something_wrong: public exception

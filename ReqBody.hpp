@@ -46,41 +46,18 @@ public:
 		string::size_type end;
 		long length = 0;
 
-		// while ((end = content.find("\r\n", start)) != string::npos)
-		// {
-		// 	line = content.substr(start, end - start);
-		// 	if (line == "0") break;
-
-		// 	length = strtol(line.c_str(), NULL, 16);
-
-		// 	if (length == 0L) throw exception();
-		// 	contentLength += length;
-		// 	start = start + (end - start) + 2;
-
-		// 	if ((end = content.find("\r\n", start)) != string::npos)
-		// 		line = content.substr(start, end - start);
-			
-		// 	if ((long)line.length() != length) throw exception();
-			
-		// 	decoding.append(line);
-		// 	start = start + length + 2;
-		// }
 		while ( true )
 		{
 			end = content.find("\r\n", start);
+			if (end == string::npos) throw exception();
 			line = content.substr(start, end - start);
 			if (line == "0") break;
-
 			length = strtol(line.c_str(), NULL, 16);
 			if (length == 0L) throw exception();
 			contentLength += length;
 			start = start + (end - start) + 2;
-
-			end = content.find("\r\n", start);
-			line = content.substr(start, end - start);
-			
-			if ((long)line.length() != length) throw exception();
-			
+			line = content.substr(start, length);
+			// lenght가 더 긴 경우 std::out_of_range발생
 			decoding.append(line);
 			start = start + length + 2;
 		}

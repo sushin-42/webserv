@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 # include <vector>
+# include <pthread.h>
 
 # include "ConnSocket.hpp"
 # include "ISocket.hpp"
@@ -17,7 +18,7 @@
 # include "ResBody.hpp"
 # include "ServerSocket.hpp"
 # include "color.hpp"
-
+# include "utils.hpp"
 
 
 class Poll : public pollfd
@@ -43,6 +44,7 @@ private:
 
 	vector<Poll>		pollVec;
 	vector<IStream*>	streamVec;
+	timeVal				timeVal;
 
 public:
 
@@ -133,7 +135,26 @@ public:
 		int	numReady = 0;
 		// TAG(PollSet, examine); this->print();
 
-		switch (numReady = ::poll(pollVec.data(), pollVec.size(), -1/*time-out*/))
+		pthread_mutex_lock(&(timeVal.timerLock));
+		if (timeVal.iStreamAddr.size() != 0)
+		{
+			for (vector<IStream *>::iterator addrIter = timeVal.iStreamAddr.begin(); addrIter != timeVal.iStreamAddr.end(); addrIter++)
+			{
+				for (iterator iter = this->begin(); iter != this->end(); iter++)
+				{
+					if (*addrIter == *(iter.second))
+					{
+						(*addrIter)->close();
+						drop(iter);
+						break;
+					}
+				}
+			}
+			timeVal.iStreamAddr.clear();
+		}
+		pthread_mutex_unlock(&(timeVal.timerLock));
+		// 타이머 테스트를 위해 폴을 3초에 한번씩 빠져나가도록 설정
+		switch (numReady = ::poll(pollVec.data(), pollVec.size(), 3000/*time-out*/))
 		{
 		case -1: TAG(PollSet, examine); cerr << RED("poll() ERROR: ")	<< strerror(errno) << endl;	break;
 		case  0: TAG(PollSet, examine); cerr << RED("poll() TIMEOUT")	<< endl;					break;
@@ -149,6 +170,12 @@ public:
 		throw exception();
 	}
 
+	void	startTimer()
+	{
+		timeVal.iStream = &(this->streamVec);
+		pthread_mutex_init(&(timeVal.timerLock),NULL);
+		pthread_create(&timeVal.timerThread, NULL, timer, (void *)&timeVal);
+	}
 
 private:
 	void	print()
