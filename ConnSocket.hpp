@@ -2,6 +2,7 @@
 # define CONNSOCKET_HPP
 
 #include <cstring>
+#include <exception>
 # include <iostream>
 #include <string>
 #include <sys/_types/_ssize_t.h>
@@ -22,6 +23,7 @@
 
 # include "Pipe.hpp"
 # include "ResHeader.hpp"
+#include "utils.hpp"
 
 # define GET	1
 # define PUT	2
@@ -35,7 +37,7 @@
  * If it is a POST method, read the Content-Length in the header and read up to Content-Length bytes.
  * If it is a POST method and the Content-Length header is absent, which is most likely to happen, read until -1 is returned, which is the signal of EOF.
 */
-
+char checkMethod(const string& content);
 struct undone
 {
 	string	content;
@@ -48,8 +50,8 @@ friend class ServerSocket;
 
 private:
 	socklen_t	len;
-	char		recvbuf[1024];
-	// char		sendbuf[1024];	//' is required?
+	char		buf[1024];
+	string		recvContent;	// cumulate received content
 
 public:
 	ReqHeader	ReqH;
@@ -57,11 +59,13 @@ public:
 	ResHeader	ResH;
 	ResBody		ResB;
 	bool		pending;
-	bool		chunk;	/* to distinguish script output chunk with server chunk */
+	bool		chunk;		/* to distinguish script output chunk with server chunk */
+	bool		FINsended;	/* we already sended FIN, DO NOT send more data. */
+
 	Pipe*		linkPipe;
 
 public:
-	ConnSocket() : ISocket(), len(sizeof(info)), ReqH(), ReqB(), ResH(), ResB(), pending(false), chunk(false), linkPipe(NULL)  {}
+	ConnSocket() : ISocket(), len(sizeof(info)), recvContent(), ReqH(), ReqB(), ResH(), ResB(), pending(false), chunk(false), FINsended(false), linkPipe(NULL)  {}
 	~ConnSocket() {}
 
 	ConnSocket&	operator=( const ConnSocket& src )
@@ -75,94 +79,139 @@ public:
 			this->ResB		= src.ResB;
 			this->pending	= src.pending;
 			this->chunk		= src.chunk;
+			this->FINsended	= src.FINsended;
 			this->linkPipe	= src.linkPipe;
-			//NOTE: no buf copy
 		}
 		return *this;
 	}
 
-	char checkMethod(const string& src)
+	void	setHeaderOrReadMore()
 	{
-		string::size_type end = src.find(" ");
-		string method = src.substr(0, end);
-		if		(method == "GET")	return GET;
-		else if (method == "PUT")	return PUT;
-		else if (method == "POST")	return POST;
-		else if (method == "DELETE")return DELETE;
-		return -1;
+		if (has2CRLF(recvContent))	//NOTE: what if bad-format request doesn't contain "\r\n\r\n"?
+		{
+			if (isValidHeader(recvContent))
+			{
+				/* set ReqH here */
+				switch (checkMethod(recvContent))
+				{
+				case GET:	ReqH.setMethod("GET");		break;
+				case PUT:	ReqH.setMethod("PUT");		break;
+				case POST:	ReqH.setMethod("POST");		break;
+				case DELETE:ReqH.setMethod("DELETE");	break;
+				default: throw methodNotAllowed();
+				}
+				ReqH.setHTTPversion("HTTP/1.1");	//TODO: parse from request
+				ReqH.setRequsetTarget(recvContent);
+				ReqH.setContent(extractHeader(recvContent));
+				ReqH.setHeaderField(KVtoMap(recvContent, ':'));
+
+				/* extract trailing body */
+				recvContent = extractBody(recvContent);
+			}
+			else
+				throw badRequest();
+		}
+		else
+			throw readMore();
 	}
 
-	void	recvRequest()	//TODO: seperate and return both Header and Body
+	void	setBodyOrReadMore()
 	{
-		// ReqHeader	ReqH;
-		// ReqBody		ReqB;
-		int			method	= 0;
-		string		content = "";
-		ssize_t		byte	= 0;
-		bzero(recvbuf, sizeof(recvbuf));
-		while ((byte = read(this->fd, this->recvbuf, sizeof(recvbuf))) > 0)
+		if (ReqH.exist("Transfer-Encoding"))	// it will override Content-Length
 		{
- 			content.append(recvbuf, byte);	// '+=' is bad for processing binary data
-
-			if (!method)	method = checkMethod(content);
-			switch (method)
+			/*
+				what if trailing header, or something exists after "0\r\n\r\n" ?
+				what if payload contains "0\r\n\r\n" ?
+			*/
+			if (recvContent.substr(recvContent.length()-5) == "0\r\n\r\n")
 			{
-			case GET:	ReqH.setMethod("GET");		break;
-			case PUT:	ReqH.setMethod("PUT");		break;
-			case POST:	ReqH.setMethod("POST");		break;
-			case DELETE:ReqH.setMethod("DELETE");	break;
-			}
-			bzero(recvbuf, sizeof(recvbuf));
-		}
-		ReqH.setHTTPversion("HTTP/1.1");	//TODO: parse from request
-		ReqH.setRequsetTarget(content);
-		ReqH.setContent(extractHeader(content));
-		ReqB.setContent(extractBody(content));
-		ReqH.setHeaderField(KVtoMap(content, ':'));
-		if (ReqH.headerField["transfer-encoding"] == "chunked")
-		{
-			try
-			{
+				ReqB.setContent(recvContent);
 				ReqB.decodingChunk();
-				// 아래는 확인 차 출력
-				cout << ReqB.getContent() << endl;
 			}
-			catch(const std::exception& e)
-			{
-				std::cerr << e.what() << '\n';
-			}
-		}
-		else if (ReqH.headerField.find("content-length") != ReqH.headerField.end())
-		{
-			try
-			{
-				ReqB.checkContentLength(ReqH.headerField["content-length"]);
-			}
-			catch(const std::exception& e)
-			{
-				std::cerr << e.what() << '\n';
-			}
-		}
-		if (byte == -1)
-		{
-			if (errno != EAGAIN && errno != EWOULDBLOCK)
-				throw something_wrong(strerror(errno));
 			else
+				throw readMore();
+		}
+		else if (ReqH.exist("Content-Length"))
+		{
+			if (!isNumber(ReqH["Content-Length"]))
+				throw badRequest();
+			if (toNum<unsigned int>(ReqH["Content-Length"]) <= recvContent.length())
 			{
-				TAG(ConnSocket, recvRequest) << YELLOW("No data to read") << endl;
-				// return make_pair(ReqH, ReqB);
+				ReqB.setContent(recvContent.substr(0, toNum<unsigned int>(ReqH["Content-Length"])));
+			}
+			else
+				throw readMore();
+			/*
+				if invalid content-length,
+				send 400(Bad request), close connection.	// @
+			*/
+			/*
+				if timeout before read all content-length,
+				send 408(Request timeout), close connection.
+			*/
+		}
+		else
+		{
+			/*
+				if got body without length
+				send 411(Length Required)
+			*/
+		}
+	}
+
+	void	recvRequest()
+	{
+		ssize_t		byte	= 0;
+		bzero(buf, sizeof(buf));
+		while ((byte = read(this->fd, this->buf, sizeof(buf))) > 0)
+		{
+ 			recvContent.append(buf, byte);
+			bzero(buf, sizeof(buf));
+		}
+
+		switch (byte)
+		{
+		case 0:
+			{
+				TAG(ConnSocket, recvRequest); cout << GRAY("CLIENT EXIT ") << this->fd << endl;
+				if (ReqH.exist("Content-Length") &&
+					toNum<unsigned int>(ReqH["Content-Length"]) > recvContent.length())
+				{
+					/*
+						if connection closed before get all content-length,
+						send 400(Bad request), close connection.
+					*/
+					throw badRequest();
+				}
+				throw connClosed();
+			}
+		case -1:
+			{
+				if (errno != EAGAIN && errno != EWOULDBLOCK)
+					throw somethingWrong(strerror(errno));
+				else
+					TAG(ConnSocket, recvRequest) << YELLOW("No data to read") << endl;
+				break;
 			}
 		}
-		else if (byte == 0)	// closed by CLIENT
+
+		if (ReqH.empty())
 		{
-			TAG(ConnSocket, recvRequest); cout << GRAY("CLIENT EXIT ") << this->fd << endl;
-			// return make_pair(ReqH, ReqB);
+			try						{ setHeaderOrReadMore(); }
+			catch (exception& e)	{ throw;}
 		}
-		// return make_pair(ReqH, ReqB);
+
+		if (!ReqH.empty())
+		{
+			try						{ setBodyOrReadMore(); }
+			catch (exception& e)	{ throw; }
+		}
+
 	}
 
 	void	send(const string& content, map<int, undone>& buf)
 	{
+		if (FINsended) return;
 		try						{ buf.at(this->fd); }
 		catch (exception& e)	{ buf[this->fd] = (struct undone){"",0};
 								  buf[this->fd].content.append(content.data(), content.length());	}
@@ -212,17 +261,90 @@ public:
 					TAG(ConnSocket, send) << _GOOD(waitpid on ) << linkPipe->pid << CYAN(" returns ") << _UL << pid << _NC << endl;
 
 			}
-			TAG(ConnSocket, send) << _GOOD(server send FIN: ) << _UL << this->fd << _NC << endl;
+			//NOTE: what if client doesn't send FIN? now we send FIN and close "after client send FIN too".
+			// Have to close() instantly after send FIN, with short timer.
 			shutdown(this->fd, SHUT_WR);
+			FINsended = true;	/*
+									for case that client keep sending message even after FIN.
+									we prevent calling ConnSocket#send().
+								*/
+			TAG(ConnSocket, send) << _GOOD(server send FIN: ) << _UL << this->fd << _NC << endl;
 		}
 		else
 			TAG(ConnSocket, send) << GRAY("WHY YOU HERE?") << endl;
 
 	}
 
+
+	void	setErrorPage(status_code_t status, const string& reason, const string& text)
+	{
+		this->ResH.setHTTPversion("HTTP/1.1");
+		this->ResH.setStatusCode(status);
+		this->ResH.setReasonPhrase(reason);
+		this->ResB.setContent(
+							errorpage(
+									toString(status) + " " + reason,
+									reason,
+									text
+								)
+							);
+		this->ResH["Content-type"] = "text/html; charset=iso-8859-1";
+		this->ResH["Content-Length"] = toString(this->ResB.getContent().length());
+	}
+
+
+
+	class readMore: public exception
+	{
+		private:	string msg;
+		public:		explicit readMore(): msg("") {}
+					explicit readMore(const string& m): msg(m) {}
+					virtual ~readMore() throw() {};
+					virtual const char * what() const throw() { return msg.c_str(); }
+	};
+
+	class connClosed: public exception
+	{
+		private:	string msg;
+		public:		explicit connClosed(): msg("") {}
+					explicit connClosed(const string& m): msg(m) {}
+					virtual ~connClosed() throw() {};
+					virtual const char * what() const throw() { return msg.c_str(); }
+	};
+
+	class badRequest: public exception
+	{
+		private:	string msg;
+		public:		explicit badRequest(): msg("") {}
+					explicit badRequest(const string& m): msg(m) {}
+					virtual ~badRequest() throw() {};
+					virtual const char * what() const throw() { return msg.c_str(); }
+	};
+
+	class methodNotAllowed: public exception
+	{
+		private:	string msg;
+		public:		explicit methodNotAllowed(): msg("") {}
+					explicit methodNotAllowed(const string& m): msg(m) {}
+					virtual ~methodNotAllowed() throw() {};
+					virtual const char * what() const throw() { return msg.c_str(); }
+	};
+
 private:
-	void			dummy() {}
+	void	dummy() {}
+
 };
+
+char checkMethod(const string& content)
+{
+	string::size_type end = content.find(" ");
+	string method = content.substr(0, end);
+	if		(method == "GET")	return GET;
+	else if (method == "PUT")	return PUT;
+	else if (method == "POST")	return POST;
+	else if (method == "DELETE")return DELETE;
+	return 0;
+}
 
 
 

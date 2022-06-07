@@ -52,6 +52,15 @@ public:
 	}
 
 
+	void	setDefaultHeaders()
+{
+	(*this)["Connection"]			= "close";
+	(*this)["Server"]				= "Webserv 0.1";
+	// (*this)["Keep-Alive"]		=
+	// (*this)["Last-Modified"]		=
+	// (*this)["E-Tag"]				=
+}
+
 	void	print()
 	{
 		map<string, string>::iterator it = headerField.begin();
