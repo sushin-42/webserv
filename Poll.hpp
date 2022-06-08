@@ -178,8 +178,12 @@ public:
 		for (iterator it = this->begin(); it<this->end(); it++)
 		{
 			if		(it.first->revents == 0)			continue;
-			else if (it.first->revents & POLLIN)		return readRoutine(it);
-			else if (it.first->revents & POLLOUT)		return writeRoutine(it);
+			else
+			{
+				(*it.second)->updateLastActive();
+				if (it.first->revents & POLLIN)			return readRoutine(it);
+				if (it.first->revents & POLLOUT)		return writeRoutine(it);
+			}
 		}
 		throw exception();
 	}
@@ -224,14 +228,12 @@ private:
 		}
 		else if (connected)
 		{
-			connected->updateLastActive();
 			TAG(PollSet, examine); cout << GREEN("New data to read ")
 			<< it.first->fd << BLUE(" (ConnSocket)") <<endl;
 			return it;
 		}
 		else if (CGIpipe)
 		{
-			connected->updateLastActive();
 			TAG(PollSet, examine); cout << GREEN("New data to read ")
 			<< it.first->fd << PURPLE(" (Pipe)") <<endl;
 			return it;
@@ -245,7 +247,6 @@ private:
 
 	iterator	writeRoutine(iterator it)
 	{
-		(*it.second)->updateLastActive();
 		TAG(PollSet, examine); cout << GREEN("Can write to ") << it.first->fd << endl;
 		return it;
 	}
