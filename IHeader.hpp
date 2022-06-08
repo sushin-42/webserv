@@ -6,14 +6,26 @@
 
 class IHeader: public IText
 {
+/**========================================================================
+* '                              typedefs
+*========================================================================**/
+
 protected:
 	typedef	map<string, string>	_Map;
 public:
 	typedef unsigned short		status_code_t;
 	typedef	_Map::iterator		iterator;
 
+/**========================================================================
+* %                          member variables
+*========================================================================**/
+
 	string				HTTPversion;
 	_Map				headerField;
+
+/**========================================================================
+* @                           Constructors
+*========================================================================**/
 
 public:
 	IHeader() : IText() {}
@@ -21,6 +33,10 @@ public:
 	IHeader( const IHeader& src )
 	: IText(src.content), HTTPversion(src.HTTPversion), headerField(src.headerField) {}
 	virtual ~IHeader() {}
+
+/**========================================================================
+* *                            operators
+*========================================================================**/
 
 	IHeader&	operator=( const IHeader& src )
 	{
@@ -42,6 +58,10 @@ public:
 	{
 		return headerField.at(lowerize(key));	// MAY throw exception if key not exists.
 	}
+
+/**========================================================================
+* #                          member functions
+*========================================================================**/
 
 	void						clear()											{ content.clear(); headerField.clear(); }
 	void						setHTTPversion(const string& v)					{ this->HTTPversion = v; }

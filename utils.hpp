@@ -14,15 +14,6 @@
 #define  CONVERT(X, Y) dynamic_cast<Y*>(X)
 using namespace std;
 
-typedef struct timeVal
-{
-	pthread_t 			timerThread;
-	pthread_mutex_t		timerLock;
-	vector<IStream*>	*iStream;
-	vector<IStream*> 	iStreamAddr;
-	// 폴의 주소값 (업데이트에서 확인할)
-}timeVal;
-
 template <class T>
 string toString(T whatever)
 {
@@ -273,55 +264,6 @@ pair<pid_t, int> whoDied()
 
 	return make_pair(waitpid(-1, &status, WNOHANG), status);
 }
-
-int	diff_time(struct timeval start)
-{
-	struct timeval	now;
-	int				diff;
-
-	gettimeofday(&now, NULL);
-	diff = (now.tv_sec - start.tv_sec);//usec은 생략
-	return (diff);
-}
-
-bool	findUnionVector(vector<IStream *> addrVec, IStream * find)
-{
-	for(vector<IStream *>::iterator iter = addrVec.begin(); iter != addrVec.end(); iter++)
-	{
-		if (*iter == find)
-			return 0;
-	}
-	return 1;
-}
-
-void *timer(void *data)
-{
-	timeVal *timeVal = static_cast<struct timeVal *>(data);
-	vector<IStream*> copy;
-
-	while (true)
-	{
-		sleep(1);
-		//update
-		pthread_mutex_lock(&(timeVal->timerLock));
-		for (vector<IStream*>::iterator iter = timeVal->iStream->begin(); iter != timeVal->iStream->end(); iter++)
-			copy.push_back(*iter);
-		pthread_mutex_unlock(&(timeVal->timerLock));
-		// check
-		for (vector<IStream*>::iterator iter = copy.begin() + 1; iter != copy.end(); iter++)
-		{
-			if (diff_time((*iter)->getTime()) > 20 && findUnionVector(timeVal->iStreamAddr, *iter))// && (*iter)->getFD() != 4)
-			{
-				timeVal->iStreamAddr.push_back(*iter);
-				TAG(utils, timer); cout << CYAN("union Vector push ") << (*iter)->getFD() << endl;
-			}
-		}
-		copy.clear();
-	}
-    return (NULL);
-}
-
-
 /*
 	we don't allow obs-fold
 	VCHAR  0x21~0x7E

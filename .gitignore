@@ -1,4 +1,5 @@
 client.cpp
 *.out
 *.o
-./webserv
+webserv
+memo

@@ -14,14 +14,25 @@
 # include "color.hpp"
 
 using namespace std;
-// struct sockaddr_in;
-// struct sockaddr;
 
 class ISocket : public IStream
 {
+/**========================================================================
+* '                              typedefs
+*========================================================================**/
+
 protected:
 	typedef struct sockaddr_in socket_info_t;
+
+/**========================================================================
+* %                          member variables
+*========================================================================**/
+
 	socket_info_t	info;
+
+/**========================================================================
+* @                           Constructors
+*========================================================================**/
 
 public:
 	ISocket() : IStream() {};
@@ -41,6 +52,10 @@ public:
 
 	~ISocket() {}
 
+/**========================================================================
+* *                            operators
+*========================================================================**/
+
 	ISocket&	operator=( const ISocket& src )
 	{
 		if (this != &src)
@@ -51,6 +66,10 @@ public:
 		return *this;
 	}
 
+/**========================================================================
+* #                          member functions
+*========================================================================**/
+
 	string			getIP() const		{ return inet_ntoa(info.sin_addr); }
 	unsigned short	getPort() const		{ return ntohs(info.sin_port); }
 
@@ -58,6 +77,10 @@ public:
 	void			setIP( const string& ip )				{ if (ip ==  "")	this->info.sin_addr.s_addr = INADDR_ANY;
 															  else				this->info.sin_addr.s_addr = inet_addr(ip.c_str()); }
 	void			setPort( const unsigned short& port)	{ this->info.sin_port = htons(port); }
+
+/**========================================================================
+* !                            Exceptions
+*========================================================================**/
 
 	class somethingWrong: public exception
 	{

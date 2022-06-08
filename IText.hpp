@@ -6,14 +6,26 @@ using namespace std;
 
 class IText
 {
+/**========================================================================
+* %                          member variables
+*========================================================================**/
+
 protected:
 	string	content;
-public:
 
+/**========================================================================
+* @                           Constructors
+*========================================================================**/
+
+public:
 	IText() : content() {}
 	IText( const string& s ) : content(s) {}
 	IText( const IText& src ) : content(src.content) {}
 	virtual ~IText() {}
+
+/**========================================================================
+* *                            operators
+*========================================================================**/
 
 	IText&	operator=( const IText& src )
 	{
@@ -21,6 +33,10 @@ public:
 			content = src.content;
 		return *this;
 	}
+
+/**========================================================================
+* #                          member functions
+*========================================================================**/
 
 	bool			empty() const					{ return this->content.empty(); }
 	void			setContent(const string& c)		{ this->content = c; }

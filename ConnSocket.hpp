@@ -37,6 +37,8 @@
  * If it is a POST method, read the Content-Length in the header and read up to Content-Length bytes.
  * If it is a POST method and the Content-Length header is absent, which is most likely to happen, read until -1 is returned, which is the signal of EOF.
 */
+
+
 char checkMethod(const string& content);
 struct undone
 {
@@ -47,6 +49,10 @@ struct undone
 class ConnSocket : public ISocket
 {
 friend class ServerSocket;
+
+/**========================================================================
+* %                          member variables
+*========================================================================**/
 
 private:
 	socklen_t	len;
@@ -64,9 +70,17 @@ public:
 
 	Pipe*		linkPipe;
 
+/**========================================================================
+* @                           Constructors
+*========================================================================**/
+
 public:
 	ConnSocket() : ISocket(), len(sizeof(info)), recvContent(), ReqH(), ReqB(), ResH(), ResB(), pending(false), chunk(false), FINsended(false), linkPipe(NULL)  {}
 	~ConnSocket() {}
+
+/**========================================================================
+* *                            operators
+*========================================================================**/
 
 	ConnSocket&	operator=( const ConnSocket& src )
 	{
@@ -84,6 +98,10 @@ public:
 		}
 		return *this;
 	}
+
+/**========================================================================
+* #                          member functions
+*========================================================================**/
 
 	void	setHeaderOrReadMore()
 	{
@@ -292,7 +310,9 @@ public:
 		this->ResH["Content-Length"] = toString(this->ResB.getContent().length());
 	}
 
-
+/**========================================================================
+* !                            Exceptions
+*========================================================================**/
 
 	class readMore: public exception
 	{

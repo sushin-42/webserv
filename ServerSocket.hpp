@@ -4,17 +4,29 @@
 # include "ConnSocket.hpp"
 # include <exception>
 # include <stdexcept>
-#include <sys/errno.h>
+# include <sys/errno.h>
 # include <sys/socket.h>
 
 
 class ServerSocket : public ISocket
 {
+/**========================================================================
+* @                           Constructors
+*========================================================================**/
+
 public:
 	ServerSocket( const string&			ip,
 				  const unsigned short& port )
 	: ISocket(ip, port) {};
 	~ServerSocket() {};
+
+/**========================================================================
+* *                            operators
+*========================================================================**/
+
+/**========================================================================
+* #                          member functions
+*========================================================================**/
 
 	void			bind()
 	{
@@ -31,6 +43,7 @@ public:
 	ConnSocket	accept() const
 	{
 		ConnSocket c;
+
 		c.fd = ::accept(this->fd, (struct sockaddr *)&c.info, &c.len);
 		if (c.fd == -1)
 		{

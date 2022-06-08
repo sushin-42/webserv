@@ -11,11 +11,16 @@
 # include <fstream>
 using namespace std;
 
+
 typedef unsigned short status_code_t;
 
 class ResBody : public IText
 {
 public:
+
+/**========================================================================
+* @                           Constructors
+*========================================================================**/
 
 	ResBody(): IText() {}
 	ResBody( const string& path ): IText()
@@ -25,12 +30,20 @@ public:
 	ResBody( const ResBody& src ): IText(src.content) {}
 	~ResBody() {}
 
+/**========================================================================
+* *                            operators
+*========================================================================**/
+
 	ResBody&	operator=( const ResBody& src )
 	{
 		if (this != &src)
 			content = src.content;
 		return *this;
 	}
+
+/**========================================================================
+* #                          member functions
+*========================================================================**/
 
 	status_code_t	readFile( const string& path )
 	{

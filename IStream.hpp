@@ -1,6 +1,7 @@
 #ifndef ISTREAM_HPP
 # define ISTREAM_HPP
 
+#include <ctime>
 # include <string>
 #include <unistd.h>
 #include <sys/time.h>
@@ -8,30 +9,60 @@ using namespace std;
 
 class IStream
 {
+/**========================================================================
+* %                          member variables
+*========================================================================**/
+
 protected:
-	int	fd;
-	struct timeval time;
+	int		fd;
+	time_t	timeout;
+	time_t	lastActive;
+
+/**========================================================================
+* @                           Constructors
+*========================================================================**/
 
 public:
-	IStream() { gettimeofday(&time, NULL); };
-	IStream( int _fd ): fd(_fd) { gettimeofday(&time, NULL); };
-	IStream( const IStream& src ): fd(src.fd) { this->time = src.time; };
+	IStream()
+	: fd(-1), timeout(-1), lastActive(time(NULL))	{  }
+	IStream( int _fd )
+	: fd(_fd), timeout(-1), lastActive(time(NULL))	{  }
+	IStream( int _fd, time_t _to)
+	: fd(_fd), timeout(_to), lastActive(time(NULL))	{  }
+	IStream( const IStream& src )
+	: fd(src.fd), timeout(src.timeout), lastActive(src.lastActive) { }
 	virtual ~IStream() {};
+
+/**========================================================================
+* *                            operators
+*========================================================================**/
 
 	IStream&	operator=( const IStream& src )
 	{
 		if (this != &src)
 		{
-			this->time = src.time;
+			this->fd = src.fd;
+			this->timeout = src.timeout;
+			this->lastActive = src.lastActive;
 		}
 		return *this;
 	}
 
-	int				getFD()	const		{ return fd; }
-	void			setFD( int fd )		{ this->fd = fd; }
-	struct timeval	getTime() const		{ return time; }
-	void			setTime()			{ gettimeofday(&time, NULL); }
-	void			close()				{ ::close(fd); }
+/**========================================================================
+* #                          member functions
+*========================================================================**/
+
+	int				getFD()	const			{ return fd; }
+	void			setFD( int fd )			{ this->fd = fd; }
+	void			updateLastActive()		{ this->lastActive = time(NULL); }
+	time_t			getLastActive()	const	{ return lastActive; }
+	void			setTimeOut(time_t to)	{ this->timeout = to; }
+	time_t			getTimeOut() const		{ return this->timeout; }
+	void			close()					{ ::close(fd); }
+
+/**========================================================================
+* !                            Exceptions
+*========================================================================**/
 
 	class somethingWrong: public exception
 	{

@@ -5,11 +5,20 @@
 # include <fcntl.h>
 #include <string>
 
+
 class ReqHeader : public IHeader
 {
+/**========================================================================
+* %                          member variables
+*========================================================================**/
+
 private:
 	string	method;
 	string	requestTarget;
+
+/**========================================================================
+* @                           Constructors
+*========================================================================**/
 
 public:
 	ReqHeader()
@@ -19,6 +28,10 @@ public:
 	ReqHeader( const ReqHeader& src )
 	: IHeader(src), method(src.method), requestTarget(src.requestTarget) {}	//TODO
 	~ReqHeader() {}
+
+/**========================================================================
+* *                            operators
+*========================================================================**/
 
 	ReqHeader&	operator=( const ReqHeader& src )
 	{
@@ -31,6 +44,10 @@ public:
 
 		return *this;
 	}
+
+/**========================================================================
+* #                          member functions
+*========================================================================**/
 
 	void	setRequsetTarget(const string& content)
 	{
@@ -51,6 +68,5 @@ public:
 		requestTarget.clear();
 		HTTPversion.clear();
 	}
-
 };
 #endif

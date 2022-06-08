@@ -1,12 +1,15 @@
 #ifndef POLL_HPP
 # define POLL_HPP
 #include <csignal>
+#include <ctime>
 #include <exception>
+#include <limits>
 # include <poll.h>
 # include <sys/_types/_size_t.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <utility>
 # include <vector>
 # include <pthread.h>
 
@@ -20,6 +23,7 @@
 # include "color.hpp"
 # include "utils.hpp"
 
+class Timer;
 
 class Poll : public pollfd
 {
@@ -33,28 +37,44 @@ public:
 };
 
 class PollSet
+
 {
+/**========================================================================
+* '                              typedefs
+*========================================================================**/
+
 private:
 	typedef vector<Poll>			_Vp;
 	typedef vector<IStream*>		_Vs;
+	typedef pair<Poll, IStream*>	_Ps;
 	typedef _Vp::iterator			iterator_p;
 	typedef _Vs::iterator			iterator_s;
 	typedef _Vp::const_iterator		const_iterator_p;
 	typedef _Vs::const_iterator		const_iterator_s;
-
-	vector<Poll>		pollVec;
-	vector<IStream*>	streamVec;
-	timeVal				timeVal;
-
 public:
-
 	typedef iterator_pair<iterator_p, iterator_s>				iterator;
 	typedef iterator_pair<const_iterator_p,const_iterator_s>	const_iterator;
 
+/**========================================================================
+* %                          member variables
+*========================================================================**/
 
-	PollSet(): pollVec(), streamVec() {}
-	PollSet( const PollSet& src ): pollVec(src.pollVec), streamVec(src.streamVec) {}
-	~PollSet() {}
+private:
+	vector<Poll>		pollVec;
+	vector<IStream*>	streamVec;
+	Timer*				timer;
+
+/**========================================================================
+* @                           Constructors
+*========================================================================**/
+public:
+	PollSet(): pollVec(), streamVec(), timer(NULL) {}
+	PollSet( const PollSet& src ): pollVec(src.pollVec), streamVec(src.streamVec), timer(NULL) {}
+	~PollSet();
+
+/**========================================================================
+* *                            operators
+*========================================================================**/
 
 	PollSet&	operator=( const PollSet& src )
 	{
@@ -65,6 +85,10 @@ public:
 		}
 		return *this;
 	}
+
+/**========================================================================
+* #                          member functions
+*========================================================================**/
 
 	iterator		begin()			{ return make_iterator_pair(pollVec.begin(), streamVec.begin()); }
 	iterator		end()			{ return make_iterator_pair(pollVec.end(), streamVec.end()); }
@@ -78,8 +102,12 @@ public:
 		p.events	= POLLIN;
 		p.revents	= 0;
 
+		stream->setTimeOut(20);
+		stream->updateLastActive();
+
 		pollVec.push_back(p);
 		streamVec.push_back(stream);
+
 
 		ServerSocket*	serv		= CONVERT(stream, ServerSocket);
 		ConnSocket*		connected	= CONVERT(stream, ConnSocket);
@@ -126,38 +154,24 @@ public:
 			pollVec.erase(itPoll);
 			streamVec.erase(itPipe);
 		}
-
-
 	}
 
+	time_t	getMinimumRemaining();
+	void	dropTimeout();
 	iterator	examine()
 	{
-		int	numReady = 0;
-		// TAG(PollSet, examine); this->print();
-
-		pthread_mutex_lock(&(timeVal.timerLock));
-		if (timeVal.iStreamAddr.size() != 0)
+		int		numReady = 0;
+		time_t	minRemaining = 2000;;
+		if (timer)
 		{
-			for (vector<IStream *>::iterator addrIter = timeVal.iStreamAddr.begin(); addrIter != timeVal.iStreamAddr.end(); addrIter++)
-			{
-				for (iterator iter = this->begin(); iter != this->end(); iter++)
-				{
-					if (*addrIter == *(iter.second))
-					{
-						(*addrIter)->close();
-						drop(iter);
-						break;
-					}
-				}
-			}
-			timeVal.iStreamAddr.clear();
+			if ((minRemaining = getMinimumRemaining() * 1000) < 0)
+				minRemaining = 2000;
+			dropTimeout();
 		}
-		pthread_mutex_unlock(&(timeVal.timerLock));
-		// 타이머 테스트를 위해 폴을 3초에 한번씩 빠져나가도록 설정
-		switch (numReady = ::poll(pollVec.data(), pollVec.size(), 3000/*time-out*/))
+		switch (numReady = ::poll(pollVec.data(), pollVec.size(), minRemaining/*time-out*/))
 		{
 		case -1: TAG(PollSet, examine); cerr << RED("poll() ERROR: ")	<< strerror(errno) << endl;	break;
-		case  0: TAG(PollSet, examine); cerr << RED("poll() TIMEOUT")	<< endl;					break;
+		case  0: TAG(PollSet, examine); cerr << GRAY("No event within ") << minRemaining << "ms" << endl;					break;
 		default:;
 		}
 
@@ -170,13 +184,7 @@ public:
 		throw exception();
 	}
 
-	void	startTimer()
-	{
-		timeVal.iStream = &(this->streamVec);
-		pthread_mutex_init(&(timeVal.timerLock),NULL);
-		pthread_create(&timeVal.timerThread, NULL, timer, (void *)&timeVal);
-	}
-
+	void	createMonitor();
 private:
 	void	print()
 	{
@@ -216,12 +224,14 @@ private:
 		}
 		else if (connected)
 		{
+			connected->updateLastActive();
 			TAG(PollSet, examine); cout << GREEN("New data to read ")
 			<< it.first->fd << BLUE(" (ConnSocket)") <<endl;
 			return it;
 		}
 		else if (CGIpipe)
 		{
+			connected->updateLastActive();
 			TAG(PollSet, examine); cout << GREEN("New data to read ")
 			<< it.first->fd << PURPLE(" (Pipe)") <<endl;
 			return it;
@@ -235,8 +245,145 @@ private:
 
 	iterator	writeRoutine(iterator it)
 	{
+		(*it.second)->updateLastActive();
 		TAG(PollSet, examine); cout << GREEN("Can write to ") << it.first->fd << endl;
 		return it;
 	}
+
 };
+
+
+
+
+class Timer
+{
+/**========================================================================
+* '                              typedefs
+*========================================================================**/
+
+private:
+	typedef PollSet::iterator		iterator;
+	typedef PollSet::const_iterator	const_iterator;
+	typedef pair<Poll, IStream*>	_Ps;
+
+/**========================================================================
+* %                          member variables
+*========================================================================**/
+
+	PollSet* pollset;
+
+public:
+	vector<_Ps>		timeoutPool;
+	pair<_Ps, time_t>	min;
+
+/**========================================================================
+* @                           Constructors
+*========================================================================**/
+
+	Timer()						: pollset(NULL), timeoutPool(), min(make_pair(Poll(), (IStream*)NULL), numeric_limits<time_t>::max())	{}
+	Timer(PollSet* p) 			: pollset(p), timeoutPool(), min(make_pair(Poll(), (IStream*)NULL), numeric_limits<time_t>::max())		{}
+	Timer( const Timer& src )	: pollset(src.pollset), timeoutPool(src.timeoutPool), min(src.min)	{}
+	~Timer() {};
+
+
+/**========================================================================
+* *                            operators
+*========================================================================**/
+
+	Timer&	operator=( const Timer& src )
+	{
+		if (this != &src)
+		{
+			this->pollset = src.pollset;
+		}
+		return *this;
+	}
+
+/**========================================================================
+* #                          member functions
+*========================================================================**/
+
+	void	subscribe(PollSet* p)
+	{
+		this->pollset = p;
+	}
+
+	void	monitor()
+	{
+		iterator it = pollset->begin();
+		iterator ite = pollset->end();
+
+		pair<_Ps, time_t> min = make_pair(
+									make_pair(*it.first, *it.second),
+									numeric_limits<time_t>::max()
+								);
+
+		time_t	now = time(NULL);
+		time_t	timeout = -1;
+		time_t	lastActive = -1;
+
+		time_t	elapsedTime;
+		time_t	remainingTime;
+
+		for (;it < ite; it++)
+		{
+			if (CONVERT(*it.second, ServerSocket))
+				continue ;
+			if ((timeout = (*it.second)->getTimeOut()) < 0)	// No limit
+				continue ;
+			if ((lastActive = (*it.second)->getLastActive()) < 0)
+				continue ;
+
+			/*--------------------------------------------*/
+			elapsedTime = difftime(now, lastActive);
+			remainingTime = difftime(timeout, elapsedTime);
+			if (remainingTime <= 0)
+			{
+				TAG(Timer, monitor) << _UL << it.first->fd << _NC << RED(" TIMEOUT: ") _UL << timeout  << "s" << _NC <<  endl;
+				timeoutPool.push_back(make_pair(*it.first, *it.second));
+			}
+			else if (remainingTime <= min.second)
+			{
+				min.first = make_pair(*it.first, *it.second);
+				min.second = remainingTime;
+			}
+		}
+		this->min = min;
+	}
+};
+
+
+
+void	PollSet::createMonitor() { this->timer = new Timer(this); }
+
+PollSet::~PollSet() {delete timer;}
+time_t	PollSet::getMinimumRemaining()
+{
+	timer->monitor();
+	if (timer->min.second == numeric_limits<time_t>::max())
+		return -1;
+	else
+	 	return timer->min.second;
+}
+
+void	PollSet::dropTimeout()
+{
+	vector<_Ps>::iterator it	= timer->timeoutPool.begin();
+	vector<_Ps>::iterator ite	= timer->timeoutPool.end();
+
+	PollSet::iterator_p itPoll;
+	PollSet::iterator_s itStream;
+
+	for (; it < ite; it++)
+	{
+		itPoll = find(pollVec.begin(), pollVec.end(), it->first);
+		itStream = find(streamVec.begin(), streamVec.end(), it->second);
+
+		drop(make_iterator_pair(itPoll, itStream));
+	}
+	timer->timeoutPool.clear();
+	// print();
+}
+
+
 #endif

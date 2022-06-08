@@ -18,7 +18,6 @@
 #include "core.hpp"
 #include "utils.hpp"
 
-
 int main()
  {
 	signal(SIGPIPE, SIG_IGN);
@@ -38,8 +37,8 @@ int main()
 	try						{ serv.listen(10 /*backlog*/); }
 	catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
 
+	pollset.createMonitor();
 	pollset.enroll(&serv);
-	pollset.startTimer();
 	while (1)
 	{
 //'----------------------catch and parse request header----------------------'//
