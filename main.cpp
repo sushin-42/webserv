@@ -22,10 +22,13 @@
 #include "HttpConfig.hpp"
 int main(int argc, char **argv)
 {
-
+	if (argvError(argc))
+		return (errMsg());
 	signal(SIGPIPE, SIG_IGN);
-	argc = 0;
+
 	HttpConfig http(argv);
+	cout << static_cast<LocationConfig *>(http.getLink()[0]->getLink()[0])->getURI() << endl;
+
 	ServerSocket serv("", 8888); // put your IP, "" means ANY
 	ConnSocket *connected;
 	Pipe *CGIpipe;

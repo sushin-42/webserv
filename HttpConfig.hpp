@@ -3,8 +3,6 @@
 #include "ServerConfig.hpp"
 
 class Config;
-// typedef void (*ScriptFunction)(vector<string> arg);
-// typedef map<std::string, ScriptFunction> func_map;
 
 class HttpConfig : public Config
 {
@@ -19,7 +17,6 @@ public:
         ReadConfig(argv);
         SeparateServerBlock();
         cout << RED(" http block ") << endl;
-
         SetupConfig();
         cout << RED(" http block ") << endl;
     }

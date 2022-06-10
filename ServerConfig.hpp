@@ -1,8 +1,6 @@
 #ifndef SERVERCONFIG_HPP
 #define SERVERCONFIG_HPP
 
-// #include "Config.hpp"
-
 class Config;
 
 class ServerConfig : public Config

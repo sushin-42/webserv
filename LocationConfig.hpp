@@ -2,8 +2,6 @@
 #ifndef LOCATIONCONFIG_HPP
 #define LOCATIONCONFIG_HPP
 
-// #include "Config.hpp"
-
 class Config;
 
 class LocationConfig : public Config
@@ -49,6 +47,11 @@ public:
     /**========================================================================
      * #                          member functions
      *========================================================================**/
+
+    string getURI()
+    {
+        return this->URI;
+    }
     /**========================================================================
      * !                            Exceptions
      *========================================================================**/

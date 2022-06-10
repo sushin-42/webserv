@@ -10,9 +10,6 @@
 #include <algorithm>
 #include "utils.hpp"
 #include "ConfigUtils.hpp"
-// #include "LocationConfig.hpp"
-// #include "ServerConfig.hpp"
-// #include "HttpConfig.hpp"
 using namespace std;
 
 string root = getcwd(NULL, 0);
@@ -42,9 +39,6 @@ map<string, string> MIME = getMIME();
 // "client_body_timeout"
 // };
 
-// class HttpConfig;
-// class ServerConfig;
-// class LocationConfig;
 typedef void (*PointerFunction)(vector<string> arg);
 typedef map<std::string, PointerFunction> func_map;
 class ErrorPage
@@ -108,6 +102,10 @@ public:
 	/**========================================================================
 	 * #                          member functions
 	 *========================================================================**/
+	vector<Config *> getLink()
+	{
+		return this->link;
+	}
 	void MapSetting()
 	{
 		m["root"] = &parse_root;
