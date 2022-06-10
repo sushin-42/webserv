@@ -18,10 +18,10 @@ public:
     {
         ReadConfig(argv);
         SeparateServerBlock();
-        cout << "http" << endl;
+        cout << RED(" http block ") << endl;
 
         SetupConfig();
-        cout << "http" << endl;
+        cout << RED(" http block ") << endl;
     }
     // HttpConfig(const HttpConfig &src) : Config() {}
     virtual ~HttpConfig() {}
@@ -63,8 +63,8 @@ public:
 
     void SeparateServerBlock()
     {
-        std::string::size_type start = 0;
-        std::string::size_type end = 0;
+        size_t start = 0;
+        size_t end = 0;
         string serverConfigtemp;
 
         while ((start = configtemp.find("server ", end)) != string::npos)

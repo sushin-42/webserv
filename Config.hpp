@@ -45,8 +45,8 @@ map<string, string> MIME = getMIME();
 // class HttpConfig;
 // class ServerConfig;
 // class LocationConfig;
-typedef void (*ScriptFunction)(vector<string> arg);
-typedef map<std::string, ScriptFunction> func_map;
+typedef void (*PointerFunction)(vector<string> arg);
+typedef map<std::string, PointerFunction> func_map;
 class ErrorPage
 {
 };
@@ -115,16 +115,17 @@ public:
 		m["server_name"] = &parse_server_name;
 		m["index"] = &parse_index;
 	}
-	int call_script(const std::string &pFunction, const vector<string> arg)
+	int call_function(const std::string &pFunction, const vector<string> arg)
 	{
 		func_map::iterator it;
 
 		if ((it = m.find(pFunction)) != m.end())
 			(*it->second)(arg);
 		else
-			return -1;
+			return -1; // 맞는거 없어서 에러 내뱉기 구현
 		return 0;
 	}
+
 	void SetupConfig()
 	{
 		string line;
@@ -142,15 +143,15 @@ public:
 			while (ss >> tmp)
 				arg.push_back(tmp);
 
-			call_script(directive, arg);
+			call_function(directive, arg);
 		}
 	}
-	string ExtractBlock(string &configtemp, string::size_type start)
+	string ExtractBlock(string &configtemp, size_t start)
 	{
 		int countBracket = 1;
 		string extractConfig;
-		string::size_type i;
-		string::size_type end;
+		size_t i;
+		size_t end;
 
 		i = configtemp.find('{', start);
 

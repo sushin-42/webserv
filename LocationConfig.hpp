@@ -26,9 +26,9 @@ public:
     {
         configtemp = str;
         URI = uri;
-        cout << "loc" << endl;
+        cout << BLUE(" location block ") << endl;
         SetupConfig();
-        cout << "loc" << endl;
+        cout << BLUE(" location block ") << endl;
     }
     // LocationConfig(const LocationConfig &src) : Config() {}
     virtual ~LocationConfig() {}

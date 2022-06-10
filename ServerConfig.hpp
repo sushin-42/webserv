@@ -26,9 +26,9 @@ public:
     {
         configtemp = str;
         SeparateLocationBlock();
-        cout << "ser" << endl;
+        cout << PURPLE(" server block ") << endl;
         SetupConfig();
-        cout << "ser" << endl;
+        cout << PURPLE(" server block ") << endl;
     }
     // ServerConfig(const ServerConfig &src) : Config() {}
     virtual ~ServerConfig() {}
@@ -48,9 +48,9 @@ public:
     /**========================================================================
      * #                          member functions
      *========================================================================**/
-    string ExtractURI(string::size_type start)
+    string ExtractURI(size_t start)
     {
-        string::size_type end;
+        size_t end;
         string uri;
 
         end = configtemp.find('{', start);
@@ -60,8 +60,8 @@ public:
 
     void SeparateLocationBlock()
     {
-        std::string::size_type start = 0;
-        std::string::size_type end = 0;
+        size_t start = 0;
+        size_t end = 0;
         string locationConfigtemp;
 
         while ((start = configtemp.find("location ", end)) != string::npos)

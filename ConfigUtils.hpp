@@ -5,7 +5,7 @@ void parse_root(vector<string> arg)
     for (size_t i = 0; i < arg.size(); i++)
         cout << arg[i] << " ";
     cout << endl;
-    cout << "root success" << endl;
+    cout << GREEN("root success") << endl;
 }
 
 void parse_listen(vector<string> arg)
@@ -13,7 +13,7 @@ void parse_listen(vector<string> arg)
     for (size_t i = 0; i < arg.size(); i++)
         cout << arg[i] << " ";
     cout << endl;
-    cout << "listen success" << endl;
+    cout << GREEN("listen success") << endl;
 }
 
 void parse_server_name(vector<string> arg)
@@ -21,7 +21,7 @@ void parse_server_name(vector<string> arg)
     for (size_t i = 0; i < arg.size(); i++)
         cout << arg[i] << " ";
     cout << endl;
-    cout << "server_name success" << endl;
+    cout << GREEN("server_name success") << endl;
 }
 
 void parse_index(vector<string> arg)
@@ -29,24 +29,18 @@ void parse_index(vector<string> arg)
     for (size_t i = 0; i < arg.size(); i++)
         cout << arg[i] << " ";
     cout << endl;
-    cout << "index success" << endl;
+    cout << GREEN("index success") << endl;
 }
 
 void EraseComment(string &configtemp)
 {
-    std::string::size_type start = 0;
-    std::string::size_type end = 0;
+    size_t start = 0;
+    size_t end = 0;
 
-    for (size_t i = 0; i < configtemp.length(); i++)
+    while ((start = configtemp.find('#')) != string::npos)
     {
-        if (configtemp[i] == '#')
-        {
-            start = i;
-            end = i;
-            while (configtemp[end] != '\n')
-                end++;
-            configtemp.erase(start, end - start);
-        }
+        end = configtemp.find('\n', start);
+        configtemp.erase(start, end - start);
     }
 }
 #endif
