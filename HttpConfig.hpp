@@ -11,10 +11,14 @@ class HttpConfig : public Config
      *========================================================================**/
 
 public:
+    string etc;
+
     HttpConfig() : Config() {}
-    HttpConfig(char **argv) : Config()
+    HttpConfig(string config) : Config()
     {
-        ReadConfig(argv);
+        etc = config;
+        separateHttpBlock();
+        cout << etc << endl;
         SeparateServerBlock();
         cout << RED(" http block ") << endl;
         SetupConfig();
@@ -40,24 +44,21 @@ public:
      * #                          member functions
      *========================================================================**/
 
-    void ReadConfig(char **argv)
+    void separateHttpBlock()
     {
-        string line;
-        ifstream file(*(argv + 1));
+        size_t start = 0;
+        size_t end = 0;
 
-        if (file.is_open())
+        while ((start = etc.find("http ", end)) != string::npos)
         {
-            while (getline(file, line))
-                if (line.length() != 0)
-                    configtemp += line + '\n';
-            file.close();
+            if (configtemp.empty())
+                configtemp = ExtractBlock(etc, start);
+            else
+                return; // duplicate 에러 내뱉기
         }
-        else
-            cout << "Unable to open file";
-
-        EraseComment(configtemp);
+        if (configtemp.empty())
+            return; // http 블록이 없습니다 에러 내뱉기
     }
-
     void SeparateServerBlock()
     {
         size_t start = 0;

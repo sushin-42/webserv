@@ -6,7 +6,6 @@
 #include <sys/poll.h>
 
 #include "CGI.hpp"
-// #include "Config.hpp"
 #include "ConnSocket.hpp"
 #include "Pipe.hpp"
 #include "Poll.hpp"
@@ -26,7 +25,9 @@ int main(int argc, char **argv)
 		return (errMsg());
 	signal(SIGPIPE, SIG_IGN);
 
-	HttpConfig http(argv);
+	HttpConfig http(ReadConfig(argv));
+	cout << http.etc << endl;
+	cout << "" << endl;
 	cout << static_cast<LocationConfig *>(http.getLink()[0]->getLink()[0])->getURI() << endl;
 
 	ServerSocket serv("", 8888); // put your IP, "" means ANY

@@ -164,6 +164,7 @@ public:
 			extractConfig.push_back(configtemp[end]);
 		}
 		configtemp.erase(start, end - start + 1);
+
 		return extractConfig;
 	}
 	/**========================================================================

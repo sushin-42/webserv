@@ -43,4 +43,23 @@ void EraseComment(string &configtemp)
         configtemp.erase(start, end - start);
     }
 }
+
+string ReadConfig(char **argv)
+{
+    string line, configtemp;
+    ifstream file(*(argv + 1));
+
+    if (file.is_open())
+    {
+        while (getline(file, line))
+            if (line.length() != 0)
+                configtemp += line + '\n';
+        file.close();
+    }
+    else
+        cout << "Unable to open file";
+
+    EraseComment(configtemp);
+    return (configtemp);
+}
 #endif
