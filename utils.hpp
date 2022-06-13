@@ -243,6 +243,17 @@ string	toHex(T num)
 }
 
 template <class T>
+T	toHexNum(string s)
+{
+	T x;
+	std::stringstream ss;
+	ss << std::hex << s;
+	ss >> x;
+
+	return x;
+}
+
+template <class T>
 T	toNum(const string& s)
 {
 	std::istringstream sstream(s);

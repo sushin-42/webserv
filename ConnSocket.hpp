@@ -138,16 +138,27 @@ public:
 		if (ReqH.exist("Transfer-Encoding"))	// it will override Content-Length
 		{
 			/*
-				what if trailing header, or something exists after "0\r\n\r\n" ?
-				what if payload contains "0\r\n\r\n" ?
+				current:
+				- discard after "0\r\n\r\n" ?
+				- accept payload contains "0\r\n\r\n"
 			*/
-			if (recvContent.substr(recvContent.length()-5) == "0\r\n\r\n")
+			ReqB.setChunk(recvContent);
+			try
 			{
-				ReqB.setContent(recvContent);
 				ReqB.decodingChunk();
+				cout << "------------" << endl;
+				cout << ReqB.getContent() << endl;
+				cout << "------------" << endl;
 			}
-			else
-				throw readMore();
+			catch (exception& e)
+			{
+				if (CONVERT(&e, ReqBody::invalidChunk))
+					throw badRequest();
+				if (CONVERT(&e, ReqBody::readMore) ||
+					CONVERT(&e, ConnSocket::readMore))
+					throw readMore();
+			}
+
 		}
 		else if (ReqH.exist("Content-Length"))
 		{
