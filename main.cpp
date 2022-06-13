@@ -16,16 +16,27 @@
 #include "ServerSocket.hpp"
 #include "core.hpp"
 #include "utils.hpp"
+#include "ConfigUtils.hpp"
 #include "LocationConfig.hpp"
 #include "ServerConfig.hpp"
 #include "HttpConfig.hpp"
+
 int main(int argc, char **argv)
 {
 	if (argvError(argc))
 		return (errMsg());
 	signal(SIGPIPE, SIG_IGN);
+	HttpConfig http;
+	try
+	{
+		http.setConfig(ReadConfig(argv));
+	}
+	catch (const std::exception &e)
+	{
+		std::cerr << e.what() << '\n';
+		return -1;
+	}
 
-	HttpConfig http(ReadConfig(argv));
 	cout << http.etc << endl;
 	cout << "" << endl;
 	cout << static_cast<LocationConfig *>(http.getLink()[0]->getLink()[0])->getURI() << endl;
@@ -156,3 +167,15 @@ int main(int argc, char **argv)
 		//.---------------------------------send end---------------------------------.//
 	}
 }
+
+// int main(int argc, char **argv)
+// {
+// 	try
+// 	{
+// 		engine(argc, argv);
+// 	}
+// 	catch (const std::exception &e)
+// 	{
+// 		cerr << e.what() << endl;
+// 	}
+// }

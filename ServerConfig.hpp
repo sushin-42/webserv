@@ -1,6 +1,6 @@
 #ifndef SERVERCONFIG_HPP
 #define SERVERCONFIG_HPP
-
+#include "LocationConfig.hpp"
 class Config;
 
 class ServerConfig : public Config
@@ -10,8 +10,8 @@ class ServerConfig : public Config
      *========================================================================**/
 
 private:
-    string server_name;
-    string ip;
+    vector<string> server_name;
+    vector<string> ip;
     // unsigned short port;
 
     /**========================================================================

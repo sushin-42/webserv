@@ -7,11 +7,16 @@
 #include <map>
 #include <fstream>
 #include <sstream>
+
 #include <algorithm>
 #include "utils.hpp"
-#include "ConfigUtils.hpp"
+// #include "ConfigUtils.hpp"
 using namespace std;
-
+class Config;
+void parse_root(vector<string> arg, Config *config);
+void parse_listen(vector<string> arg, Config *config);
+void parse_server_name(vector<string> arg, Config *config);
+void parse_index(vector<string> arg, Config *config);
 string root = getcwd(NULL, 0);
 
 map<string, string> MIME = getMIME();
@@ -38,8 +43,7 @@ map<string, string> MIME = getMIME();
 // "send_timeout",
 // "client_body_timeout"
 // };
-
-typedef void (*PointerFunction)(vector<string> arg);
+typedef void (*PointerFunction)(vector<string> arg, Config *config);
 typedef map<std::string, PointerFunction> func_map;
 class ErrorPage
 {
@@ -59,7 +63,7 @@ protected:
 	string configtemp;
 	string root;
 	bool auto_index; // directory listing
-	ErrorPage error_page;
+	map<int, string> error_page;
 	int keepalive_requests;
 
 	string default_type;
@@ -102,6 +106,14 @@ public:
 	/**========================================================================
 	 * #                          member functions
 	 *========================================================================**/
+	void setRoot(string path)
+	{
+		this->root = path;
+	}
+	string getRoot()
+	{
+		return (this->root);
+	}
 	vector<Config *> getLink()
 	{
 		return this->link;
@@ -118,7 +130,7 @@ public:
 		func_map::iterator it;
 
 		if ((it = m.find(pFunction)) != m.end())
-			(*it->second)(arg);
+			(*it->second)(arg, this);
 		else
 			return -1; // 맞는거 없어서 에러 내뱉기 구현
 		return 0;
@@ -170,6 +182,18 @@ public:
 	/**========================================================================
 	 * !                            Exceptions
 	 *========================================================================**/
+
+	class parseFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseFail() : msg(RED("parseFail")) {}
+		explicit parseFail(const string &m) : msg(m) {}
+		virtual ~parseFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
 };
 
 //*--------------------------------------------------------------------------*//

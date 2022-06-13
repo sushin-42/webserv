@@ -1,35 +1,56 @@
 #ifndef CONFIGUTILS_HPP
 #define CONFIGUTILS_HPP
-void parse_root(vector<string> arg)
+#include "Config.hpp"
+#include "ServerConfig.hpp"
+// class Config;
+class HttpConfig;
+class ServerConfig;
+class LocationConfig;
+void parse_root(vector<string> arg, Config *config)
 {
     for (size_t i = 0; i < arg.size(); i++)
         cout << arg[i] << " ";
     cout << endl;
     cout << GREEN("root success") << endl;
+    cout << GREEN("") << endl;
+    cout << typeid(config).name() << endl;
+    // HttpConfig *http = dynamic_cast<HttpConfig *>(config);
+    ServerConfig *server = dynamic_cast<ServerConfig *>(config);
+    // LocationConfig *location = dynamic_cast<LocationConfig *>(config);
+
+    // cout << typeid(http).name() << endl;
+    cout << typeid(server).name() << endl;
+    // cout << typeid(location).name() << endl;
+
+    cout << GREEN("") << endl;
+    // throw Config::parseFail();
 }
 
-void parse_listen(vector<string> arg)
+void parse_listen(vector<string> arg, Config *config)
 {
     for (size_t i = 0; i < arg.size(); i++)
         cout << arg[i] << " ";
     cout << endl;
     cout << GREEN("listen success") << endl;
+    cout << typeid(config).name() << endl;
 }
 
-void parse_server_name(vector<string> arg)
+void parse_server_name(vector<string> arg, Config *config)
 {
     for (size_t i = 0; i < arg.size(); i++)
         cout << arg[i] << " ";
     cout << endl;
     cout << GREEN("server_name success") << endl;
+    cout << typeid(config).name() << endl;
 }
 
-void parse_index(vector<string> arg)
+void parse_index(vector<string> arg, Config *config)
 {
     for (size_t i = 0; i < arg.size(); i++)
         cout << arg[i] << " ";
     cout << endl;
     cout << GREEN("index success") << endl;
+    cout << typeid(config).name() << endl;
 }
 
 void EraseComment(string &configtemp)

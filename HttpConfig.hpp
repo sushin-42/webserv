@@ -14,17 +14,6 @@ public:
     string etc;
 
     HttpConfig() : Config() {}
-    HttpConfig(string config) : Config()
-    {
-        etc = config;
-        separateHttpBlock();
-        cout << etc << endl;
-        SeparateServerBlock();
-        cout << RED(" http block ") << endl;
-        SetupConfig();
-        cout << RED(" http block ") << endl;
-    }
-    // HttpConfig(const HttpConfig &src) : Config() {}
     virtual ~HttpConfig() {}
 
     /**========================================================================
@@ -43,7 +32,16 @@ public:
     /**========================================================================
      * #                          member functions
      *========================================================================**/
-
+    void setConfig(string config)
+    {
+        etc = config;
+        separateHttpBlock();
+        cout << etc << endl;
+        SeparateServerBlock();
+        cout << RED(" http block ") << endl;
+        SetupConfig();
+        cout << RED(" http block ") << endl;
+    }
     void separateHttpBlock()
     {
         size_t start = 0;
