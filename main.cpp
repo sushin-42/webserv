@@ -39,8 +39,10 @@ int main(int argc, char **argv)
 
 	cout << http.etc << endl;
 	cout << "" << endl;
-	cout << static_cast<LocationConfig *>(http.getLink()[0]->getLink()[0])->getURI() << endl;
-
+	// cout << static_cast<LocationConfig *>(http.link[0]->link[0])->URI << endl;
+	cout << static_cast<LocationConfig *>(http.link[0]->link[1])->assign << endl;
+	cout << "" << endl;
+	return 0;
 	ServerSocket serv("", 8888); // put your IP, "" means ANY
 	ConnSocket *connected;
 	Pipe *CGIpipe;

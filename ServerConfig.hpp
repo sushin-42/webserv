@@ -9,7 +9,7 @@ class ServerConfig : public Config
      * %                          member variables
      *========================================================================**/
 
-private:
+public:
     vector<string> server_name;
     vector<string> ip;
     // unsigned short port;

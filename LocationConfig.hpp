@@ -1,7 +1,7 @@
 
 #ifndef LOCATIONCONFIG_HPP
 #define LOCATIONCONFIG_HPP
-
+#include "Config.hpp"
 class Config;
 
 class LocationConfig : public Config
@@ -9,9 +9,9 @@ class LocationConfig : public Config
     /**========================================================================
      * %                          member variables
      *========================================================================**/
-
-    string URI;
-    // bool assign;
+public:
+    string URI;  // location URI(/admin/)  {}
+    bool assign; //
     vector<string> limit_except_method;
 
     /**========================================================================
@@ -20,17 +20,17 @@ class LocationConfig : public Config
 
 public:
     LocationConfig() : Config() {}
-    LocationConfig(string str, string uri) : Config()
+    LocationConfig(string str, const string uri) : Config()
     {
         configtemp = str;
         URI = uri;
+        assign = checkAssign(uri);
         cout << BLUE(" location block ") << endl;
         SetupConfig();
         cout << BLUE(" location block ") << endl;
     }
     // LocationConfig(const LocationConfig &src) : Config() {}
     virtual ~LocationConfig() {}
-
     /**========================================================================
      * *                            operators
      *========================================================================**/
@@ -47,11 +47,13 @@ public:
     /**========================================================================
      * #                          member functions
      *========================================================================**/
-
-    string getURI()
+    bool checkAssign(const string uri)
     {
-        return this->URI;
+        if (uri.find("=") != string::npos)
+            return true;
+        return false;
     }
+
     /**========================================================================
      * !                            Exceptions
      *========================================================================**/

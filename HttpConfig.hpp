@@ -11,7 +11,7 @@ class HttpConfig : public Config
      *========================================================================**/
 
 public:
-    string etc;
+    string etc; // http 블록 외에 있는 디렉티브 모음
 
     HttpConfig() : Config() {}
     virtual ~HttpConfig() {}
@@ -52,10 +52,10 @@ public:
             if (configtemp.empty())
                 configtemp = ExtractBlock(etc, start);
             else
-                return; // duplicate 에러 내뱉기
+                throw Config::httpDupe();
         }
         if (configtemp.empty())
-            return; // http 블록이 없습니다 에러 내뱉기
+            throw Config::notExistHttpBlock();
     }
     void SeparateServerBlock()
     {

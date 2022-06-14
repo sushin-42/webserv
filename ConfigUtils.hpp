@@ -78,7 +78,7 @@ string ReadConfig(char **argv)
         file.close();
     }
     else
-        cout << "Unable to open file";
+        cout << "Unable to open file"; // throw
 
     EraseComment(configtemp);
     return (configtemp);

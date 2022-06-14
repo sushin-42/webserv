@@ -54,13 +54,13 @@ class Config
 	 * %                          member variables
 	 *========================================================================**/
 
-protected:
-	vector<Config *> link;
-
+public:
+	//파싱 변수
 	func_map m;
-
 	vector<string> conf;
 	string configtemp;
+	//멤버 변수
+	vector<Config *> link;
 	string root;
 	bool auto_index; // directory listing
 	map<int, string> error_page;
@@ -106,18 +106,7 @@ public:
 	/**========================================================================
 	 * #                          member functions
 	 *========================================================================**/
-	void setRoot(string path)
-	{
-		this->root = path;
-	}
-	string getRoot()
-	{
-		return (this->root);
-	}
-	vector<Config *> getLink()
-	{
-		return this->link;
-	}
+
 	void MapSetting()
 	{
 		m["root"] = &parse_root;
@@ -192,6 +181,28 @@ public:
 		explicit parseFail() : msg(RED("parseFail")) {}
 		explicit parseFail(const string &m) : msg(m) {}
 		virtual ~parseFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+	class httpDupe : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit httpDupe() : msg(RED("httpDupe")) {}
+		explicit httpDupe(const string &m) : msg(m) {}
+		virtual ~httpDupe() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+	class notExistHttpBlock : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit notExistHttpBlock() : msg(RED("notExistHttpBlock")) {}
+		explicit notExistHttpBlock(const string &m) : msg(m) {}
+		virtual ~notExistHttpBlock() throw(){};
 		virtual const char *what() const throw() { return msg.c_str(); }
 	};
 };
