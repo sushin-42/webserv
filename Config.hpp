@@ -61,13 +61,14 @@ public:
 	string configtemp;
 	//멤버 변수
 	vector<Config *> link;
+	vector<string> index;
 	string root;
 	bool auto_index; // directory listing
 	map<int, string> error_page;
-	int keepalive_requests;
+	ssize_t keepalive_requests;
 
 	string default_type;
-	int client_body_size;
+	size_t client_body_size;
 	bool reset_timedout_connection;
 
 	time_t lingering_timeout;

@@ -12,7 +12,7 @@ class ServerConfig : public Config
 public:
     vector<string> server_name;
     vector<string> ip;
-    // unsigned short port;
+    vector<unsigned short> port;
 
     /**========================================================================
      * @                           Constructors
