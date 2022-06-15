@@ -22,6 +22,9 @@ public:
     ServerConfig() : Config() {}
     ServerConfig(string str) : Config()
     {
+        // server_name[0] = "";
+        // ip[0] = "";
+        // port[0] = convertStringToPort("8888");
         configtemp = str;
         SeparateLocationBlock();
         cout << PURPLE(" server block ") << endl;

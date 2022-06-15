@@ -13,7 +13,9 @@ class HttpConfig : public Config
 public:
     string etc; // http 블록 외에 있는 디렉티브 모음
 
-    HttpConfig() : Config() {}
+    HttpConfig() : Config()
+    {
+    }
     virtual ~HttpConfig() {}
 
     /**========================================================================
@@ -32,6 +34,57 @@ public:
     /**========================================================================
      * #                          member functions
      *========================================================================**/
+    void defaultSet()
+    {
+        for (size_t i = 0; i < sizeof(dupeCheck); i++)
+        {
+            if (dupeCheck[i] == false)
+            {
+                switch (i)
+                {
+                case 0:
+                    index.push_back("index.html");
+                    break;
+                case 1:
+                    root = "html";
+                    break;
+                case 2:
+                    auto_index = false;
+                    break;
+                case 3:
+                    keepalive_time = convertStringToTime("1h");
+                    break;
+                case 4:
+                    keepalive_timeout = convertStringToTime("75s");
+                    break;
+                case 5:
+                    keepalive_requests = 100;
+                    break;
+                case 6:
+                    default_type = "text/plain";
+                    break;
+                case 7:
+                    client_max_body_size = convertStringToByte("1m");
+                    break;
+                case 8:
+                    reset_timedout_connection = false;
+                    break;
+                case 9:
+                    lingering_time = convertStringToTime("30s");
+                    break;
+                case 10:
+                    lingering_timeout = convertStringToTime("5s");
+                    break;
+                case 11:
+                    send_timeout = convertStringToTime("60s");
+                    break;
+                case 12:
+                    client_body_timeout = convertStringToTime("60s");
+                    break;
+                }
+            }
+        }
+    }
     void setConfig(string config)
     {
         etc = config;

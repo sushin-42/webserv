@@ -23,8 +23,9 @@ public:
     LocationConfig(string str, const string uri) : Config()
     {
         configtemp = str;
+        // limit_except_method[0] = "";
         URI = uri;
-        assign = checkAssign(uri);
+        assign = checkAssign(URI);
         cout << BLUE(" location block ") << endl;
         SetupConfig();
         cout << BLUE(" location block ") << endl;
@@ -47,10 +48,17 @@ public:
     /**========================================================================
      * #                          member functions
      *========================================================================**/
-    bool checkAssign(const string uri)
+    bool checkAssign(string &uri)
     {
-        if (uri.find("=") != string::npos)
+        size_t pos;
+
+        if (uri.length() == 0)
+            throw Config::parseLocationFail();
+        if ((pos = uri.find("=")) != string::npos)
+        {
+            uri.erase(pos, 1);
             return true;
+        }
         return false;
     }
 

@@ -30,6 +30,7 @@ int main(int argc, char **argv)
 	try
 	{
 		http.setConfig(ReadConfig(argv));
+		http.defaultSet();
 	}
 	catch (const std::exception &e)
 	{

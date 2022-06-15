@@ -1,8 +1,9 @@
 #ifndef CONFIGUTILS_HPP
 #define CONFIGUTILS_HPP
-#include "Config.hpp"
+// #include "Config.hpp"
 #include "ServerConfig.hpp"
-// class Config;
+#include "ConfigUtilsException.hpp"
+class Config;
 class HttpConfig;
 class ServerConfig;
 class LocationConfig;
@@ -10,62 +11,62 @@ class LocationConfig;
 using namespace std;
 
 //=====================================parse_util========================================
-void    isPath(string path)
+void isPath(string path)
 {
     if (path.find("$") != string::npos)
-        throw Config::parseFail();
+        throw isPathFail();
 }
 
-string    convertStringToLower(string str)
+string convertStringToLower(string str)
 {
-    string  lower = "";
+    string lower = "";
 
     for (string::size_type i = 0; i < str.length(); i++)
         lower.append(1, tolower(str[i]));
     return lower;
 }
 
-string    convertStringToUpper(string str)
+string convertStringToUpper(string str)
 {
-    string  upper = "";
+    string upper = "";
 
     for (string::size_type i = 0; i < str.length(); i++)
         upper.append(1, toupper(str[i]));
     return upper;
 }
 
-ssize_t    convertStringToSsize_T(string val)
+ssize_t convertStringToSsize_T(string val)
 {
-    ssize_t         num = 0;
-    istringstream   iss;
+    ssize_t num = 0;
+    istringstream iss;
 
     if (val.find_first_not_of("0123456789") != string::npos)
-        throw Config::parseFail();
+        throw convertStringToSsize_TFail();
     iss.str(val);
     iss >> num;
     if (iss.fail())
-        throw Config::parseFail();
+        throw convertStringToSsize_TFail();
     return num;
 }
 
-int    convertStringToStateCode(string code)
+int convertStringToStateCode(string code)
 {
-    ssize_t         val = 0;
+    ssize_t val = 0;
 
     val = convertStringToSsize_T(code);
     if (!(300 <= val && val < 600))
-        throw Config::parseFail();
+        throw convertStringToStateCodeFail();
     return static_cast<int>(val);
 }
 
-string  convertStringToIpv4(unsigned int ip)
+string convertStringToIpv4(unsigned int ip)
 {
-    stringstream    ss;
-    string          hexString;
-    string          cut;
-    int             pos;
-    string          ipv4 = "";
-    int             decimal;
+    stringstream ss;
+    string hexString;
+    string cut;
+    int pos;
+    string ipv4 = "";
+    int decimal;
 
     ss << hex << ip;
     hexString = ss.str();
@@ -83,7 +84,7 @@ string  convertStringToIpv4(unsigned int ip)
             decimal = strtol(cut.c_str(), NULL, 16);
         }
         else
-            decimal = 0;       
+            decimal = 0;
         ss << "." << dec << decimal;
         ipv4.insert(0, ss.str());
     }
@@ -91,10 +92,10 @@ string  convertStringToIpv4(unsigned int ip)
     return ipv4;
 }
 
-string  convertStringToIP(string ip)
+string convertStringToIP(string ip)
 {
     ssize_t numString;
-    int     dot;
+    int dot;
 
     if ((ip.find(".")) != string::npos)
     {
@@ -102,38 +103,38 @@ string  convertStringToIP(string ip)
         for (string::size_type i = 0; i < ip.length(); i++)
         {
             if (ip[i] == '.')
-            dot++;
+                dot++;
         }
         if (inet_addr(ip.c_str()) != (in_addr_t)-1)
         {
-            for(dot = 4 - dot; dot > 0; dot--)
+            for (dot = 4 - dot; dot > 0; dot--)
                 ip.insert(0, "0.");
             return ip;
         }
-        throw Config::parseFail();
+        throw convertStringToIPFail();
     }
 
     numString = convertStringToSsize_T(ip);
     return convertStringToIpv4(static_cast<unsigned int>(numString));
 }
 
-unsigned short  convertStringToPort(string code)
+unsigned short convertStringToPort(string code)
 {
-    ssize_t         val = 0;
+    ssize_t val = 0;
 
     val = convertStringToSsize_T(code);
     if (!(0 <= val && val <= 65535))
-        throw Config::parseFail();
+        throw convertStringToPortFail();
     return static_cast<unsigned short>(val);
 }
 
-pair<ssize_t, string>    splitStringToType(string val)
+pair<ssize_t, string> splitStringToType(string val)
 {
-    string::size_type   pos;
-    string              numStr = "";
-    string              type = "";
-    ssize_t             num;
-    istringstream       iss;
+    string::size_type pos;
+    string numStr = "";
+    string type = "";
+    ssize_t num;
+    istringstream iss;
 
     pos = val.find_first_not_of("0123456789", 0);
     if (pos != string::npos)
@@ -147,22 +148,22 @@ pair<ssize_t, string>    splitStringToType(string val)
     iss.str(numStr);
     iss >> num;
     if (iss.fail())
-        throw Config::parseFail();
+        throw splitStringToTypeFail();
     return make_pair(num, type);
 }
 
-time_t   convertStringToTime(string val)
+time_t convertStringToTime(string val)
 {
-    int                     pos;
-    time_t                  numTime;
-    string                  timeType[4] = {"h", "m", "s", "ms"};
-    pair<ssize_t, string>   valuePair;
+    int pos;
+    time_t numTime;
+    string timeType[4] = {"h", "m", "s", "ms"};
+    pair<ssize_t, string> valuePair;
 
     valuePair = splitStringToType(val);
     if (valuePair.second == "")
         valuePair.second = "ms";
     numTime = static_cast<time_t>(valuePair.first);
-    
+
     for (pos = 0; pos < 4; pos++)
     {
         if (timeType[pos] == valuePair.second)
@@ -172,33 +173,33 @@ time_t   convertStringToTime(string val)
     {
     case 0:
         if (numTime > 2562047788)
-            throw Config::parseFail();
+            throw convertStringToTimeFail();
         numTime *= 60;
     case 1:
         if (numTime > 153722867280)
-            throw Config::parseFail();
+            throw convertStringToTimeFail();
         numTime *= 60;
     case 2:
         if (numTime > 9223372036854)
-            throw Config::parseFail();
+            throw convertStringToTimeFail();
         numTime *= 1000;
     case 3:
         break;
     case 4:
-        throw Config::parseFail();
+        throw convertStringToTimeFail();
     }
     return numTime;
 }
 
-ssize_t   convertStringToByte(string val)
+ssize_t convertStringToByte(string val)
 {
-    char                    type;
-    ssize_t                 numByte;
-    pair<ssize_t, string>   valuePair;
+    char type;
+    ssize_t numByte;
+    pair<ssize_t, string> valuePair;
 
     valuePair = splitStringToType(val);
     if (valuePair.second.length() > 1 || valuePair.second.find_first_not_of("gmkGMK", 0) != string::npos)
-        throw Config::parseFail();
+        throw convertStringToByteFail();
     numByte = valuePair.first;
 
     type = *(valuePair.second.c_str());
@@ -206,15 +207,15 @@ ssize_t   convertStringToByte(string val)
     {
     case 'g':
         if (numByte > 8589934591)
-            throw Config::parseFail();
+            throw convertStringToByteFail();
         numByte *= 1024;
     case 'm':
         if (numByte > 8796093022207)
-            throw Config::parseFail();
+            throw convertStringToByteFail();
         numByte *= 1024;
     case 'k':
         if (numByte > 9007199254740991)
-            throw Config::parseFail();
+            throw convertStringToByteFail();
         numByte *= 1024;
         break;
     }
@@ -222,67 +223,43 @@ ssize_t   convertStringToByte(string val)
 }
 //=====================================parse_util========================================
 
-
 //=====================================parse_arg========================================
 
 void parse_root(vector<string> arg, Config *config)
 {
-    if (arg.size() != 1)
-        throw Config::parseFail();
+    if (arg.size() != 1 || config->dupeCheck.root == true)
+        throw Config::parseRootFail();
     isPath(arg[0]);
     config->root = arg[0];
+    config->dupeCheck.root = true;
 
-    // for (size_t i = 0; i < arg.size(); i++)
-    //     cout << arg[i] << " ";
-    // cout << endl;
-    // cout << GREEN("root success") << endl;
-    // cout << GREEN("") << endl;
     // cout << typeid(config).name() << endl;
     // // HttpConfig *http = dynamic_cast<HttpConfig *>(config);
     // ServerConfig *server = dynamic_cast<ServerConfig *>(config);
     // // LocationConfig *location = dynamic_cast<LocationConfig *>(config);
-
-    // // cout << typeid(http).name() << endl;
-    // cout << typeid(server).name() << endl;
-    // // cout << typeid(location).name() << endl;
-
-    // cout << GREEN("") << endl;
-    // throw Config::parseFail();
 }
 
 void parse_listen(vector<string> arg, Config *config)
 {
-    string::size_type   pos;
+    string::size_type pos;
 
     if (arg.size() != 1)
-        throw Config::parseFail();
-    ServerConfig * server = dynamic_cast<ServerConfig *>(config);
+        throw Config::parseListenFail();
+    ServerConfig *server = dynamic_cast<ServerConfig *>(config);
     if ((pos = arg[0].find(':')) != string::npos)
     {
         server->ip.push_back(convertStringToIP(arg[0].substr(0, pos)));
         server->port.push_back(convertStringToPort(arg[0].substr(pos, arg[0].length())));
     }
     server->port.push_back(convertStringToPort(arg[0]));
-
-    // for (size_t i = 0; i < arg.size(); i++)
-    //     cout << arg[i] << " ";
-    // cout << endl;
-    // cout << GREEN("listen success") << endl;
-    // cout << typeid(config).name() << endl;
 }
 
 void parse_server_name(vector<string> arg, Config *config)
 {
-    ServerConfig * server = dynamic_cast<ServerConfig *>(config);
-    
+    ServerConfig *server = dynamic_cast<ServerConfig *>(config);
+
     for (vector<string>::size_type i = 0; i < arg.size(); i++)
         server->server_name.push_back(arg[i]);
-
-    // for (size_t i = 0; i < arg.size(); i++)
-    //     cout << arg[i] << " ";
-    // cout << endl;
-    // cout << GREEN("server_name success") << endl;
-    // cout << typeid(config).name() << endl;
 }
 
 void parse_index(vector<string> arg, Config *config)
@@ -292,34 +269,29 @@ void parse_index(vector<string> arg, Config *config)
         isPath(arg[i]);
         config->index.push_back(arg[i]);
     }
-
-    // for (size_t i = 0; i < arg.size(); i++)
-    //     cout << arg[i] << " ";
-    // cout << endl;
-    // cout << GREEN("index success") << endl;
-    // cout << typeid(config).name() << endl;
 }
 
 void parse_auto_index(vector<string> arg, Config *config)
 {
-    string  button;
+    string button;
 
-    if (arg.size() != 1)
-        throw Config::parseFail();
+    if (arg.size() != 1 || config->dupeCheck.autoindex == true)
+        throw Config::parseAutoIndexFail();
     button = convertStringToLower(arg[0]);
     if (button == "off")
         config->auto_index = 0;
     else
         config->auto_index = 1;
+    config->dupeCheck.autoindex = true;
 }
 
 void parse_error_page(vector<string> arg, Config *config)
 {
-    string  path;
-    int     status;
+    string path;
+    int status;
 
     if (arg.size() < 2)
-        throw Config::parseFail();
+        throw Config::parseErrorPageFail();
     isPath(arg[arg.size() - 1]);
     path = arg[arg.size() - 1];
 
@@ -332,100 +304,110 @@ void parse_error_page(vector<string> arg, Config *config)
 
 void parse_keepalive_requests(vector<string> arg, Config *config)
 {
-    if (arg.size() != 1)
-        throw Config::parseFail();
+    if (arg.size() != 1 || config->dupeCheck.keepalive_requests == true)
+        throw Config::parseKeepRequestsFail();
     config->keepalive_requests = convertStringToSsize_T(arg[0]);
+    config->dupeCheck.keepalive_requests = true;
 }
 
 void parse_default_type(vector<string> arg, Config *config)
 {
-    if (arg.size() != 1)
-        throw Config::parseFail();
+    if (arg.size() != 1 || config->dupeCheck.default_type == true)
+        throw Config::parseDefaultTypeFail();
     config->default_type = arg[0];
+    config->dupeCheck.default_type = true;
 }
 
-void parse_client_body_size(vector<string> arg, Config *config)
+void parse_client_max_body_size(vector<string> arg, Config *config)
 {
-    if (arg.size() != 1)
-        throw Config::parseFail();
-    config->client_body_size = convertStringToByte(arg[0]);
+    if (arg.size() != 1 || config->dupeCheck.client_max_body_size == true)
+        throw Config::parseClientBodySizeFail();
+    config->client_max_body_size = convertStringToByte(arg[0]);
+    config->dupeCheck.client_max_body_size = true;
 }
 
 void parse_reset_timedout_connection(vector<string> arg, Config *config)
 {
-    string  button;
+    string button;
 
-    if (arg.size() != 1)
-        throw Config::parseFail();
+    if (arg.size() != 1 || config->dupeCheck.reset_timedout_connection == true)
+        throw Config::parseResetTimedoutConnFail();
     button = convertStringToLower(arg[0]);
     if (button == "off")
         config->reset_timedout_connection = 0;
     else
         config->reset_timedout_connection = 1;
+    config->dupeCheck.reset_timedout_connection = true;
 }
 
 void parse_lingering_timeout(vector<string> arg, Config *config)
 {
-    if (arg.size() != 1)
-        throw Config::parseFail();
+    if (arg.size() != 1 || config->dupeCheck.lingering_timeout == true)
+        throw Config::parseLingeringTimeoutFail();
     config->lingering_timeout = convertStringToTime(arg[0]);
+    config->dupeCheck.lingering_timeout = true;
 }
 
 void parse_lingering_time(vector<string> arg, Config *config)
 {
-    if (arg.size() != 1)
-        throw Config::parseFail();
+    if (arg.size() != 1 || config->dupeCheck.lingering_time == true)
+        throw Config::parseLingeringTimeFail();
     config->lingering_time = convertStringToTime(arg[0]);
+    config->dupeCheck.lingering_time = true;
 }
 
 void parse_keepalive_time(vector<string> arg, Config *config)
 {
-    if (arg.size() != 1)
-        throw Config::parseFail();
+    if (arg.size() != 1 || config->dupeCheck.keepalive_time == true)
+        throw Config::parseKeepTimeFail();
     config->keepalive_time = convertStringToTime(arg[0]);
+    config->dupeCheck.keepalive_time = true;
 }
 
 void parse_keepalive_timeout(vector<string> arg, Config *config)
 {
-    if (arg.size() != 1)
-        throw Config::parseFail();
+    if (arg.size() != 1 || config->dupeCheck.keepalive_timeout == true)
+        throw Config::parseKeepTimeoutFail();
     config->keepalive_timeout = convertStringToTime(arg[0]);
+    config->dupeCheck.keepalive_timeout = true;
 }
 
 void parse_send_timeout(vector<string> arg, Config *config)
 {
-    if (arg.size() != 1)
-        throw Config::parseFail();
+    if (arg.size() != 1 || config->dupeCheck.send_timeout == true)
+        throw Config::parseSendTimeoutFail();
     config->send_timeout = convertStringToTime(arg[0]);
+    config->dupeCheck.send_timeout = true;
 }
 
 void parse_client_body_timeout(vector<string> arg, Config *config)
 {
-    if (arg.size() != 1)
-        throw Config::parseFail();
+    if (arg.size() != 1 || config->dupeCheck.client_body_timeout == true)
+        throw Config::parseClientBodyTimeoutFail();
     config->client_body_timeout = convertStringToTime(arg[0]);
+    config->dupeCheck.client_body_timeout = true;
 }
 
-void parse_location(string uri, Config *config)
-{
-    LocationConfig  *location;
+// void parse_location(string uri, Config *config)
+// {
+//     LocationConfig *location;
 
-    if (uri.length() == 0)
-        throw Config::parseFail();
-    location = dynamic_cast<LocationConfig *>(config);
-    if (uri[0] == '=')
-    {
-        location->assign = 1;
-        uri.erase(0, 1);
-    }
-    location->URI = uri;
-}
+//     if (uri.length() == 0)
+//         throw Config::parseLocationFail();
+//     location = dynamic_cast<LocationConfig *>(config);
+//     if (uri[0] == '=')
+//     {
+//         location->assign = 1;
+//         uri.erase(0, 1);
+//     }
+//     location->URI = uri;
+// }
 
 void parse_limit_except_method(vector<string> arg, Config *config)
 {
-    LocationConfig              *location;
-    string                      method;
-    vector<string>::size_type   check;
+    LocationConfig *location;
+    string method;
+    vector<string>::size_type check;
 
     location = dynamic_cast<LocationConfig *>(config);
     for (vector<string>::size_type i = 0; i < arg.size(); i++)
@@ -443,7 +425,6 @@ void parse_limit_except_method(vector<string> arg, Config *config)
 }
 
 //=====================================parse_arg========================================
-
 
 void EraseComment(string &configtemp)
 {

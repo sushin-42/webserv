@@ -7,16 +7,54 @@
 #include <map>
 #include <fstream>
 #include <sstream>
-
 #include <algorithm>
 #include "utils.hpp"
 // #include "ConfigUtils.hpp"
 using namespace std;
 class Config;
+struct Duplicate
+{
+	bool index;
+	bool root;
+	bool autoindex;
+	bool keepalive_time;
+	bool keepalive_timeout;
+	bool keepalive_requests;
+	bool default_type;
+	bool client_max_body_size;
+	bool reset_timedout_connection;
+	bool lingering_time;
+	bool lingering_timeout;
+	bool send_timeout;
+	bool client_body_timeout;
+
+	bool &operator[](int index) { return *(&root + index); }
+};
+// ssize_t convertStringToByte(string val);
+// time_t convertStringToTime(string val);
+// unsigned short convertStringToPort(string code);
+
 void parse_root(vector<string> arg, Config *config);
 void parse_listen(vector<string> arg, Config *config);
 void parse_server_name(vector<string> arg, Config *config);
 void parse_index(vector<string> arg, Config *config);
+void parse_index(vector<string> arg, Config *config);
+void parse_root(vector<string> arg, Config *config);
+void parse_auto_index(vector<string> arg, Config *config);
+void parse_error_page(vector<string> arg, Config *config);
+void parse_keepalive_requests(vector<string> arg, Config *config);
+void parse_keepalive_time(vector<string> arg, Config *config);
+void parse_keepalive_timeout(vector<string> arg, Config *config);
+void parse_lingering_time(vector<string> arg, Config *config);
+void parse_lingering_timeout(vector<string> arg, Config *config);
+void parse_send_timeout(vector<string> arg, Config *config);
+void parse_client_body_timeout(vector<string> arg, Config *config);
+void parse_reset_timedout_connection(vector<string> arg, Config *config);
+void parse_client_max_body_size(vector<string> arg, Config *config);
+void parse_default_type(vector<string> arg, Config *config);
+void parse_listen(vector<string> arg, Config *config);
+void parse_server_name(vector<string> arg, Config *config);
+void parse_limit_except_method(vector<string> arg, Config *config);
 string root = getcwd(NULL, 0);
 
 map<string, string> MIME = getMIME();
@@ -34,7 +72,7 @@ map<string, string> MIME = getMIME();
 // "error_page",
 // "keepalive_requests",
 // "default_type",
-// "client_body_size",
+// "client_max_body_size",
 // "reset_timedout_connection",
 // "lingering_timeout",
 // "lingering_time",
@@ -59,6 +97,8 @@ public:
 	func_map m;
 	vector<string> conf;
 	string configtemp;
+	//중복 체크 구조체
+	Duplicate dupeCheck;
 	//멤버 변수
 	vector<Config *> link;
 	vector<string> index;
@@ -68,7 +108,7 @@ public:
 	ssize_t keepalive_requests;
 
 	string default_type;
-	size_t client_body_size;
+	size_t client_max_body_size;
 	bool reset_timedout_connection;
 
 	time_t lingering_timeout;
@@ -87,7 +127,10 @@ public:
 
 	*========================================================================**/
 public:
-	Config() : link() { MapSetting(); }
+	Config() : link()
+	{
+		MapSetting();
+	}
 	Config(const Config &src) : link(src.link) {}
 	virtual ~Config() {}
 
@@ -110,10 +153,27 @@ public:
 
 	void MapSetting()
 	{
+		m["index"] = &parse_index;
 		m["root"] = &parse_root;
+		m["auto_index"] = &parse_auto_index;
+		m["error_page"] = &parse_error_page;
+		m["keepalive_requests"] = &parse_keepalive_requests;
+		m["keepalive_time"] = &parse_keepalive_time;
+		m["keepalive_timeout"] = &parse_keepalive_timeout;
+		m["lingering_time"] = &parse_lingering_time;
+		m["lingering_timeout"] = &parse_lingering_timeout;
+		m["send_timeout"] = &parse_send_timeout;
+		m["client_body_timeout"] = &parse_client_body_timeout;
+		m["reset_timedout_connection"] = &parse_reset_timedout_connection;
+		m["client_max_body_size"] = &parse_client_max_body_size;
+		m["default_type"] = &parse_default_type;
+
+		// only server block
 		m["listen"] = &parse_listen;
 		m["server_name"] = &parse_server_name;
-		m["index"] = &parse_index;
+
+		// only location_block
+		m["limit_except_method"] = &parse_limit_except_method;
 	}
 	int call_function(const std::string &pFunction, const vector<string> arg)
 	{
@@ -184,6 +244,199 @@ public:
 		virtual ~parseFail() throw(){};
 		virtual const char *what() const throw() { return msg.c_str(); }
 	};
+
+	class parseRootFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseRootFail() : msg(RED("parseRootFail")) {}
+		explicit parseRootFail(const string &m) : msg(m) {}
+		virtual ~parseRootFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+
+	class parseListenFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseListenFail() : msg(RED("parseListenFail")) {}
+		explicit parseListenFail(const string &m) : msg(m) {}
+		virtual ~parseListenFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+
+	class parseServerNameFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseServerNameFail() : msg(RED("parseServerNameFail")) {}
+		explicit parseServerNameFail(const string &m) : msg(m) {}
+		virtual ~parseServerNameFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+
+	class parseAutoIndexFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseAutoIndexFail() : msg(RED("parseAutoIndexFail")) {}
+		explicit parseAutoIndexFail(const string &m) : msg(m) {}
+		virtual ~parseAutoIndexFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+
+	class parseErrorPageFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseErrorPageFail() : msg(RED("parseErrorPageFail")) {}
+		explicit parseErrorPageFail(const string &m) : msg(m) {}
+		virtual ~parseErrorPageFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+
+	class parseKeepRequestsFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseKeepRequestsFail() : msg(RED("parseKeepRequestsFail")) {}
+		explicit parseKeepRequestsFail(const string &m) : msg(m) {}
+		virtual ~parseKeepRequestsFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+
+	class parseDefaultTypeFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseDefaultTypeFail() : msg(RED("parseDefaultTypeFail")) {}
+		explicit parseDefaultTypeFail(const string &m) : msg(m) {}
+		virtual ~parseDefaultTypeFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+
+	class parseClientBodySizeFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseClientBodySizeFail() : msg(RED("parseClientBodySizeFail")) {}
+		explicit parseClientBodySizeFail(const string &m) : msg(m) {}
+		virtual ~parseClientBodySizeFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+
+	class parseResetTimedoutConnFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseResetTimedoutConnFail() : msg(RED("parseResetTimedoutConnFail")) {}
+		explicit parseResetTimedoutConnFail(const string &m) : msg(m) {}
+		virtual ~parseResetTimedoutConnFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+
+	class parseLingeringTimeFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseLingeringTimeFail() : msg(RED("parseLingeringTimeFail")) {}
+		explicit parseLingeringTimeFail(const string &m) : msg(m) {}
+		virtual ~parseLingeringTimeFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+
+	class parseLingeringTimeoutFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseLingeringTimeoutFail() : msg(RED("parseLingeringTimeoutFail")) {}
+		explicit parseLingeringTimeoutFail(const string &m) : msg(m) {}
+		virtual ~parseLingeringTimeoutFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+
+	class parseKeepTimeFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseKeepTimeFail() : msg(RED("parseKeepTimeFail")) {}
+		explicit parseKeepTimeFail(const string &m) : msg(m) {}
+		virtual ~parseKeepTimeFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+
+	class parseKeepTimeoutFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseKeepTimeoutFail() : msg(RED("parseKeepTimeoutFail")) {}
+		explicit parseKeepTimeoutFail(const string &m) : msg(m) {}
+		virtual ~parseKeepTimeoutFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+
+	class parseSendTimeoutFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseSendTimeoutFail() : msg(RED("parseSendTimeoutFail")) {}
+		explicit parseSendTimeoutFail(const string &m) : msg(m) {}
+		virtual ~parseSendTimeoutFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+
+	class parseClientBodyTimeoutFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseClientBodyTimeoutFail() : msg(RED("parseClientBodyTimeoutFail")) {}
+		explicit parseClientBodyTimeoutFail(const string &m) : msg(m) {}
+		virtual ~parseClientBodyTimeoutFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+
+	class parseLocationFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseLocationFail() : msg(RED("parseLocationFail")) {}
+		explicit parseLocationFail(const string &m) : msg(m) {}
+		virtual ~parseLocationFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+
 	class httpDupe : public exception
 	{
 	private:
