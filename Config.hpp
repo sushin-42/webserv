@@ -130,6 +130,14 @@ public:
 	Config() : link()
 	{
 		MapSetting();
+		keepalive_requests = 0;
+		client_max_body_size = 0;;
+		lingering_timeout = 0;
+		lingering_time = 0;
+		keepalive_time = 0;
+		keepalive_timeout = 0;
+		send_timeout = 0;
+		client_body_timeout = 0;
 	}
 	Config(const Config &src) : link(src.link) {}
 	virtual ~Config() {}

@@ -21,16 +21,19 @@
 #include "ServerConfig.hpp"
 #include "HttpConfig.hpp"
 
+HttpConfig http;
+
 int main(int argc, char **argv)
 {
 	if (argvError(argc))
 		return (errMsg());
 	signal(SIGPIPE, SIG_IGN);
-	HttpConfig http;
+	// HttpConfig http;
 	try
 	{
 		http.setConfig(ReadConfig(argv));
-		http.defaultSet();
+		// http.defaultSet();
+		pringConfigAll(&http);
 	}
 	catch (const std::exception &e)
 	{
