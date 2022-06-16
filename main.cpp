@@ -3,6 +3,7 @@
 #include <iostream>
 #include <signal.h>
 #include <poll.h>
+#include <string>
 #include <sys/poll.h>
 
 #include "CGI.hpp"
@@ -25,11 +26,13 @@ int main()
 	ServerSocket		serv("", 8888);	// put your IP, "" means ANY
 	ConnSocket*			connected;
 	Pipe*				CGIpipe;
+	IStream*			stream;
 
 	PollSet				pollset;
 	PollSet::iterator	it;
 
-	map<int, undone>	undoneBuf;
+	string				content;
+	map<int, undone>	writeUndoneBuf;
 	root += "/static_file";
 
 	try						{ serv.bind(); }
@@ -52,7 +55,14 @@ int main()
 		if (CGIpipe)
 		{
 			connected =  CGIpipe->linkConn;
+			if (CGIpipe == connected->linkWritePipe)
+			{
+				stream = CGIpipe;
+				content = connected->ReqB.getContent();
+				goto _send;
+			}
 			goto _core;
+
 		}
 
 		if (it.first->revents & POLLOUT)	{ it.first->events &= ~POLLOUT;
@@ -69,7 +79,7 @@ int main()
 													continue;
 												}
 
-												if (CONVERT(&e, ConnSocket::readMore))
+												if (CONVERT(&e, IStream::readMore))
 												{
 													continue;
 												}
@@ -99,16 +109,22 @@ _core:
 		core_wrapper(pollset, &serv, connected, CGIpipe);	//@ make response header, body//
 		if (connected->pending)
 			continue;
+		if (!CGIpipe && connected->linkReadPipe)	/* pipe is just created */
+			continue;
+		stream	= connected;
+		content = connected->ResH.getContent() +
+				  connected->ResB.getContent();
+
 
 //.------------------------send response header, body------------------------.//
 _send:
-		try									{ connected->send(
-																connected->ResH.getContent() +
-																connected->ResB.getContent(),
-																undoneBuf
-															);
+		try									{ stream->send(content, writeUndoneBuf); }
+		catch (exception& e)				{
+											  if (CONVERT(&e, IStream::sendMore))
+												it.first->events |= POLLOUT; // not all data sended
+											  else
+												pollset.drop(it);
 											}
-		catch (exception& e)				{ it.first->events |= POLLOUT; }	// not all data sended
 
 		connected->ReqH.clear(), connected->ResH.clear(), connected->ResB.clear();
 //.---------------------------------send end---------------------------------.//

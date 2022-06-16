@@ -158,11 +158,18 @@ ssize_t	readFrom(int fd, string& content)
 	ssize_t byte = 0;
 	char readbuf[1024];
 	bzero(readbuf, sizeof(readbuf));
-	while ((byte = read(fd, readbuf, sizeof(readbuf))) > 0)
+	byte = read(fd, readbuf, sizeof(readbuf));
+	switch (byte)
 	{
+	case 0:
+		TAG(utils, readFrom); cout << GRAY ("read ") << _UL << byte << _NC << GRAY(" bytes from ") << _UL << fd  << _NC << endl;
+		break;
+	case -1:
+		TAG(utils, readFrom); cout << GRAY ("read ") << _UL << byte << _NC << GRAY(" bytes from ") << _UL << fd  << _NC << endl;
+		break;
+	default:
 		TAG(utils, readFrom); cout << GRAY ("read ") << _UL << byte << _NC << GRAY(" bytes from ") << _UL << fd  << _NC << endl;
 		content.append(readbuf, byte);
-		bzero(readbuf, sizeof(readbuf));
 	}
 	return byte;
 }

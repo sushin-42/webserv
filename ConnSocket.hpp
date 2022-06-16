@@ -23,7 +23,8 @@
 
 # include "Pipe.hpp"
 # include "ResHeader.hpp"
-#include "utils.hpp"
+# include "utils.hpp"
+# include "Undone.hpp"
 
 # define GET	1
 # define PUT	2
@@ -40,11 +41,6 @@
 
 
 char checkMethod(const string& content);
-struct undone
-{
-	string	content;
-	ssize_t	totalWrited;
-};
 
 class ConnSocket : public ISocket
 {
@@ -55,9 +51,9 @@ friend class ServerSocket;
 *========================================================================**/
 
 private:
-	socklen_t	len;
-	char		buf[1024];
-	string		recvContent;	// cumulate received content
+	socklen_t			len;
+	char				buf[1024];
+	string				recvContent;	// cumulate received content
 
 public:
 	ReqHeader	ReqH;
@@ -68,14 +64,17 @@ public:
 	bool		chunk;		/* to distinguish script output chunk with server chunk */
 	bool		FINsended;	/* we already sended FIN, DO NOT send more data. */
 
-	Pipe*		linkPipe;
+	Pipe*		linkReadPipe;
+	Pipe*		linkWritePipe;
+
 
 /**========================================================================
 * @                           Constructors
 *========================================================================**/
 
 public:
-	ConnSocket() : ISocket(), len(sizeof(info)), recvContent(), ReqH(), ReqB(), ResH(), ResB(), pending(false), chunk(false), FINsended(false), linkPipe(NULL)  {}
+	ConnSocket()
+	: ISocket(), len(sizeof(info)), recvContent(), ReqH(), ReqB(), ResH(), ResB(), pending(false), chunk(false), FINsended(false), linkReadPipe(NULL), linkWritePipe(NULL) {}
 	~ConnSocket() {}
 
 /**========================================================================
@@ -94,7 +93,8 @@ public:
 			this->pending	= src.pending;
 			this->chunk		= src.chunk;
 			this->FINsended	= src.FINsended;
-			this->linkPipe	= src.linkPipe;
+			this->linkReadPipe	= src.linkReadPipe;
+			this->linkWritePipe	= src.linkWritePipe;
 		}
 		return *this;
 	}
@@ -102,6 +102,37 @@ public:
 /**========================================================================
 * #                          member functions
 *========================================================================**/
+
+	bool	isPipeAlive()
+	{
+		pid_t	pid	= 0;
+
+		pid = waitpid(linkReadPipe->pid, &linkReadPipe->status, WNOHANG);
+		if (!(pid == linkReadPipe->pid || pid == -1))
+		{
+			TAG(ConnSocket, isPipeAlive) <<  _NOTE(pipe still alive: ) <<  _UL << linkReadPipe->pid << _NC << endl;
+			return true;
+		}
+		else
+		{
+			TAG(ConnSocket, isPipeAlive) << _GOOD(waitpid on ) << linkReadPipe->pid << CYAN(" returns ") << _UL << pid << _NC << endl;
+			return false;
+		}
+	}
+
+	void	gracefulClose()
+	{
+		//NOTE: what if client doesn't send FIN? now we send FIN and close "after client send FIN too".
+		// Have to close() instantly after send FIN, with short timer.
+		shutdown(this->fd, SHUT_WR);
+		/*
+			for case that client keep sending message even after FIN.
+			we prevent calling ConnSocket#send().
+		*/
+		FINsended = true;
+
+		TAG(ConnSocket, gracefulClose) << _GOOD(server send FIN: ) << _UL << this->fd << _NC << endl;
+	}
 
 	void	setHeaderOrReadMore()
 	{
@@ -192,11 +223,7 @@ public:
 	{
 		ssize_t		byte	= 0;
 		bzero(buf, sizeof(buf));
-		while ((byte = read(this->fd, this->buf, sizeof(buf))) > 0)
-		{
- 			recvContent.append(buf, byte);
-			bzero(buf, sizeof(buf));
-		}
+		byte = read(this->fd, this->buf, sizeof(buf));
 
 		switch (byte)
 		{
@@ -222,6 +249,8 @@ public:
 					TAG(ConnSocket, recvRequest) << YELLOW("No data to read") << endl;
 				break;
 			}
+		default:
+			recvContent.append(buf, byte);
 		}
 
 		if (ReqH.empty())
@@ -238,70 +267,48 @@ public:
 
 	}
 
-	void	send(const string& content, map<int, undone>& buf)
+	void	send(const string& content, map<int, undone>& writeUndoneBuf)
 	{
 		if (FINsended) return;
-		try						{ buf.at(this->fd); }
-		catch (exception& e)	{ buf[this->fd] = (struct undone){"",0};
-								  buf[this->fd].content.append(content.data(), content.length());	}
+		try						{ writeUndoneBuf.at(this->fd); }
+		catch (exception& e)	{ writeUndoneBuf[this->fd] = (struct undone){"",0};
+								  writeUndoneBuf[this->fd].content.append(content.data(), content.length());	}
 
-		string&		rContent	= buf[this->fd].content;
-		ssize_t&	rWrited		= buf[this->fd].totalWrited;
+		string&		rContent	= writeUndoneBuf[this->fd].content;
+		ssize_t&	rWrited		= writeUndoneBuf[this->fd].totalWrited;
 		ssize_t		rContentLen	= rContent.length();
 		ssize_t		byte		= 0;
-		pid_t		pid			= 0;
 
-		while ( true )
-		{
-			byte = write( this->fd,
-						  rContent.data() + rWrited,
-						  rContentLen - rWrited );
-
-			if (byte <= 0)				break;
-
+		byte = write( this->fd,
+					  rContent.data() + rWrited,
+					  rContentLen - rWrited );
+		if (byte > 0)
 			rWrited += byte;
-			if (rWrited == rContentLen)	break; //@ send GOOD, stop write()
 
-		}
 
-		if (byte == -1)
-		{
-			if (errno == EWOULDBLOCK || errno == EAGAIN)
-			{
-				if (rWrited == rContentLen)	//! means all data sended. cannot reach here?
-					TAG(ConnSocket, send) << _NOTE(No data to write) << endl;
-				else						//' not all data sended. have to be buffered.
-					TAG(ConnSocket, send) << _NOTE(Not all data sended to) << this->fd << ": " << rWrited << " / " << rContentLen  << " bytes" << endl;
-				throw exception();
-			}
-			else
-				TAG(ConnSocket, send) << _FAIL(unexpected error) << errno << endl;
-		}
-		else if (rWrited == rContentLen)
+		//@ all data sended @//
+		if (rWrited == rContentLen)
 		{
 			TAG(ConnSocket, send) << _GOOD(all data sended to) << this->fd << ": " << rWrited << " / " << rContentLen << " bytes" << endl;
-			buf.erase(this->fd);
-			if (linkPipe)
-			{
-				pid = waitpid(linkPipe->pid, &linkPipe->status, WNOHANG);
-				if (!(pid == linkPipe->pid || pid == -1))
-					return ;
-				else
-					TAG(ConnSocket, send) << _GOOD(waitpid on ) << linkPipe->pid << CYAN(" returns ") << _UL << pid << _NC << endl;
-
-			}
-			//NOTE: what if client doesn't send FIN? now we send FIN and close "after client send FIN too".
-			// Have to close() instantly after send FIN, with short timer.
-			shutdown(this->fd, SHUT_WR);
-			FINsended = true;	/*
-									for case that client keep sending message even after FIN.
-									we prevent calling ConnSocket#send().
-								*/
-			TAG(ConnSocket, send) << _GOOD(server send FIN: ) << _UL << this->fd << _NC << endl;
+			writeUndoneBuf.erase(this->fd);
+			if (linkReadPipe && isPipeAlive())
+				throw sendMore();
+			else
+				gracefulClose();
 		}
+		//' not all data sended. have to be buffered '//
 		else
-			TAG(ConnSocket, send) << GRAY("WHY YOU HERE?") << endl;
-
+		{
+			TAG(ConnSocket, send) << _NOTE(Not all data sended to) << this->fd << ": " << rWrited << " / " << rContentLen  << " bytes" << endl;
+			if (byte == -1)
+			{
+				TAG(ConnSocket, send) << _FAIL(unexpected error: ) << errno << endl;
+				writeUndoneBuf.erase(this->fd);
+				gracefulClose();
+				throw exception();	// close and Drop now!
+			}
+			throw sendMore();
+		}
 	}
 
 
@@ -324,16 +331,6 @@ public:
 /**========================================================================
 * !                            Exceptions
 *========================================================================**/
-
-	class readMore: public exception
-	{
-		private:	string msg;
-		public:		explicit readMore(): msg("") {}
-					explicit readMore(const string& m): msg(m) {}
-					virtual ~readMore() throw() {};
-					virtual const char * what() const throw() { return msg.c_str(); }
-	};
-
 	class connClosed: public exception
 	{
 		private:	string msg;

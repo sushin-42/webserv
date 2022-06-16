@@ -8,42 +8,21 @@
 //@                client-redir-response | client-redirdoc-response          @//
 //@--------------------------------------------------------------------------@//
 
-
-
-
-//#   script-URI = <scheme> "://" <server-name> ":" <server-port>
-//#  				<script-path> <extra-path> "?" <query-string>
-//#
-//#   where <scheme> is found from SERVER_PROTOCOL, <server-name>,
-//#   <server-port> and <query-string> are the values of the respective
-//#   meta-variables.  The SCRIPT_NAME and PATH_INFO values, URL-encoded
-//#   with ";", "=" and "?"  reserved, give <script-path> and <extra-path>.
-
-// http://localhost:8080/test.py/additional/path
-// REQUEST_URI	=> /test.py/additional/path
-// SCRIPT_NAME => /test.py
-// PATH_INFO => /additional/path
-
-// PATH_TRANSLATED => /Users/shin/Desktop/Git/webserv/static_file/additional/path
-// QUERY_STRING
-// SCRIPT_FILENAME => /Users/shin/Desktop/Git/webserv/static_file/test.py
-
 #ifndef CGI_HPP
 # define CGI_HPP
 
-#include <_ctype.h>
+# include <_ctype.h>
 # include <cstddef>
 # include <cstring>
 # include <string>
-// #include <sys/_types/_pid_t.h>
-#include <sys/_types/_ssize_t.h>
-#include <sys/fcntl.h>
-#include <sys/wait.h>
-#include <utility>
+# include <sys/_types/_ssize_t.h>
+# include <sys/fcntl.h>
+# include <sys/wait.h>
+# include <utility>
 # include <vector>
 
-#include "ConnSocket.hpp"
-#include "Poll.hpp"
+# include "ConnSocket.hpp"
+# include "Poll.hpp"
 # include "ServerSocket.hpp"
 # include "ReqBody.hpp"
 # include "ReqHeader.hpp"
@@ -198,17 +177,20 @@ void parentRoutine(
 					int CtoP[2]
 				)
 {
+	close(PtoC[0]), close(CtoP[1]);
 
-		string	ReqB = connected->ReqB.getContent();
-		Pipe*	p = new Pipe(CtoP[0], pid);
-		p->linkConn = connected;
-		connected->linkPipe = p;
+	string	ReqB = connected->ReqB.getContent();
+	Pipe*	pr = new Pipe(CtoP[0], pid);
+	Pipe*	pw = new Pipe(PtoC[1], pid);
 
-		close(PtoC[0]), close(CtoP[1]);
-		write(PtoC[1], ReqB.c_str(), ReqB.length());
-		close(PtoC[1]);
+	pr->linkConn = connected;
+	connected->linkReadPipe = pr;
+	pollset.enroll(pr);
 
-		pollset.enroll(p);
+	pw->linkConn = connected;
+	connected->linkWritePipe = pw;
+	PollSet::iterator it =  pollset.enroll(pw);
+	it.first->events |= POLLOUT;
 }
 
 void	newProc(PollSet& pollset, ServerSocket* serv, ConnSocket* connected)
@@ -216,12 +198,12 @@ void	newProc(PollSet& pollset, ServerSocket* serv, ConnSocket* connected)
 	int				PtoC[2], CtoP[2];
 	pid_t			pid;
 
-	pipe(PtoC), pipe(CtoP);
+	pipe(CtoP), pipe(PtoC) ;
 	fcntl(CtoP[0], F_SETFL, fcntl(CtoP[0], F_GETFL, 0) | O_NONBLOCK);
 
 	pid = fork();
 	if (pid == 0)	childRoutine(PtoC, CtoP, serv, connected);	//TODO: check return value -1
-	else			parentRoutine(pollset, connected, pid, PtoC, CtoP);			// produce non-blocking pipe and poll.enroll(pipe)
+	else			parentRoutine(pollset, connected, pid, PtoC, CtoP);	// produce non-blocking pipe and poll.enroll(pipe)
 
 	connected->pending = false;	//@ default == NO pending
 }
@@ -294,13 +276,36 @@ void	CGIRoutines(
 	ssize_t	byte = 0;
 	if (!CGIpipe)
 		newProc(pollset, serv, connected);
-
 	else
 	{
-		byte = CGIpipe->read();
 
-		if		(byte == -1)	// output appended
+		switch (byte = CGIpipe->read())
 		{
+
+		case -1:	/* internal server error */
+			TAG(CGI#, CGIroutines); cout << RED("Unexcpected error from pipe: ") << CGIpipe->getFD() << endl;
+			CGIpipe->close();
+			/* need to return 500! */
+			break;
+
+		case 0:		/* close pipe, process output */
+
+			TAG(CGI#, CGIroutines); cout << GRAY("Pipe closed: ") << CGIpipe->getFD() << endl;
+			CGIpipe->close();
+
+			if (connected->pending == false)
+			{
+				//NOTE: if read 0 byte after n byte ?
+				connected->ResB.setContent(
+											connected->chunk ?
+												makeChunk(CGIpipe->output) :
+												CGIpipe->output
+										);
+			}
+			connected->pending = false;
+			break;
+
+		default:	/* output appended */
 
 			/* wait full header */
 			if (CGIpipe->headerDone == false &&
@@ -320,28 +325,7 @@ void	CGIRoutines(
 										);
 				CGIpipe->output.clear();
 			}
-			return;
 		}
-
-		else if (byte == 0)		// close pipe, process output
-		{
-			TAG(CGI#, CGIroutines); cout << GRAY("Pipe closed: ") << CGIpipe->getFD() << endl;
-			CGIpipe->close();
-			// connected->linkPipe =NULL;	// if NULL, cannot detect iterator of pipe when drop connSocket
-
-			if (connected->pending == false)
-			{
-				//NOTE: if read 0 byte after n byte ?
-				connected->ResB.setContent(
-											connected->chunk ?
-												makeChunk(CGIpipe->output) :
-												CGIpipe->output
-										);
-			}
-			connected->pending = false;
-			//waitpid(CGIpipe->pid, &CGIpipe->status, WNOHANG);
-		}
-
 	}
 }
 

@@ -3,6 +3,7 @@
 
 # include "ConnSocket.hpp"
 # include <exception>
+#include <map>
 # include <stdexcept>
 # include <sys/errno.h>
 # include <sys/socket.h>
@@ -56,6 +57,7 @@ public:
 		// cout << "accept OK :" << c.fd << endl;
 		return c;
 	}
+	void send(const string& s, map<int, struct undone>& u) { (void)s, (void)u; }
 private:
 	void dummy() {}
 };

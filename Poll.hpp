@@ -95,7 +95,7 @@ public:
 	const_iterator	begin() const	{ return make_iterator_pair(pollVec.begin(), streamVec.begin()); }
 	const_iterator	end() const		{ return make_iterator_pair(pollVec.end(), streamVec.end()); }
 
-	void	enroll( IStream* stream )
+	iterator	enroll( IStream* stream )
 	{
 		Poll		p;
 		p.fd		= stream->getFD();
@@ -117,6 +117,8 @@ public:
 		<< (serv		? CYAN( " (ServerSocket)") :
 			connected	? BLUE( " (ConnSocket)") :
 			P			? PURPLE( " (Pipe)") : "") << endl;
+
+		return make_iterator_pair(pollVec.end()-1, streamVec.end()-1);
 	}
 
 	void	drop( iterator it )
@@ -125,8 +127,8 @@ public:
 		Pipe*			link = NULL;
 
 
-		if (connSock && connSock->linkPipe)
-			link = connSock->linkPipe;
+		if (connSock && connSock->linkReadPipe)
+			link = connSock->linkReadPipe;
 
 		TAG(PollSet, drop); cout << GRAY("Drop ") << it.first->fd << endl;
 		delete (*it.second);
