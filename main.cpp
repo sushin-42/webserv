@@ -33,6 +33,8 @@ HttpConfig *HttpConfig::http;
 // 	return http;
 // }
 
+HttpConfig http;
+
 int main(int argc, char **argv)
 {
 	HttpConfig *http = HttpConfig::getInstance();
@@ -42,12 +44,11 @@ int main(int argc, char **argv)
 	// HttpConfig http;
 	try
 	{
+
 		http->setConfig(ReadConfig(argv));
-		for (size_t i = 0; i < sizeof(http->dupeCheck); i++)
-			cout << http->dupeCheck[i] << endl;
-		cout << "asdf  " << http->dupeCheck.autoindex << endl;
-		cout << "asdf  " << http->dupeCheck[2] << endl;
 		http->defaultSet();
+
+		// pringConfigAll(&http);
 	}
 	catch (const std::exception &e)
 	{

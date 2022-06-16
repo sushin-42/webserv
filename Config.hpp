@@ -131,7 +131,6 @@ public:
 		MapSetting();
 		keepalive_requests = 0;
 		client_max_body_size = 0;
-
 		lingering_timeout = 0;
 		lingering_time = 0;
 		keepalive_time = 0;
