@@ -3,6 +3,7 @@
 // #include "Config.hpp"
 #include "ServerConfig.hpp"
 #include "ConfigUtilsException.hpp"
+#include <arpa/inet.h>
 class Config;
 class HttpConfig;
 class ServerConfig;
@@ -107,7 +108,7 @@ string convertStringToIP(string ip)
         }
         if (inet_addr(ip.c_str()) != (in_addr_t)-1)
         {
-            for (dot = 4 - dot; dot > 0; dot--)
+            for (dot = 3 - dot; dot > 0; dot--)
                 ip.insert(0, "0.");
             return ip;
         }
@@ -242,16 +243,28 @@ void parse_root(vector<string> arg, Config *config)
 void parse_listen(vector<string> arg, Config *config)
 {
     string::size_type pos;
-
+    unsigned short port;
+    string ip = "";
     if (arg.size() != 1)
         throw Config::parseListenFail();
     ServerConfig *server = dynamic_cast<ServerConfig *>(config);
     if ((pos = arg[0].find(':')) != string::npos)
     {
-        server->ip.push_back(convertStringToIP(arg[0].substr(0, pos)));
-        server->port.push_back(convertStringToPort(arg[0].substr(pos, arg[0].length())));
+        ip = convertStringToIP(arg[0].substr(0, pos));
+        port = convertStringToPort(arg[0].substr(pos + 1, arg[0].length()));
     }
-    server->port.push_back(convertStringToPort(arg[0]));
+    else
+        port = convertStringToPort(arg[0]);
+    cout << "3" << endl;
+    // server->port.push_back(convertStringToPort(arg[0]));
+    for (vector<string>::size_type i = 0; i < server->ip.size(); i++)
+    {
+        if (server->ip[i] == ip && server->port[i] == port)
+            throw Config::parseListenFail();
+    }
+    cout << "4" << endl;
+    server->ip.push_back(ip);
+    server->port.push_back(port);
 }
 
 void parse_server_name(vector<string> arg, Config *config)
@@ -269,12 +282,13 @@ void parse_index(vector<string> arg, Config *config)
         isPath(arg[i]);
         config->index.push_back(arg[i]);
     }
+    config->dupeCheck.index = true;
 }
 
 void parse_auto_index(vector<string> arg, Config *config)
 {
     string button;
-
+    cout << "" << endl;
     if (arg.size() != 1 || config->dupeCheck.autoindex == true)
         throw Config::parseAutoIndexFail();
     button = convertStringToLower(arg[0]);
@@ -456,4 +470,5 @@ string ReadConfig(char **argv)
     EraseComment(configtemp);
     return (configtemp);
 }
+
 #endif

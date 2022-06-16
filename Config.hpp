@@ -1,6 +1,5 @@
 #ifndef CONFIG_HPP
 #define CONFIG_HPP
-
 #include <string>
 #include <unistd.h>
 #include <vector>
@@ -28,7 +27,7 @@ struct Duplicate
 	bool send_timeout;
 	bool client_body_timeout;
 
-	bool &operator[](int index) { return *(&root + index); }
+	bool &operator[](int ind) { return *(&index + ind); }
 };
 // ssize_t convertStringToByte(string val);
 // time_t convertStringToTime(string val);
@@ -37,7 +36,6 @@ struct Duplicate
 void parse_root(vector<string> arg, Config *config);
 void parse_listen(vector<string> arg, Config *config);
 void parse_server_name(vector<string> arg, Config *config);
-void parse_index(vector<string> arg, Config *config);
 void parse_index(vector<string> arg, Config *config);
 void parse_root(vector<string> arg, Config *config);
 void parse_auto_index(vector<string> arg, Config *config);
@@ -81,6 +79,7 @@ map<string, string> MIME = getMIME();
 // "send_timeout",
 // "client_body_timeout"
 // };
+
 typedef void (*PointerFunction)(vector<string> arg, Config *config);
 typedef map<std::string, PointerFunction> func_map;
 class ErrorPage
@@ -130,6 +129,15 @@ public:
 	Config() : link()
 	{
 		MapSetting();
+		keepalive_requests = 0;
+		client_max_body_size = 0;
+
+		lingering_timeout = 0;
+		lingering_time = 0;
+		keepalive_time = 0;
+		keepalive_timeout = 0;
+		send_timeout = 0;
+		client_body_timeout = 0;
 	}
 	Config(const Config &src) : link(src.link) {}
 	virtual ~Config() {}
@@ -203,7 +211,12 @@ public:
 			while (ss >> tmp)
 				arg.push_back(tmp);
 
+			cout << dupeCheck.autoindex << endl;
 			call_function(directive, arg);
+			cout << directive << endl;
+			for (size_t i = 0; i < arg.size(); i++)
+				cout << arg[i] << endl;
+			cout << dupeCheck.autoindex << endl;
 		}
 	}
 	string ExtractBlock(string &configtemp, size_t start)

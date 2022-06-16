@@ -20,17 +20,34 @@
 #include "LocationConfig.hpp"
 #include "ServerConfig.hpp"
 #include "HttpConfig.hpp"
+#include "print.hpp"
+
+HttpConfig *HttpConfig::http;
+// HttpConfig *HttpConfig::getInstance()
+// {
+
+// 	if (http == NULL)
+// 	{
+// 		http = new HttpConfig();
+// 	}
+// 	return http;
+// }
 
 int main(int argc, char **argv)
 {
+	HttpConfig *http = HttpConfig::getInstance();
 	if (argvError(argc))
 		return (errMsg());
 	signal(SIGPIPE, SIG_IGN);
-	HttpConfig http;
+	// HttpConfig http;
 	try
 	{
-		http.setConfig(ReadConfig(argv));
-		http.defaultSet();
+		http->setConfig(ReadConfig(argv));
+		for (size_t i = 0; i < sizeof(http->dupeCheck); i++)
+			cout << http->dupeCheck[i] << endl;
+		cout << "asdf  " << http->dupeCheck.autoindex << endl;
+		cout << "asdf  " << http->dupeCheck[2] << endl;
+		http->defaultSet();
 	}
 	catch (const std::exception &e)
 	{
@@ -38,12 +55,8 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	cout << http.etc << endl;
-	cout << "" << endl;
-	// cout << static_cast<LocationConfig *>(http.link[0]->link[0])->URI << endl;
-	cout << static_cast<LocationConfig *>(http.link[0]->link[1])->assign << endl;
-	cout << "" << endl;
-	return 0;
+	// printConfig(http);
+	// return 0;
 	ServerSocket serv("", 8888); // put your IP, "" means ANY
 	ConnSocket *connected;
 	Pipe *CGIpipe;

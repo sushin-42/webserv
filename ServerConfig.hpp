@@ -56,6 +56,7 @@ public:
 
         end = configtemp.find('{', start);
         uri = configtemp.substr(start, end - start);
+        uri = trim(uri, " ");
         return (uri);
     }
 

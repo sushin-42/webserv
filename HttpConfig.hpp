@@ -1,7 +1,7 @@
 #ifndef HTTPCONFIG_HPP
 #define HTTPCONFIG_HPP
 #include "ServerConfig.hpp"
-
+#include "ConfigUtils.hpp"
 class Config;
 
 class HttpConfig : public Config
@@ -12,11 +12,24 @@ class HttpConfig : public Config
 
 public:
     string etc; // http 블록 외에 있는 디렉티브 모음
+    virtual ~HttpConfig() {}
 
+private:
+    static HttpConfig *http;
     HttpConfig() : Config()
     {
     }
-    virtual ~HttpConfig() {}
+
+public:
+    static HttpConfig *getInstance()
+    {
+
+        if (http == NULL)
+        {
+            http = new HttpConfig();
+        }
+        return http;
+    }
 
     /**========================================================================
      * *                            operators
