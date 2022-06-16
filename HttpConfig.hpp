@@ -27,7 +27,6 @@ public:
         if (http == NULL)
         {
             http = new HttpConfig();
-            cout << "" << endl;
         }
         return http;
     }
@@ -142,7 +141,7 @@ public:
      * !                            Exceptions
      *========================================================================**/
 };
-HttpConfig* HttpConfig::http;
+HttpConfig *HttpConfig::http;
 //*--------------------------------------------------------------------------*//
 
 #endif
