@@ -61,10 +61,10 @@ int main(int argc, char** argv)
 	while (1)
 	{
 //'----------------------catch and parse request header----------------------'//
-		try									{ whoDied();
-											  it = pollset.examine(); }
-		catch	(exception& e)				{ continue; }
-		if		((*it.second) == &serv)		{ continue; }	// servSocket
+		try												{ whoDied();
+														  it = pollset.examine(); }
+		catch	(exception& e)							{ continue; }
+		if		(CONVERT(*it.second, ServerSocket))		{ continue; }	// servSocket
 
 		connected	= CONVERT(*it.second, ConnSocket);
 		CGIpipe		= CONVERT(*it.second, Pipe);

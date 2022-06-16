@@ -214,18 +214,23 @@ private:
 
 		if (serv)
 		{
+			Poll p;
+			p.fd = serv->getFD();
 			while(1)	// accept() will throw exception if not readied
 			{
 				try
 				{
 					connected = new ConnSocket(serv->accept());
-					TAG(PollSet, examine); cout << GREEN("Got new connection, enroll ") << connected->getFD() << endl;
+					TAG(PollSet, examine); cout << GREEN("Serv ") << _UL << serv->getFD() << _NC <<  GREEN(" Got new connection, enroll ") << connected->getFD() << endl;
 					this->enroll(connected);
 				}
 				catch (exception& e)	// accept() not ready
 				{	continue;	}
 
-				return (this->begin());
+				return (make_iterator_pair(
+											find(pollVec.begin(), pollVec.end(), p),
+											find(streamVec.begin(), streamVec.end(), serv))
+										);
 			}
 		}
 		else if (connected)
