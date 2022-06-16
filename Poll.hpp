@@ -182,6 +182,7 @@ public:
 			if		(it.first->revents == 0)			continue;
 			else
 			{
+				//IMPL: separate updateLastWrite, updateLastRead for send_timeout
 				(*it.second)->updateLastActive();
 				if (it.first->revents & POLLIN)			return readRoutine(it);
 				if (it.first->revents & POLLOUT)		return writeRoutine(it);
@@ -387,6 +388,9 @@ void	PollSet::dropTimeout()
 		itPoll = find(pollVec.begin(), pollVec.end(), it->first);
 		itStream = find(streamVec.begin(), streamVec.end(), it->second);
 
+		//IMPL: reset_timedout_connection
+		// struct linger l = {.l_onoff = 1, .l_linger = 0};
+		// setsockopt((*itStream)->getFD(), SOL_SOCKET, SO_LINGER, &l, sizeof(l));
 		drop(make_iterator_pair(itPoll, itStream));
 	}
 	timer->timeoutPool.clear();
