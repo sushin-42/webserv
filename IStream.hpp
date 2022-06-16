@@ -2,9 +2,11 @@
 # define ISTREAM_HPP
 
 #include <ctime>
+#include <map>
 # include <string>
 #include <unistd.h>
 #include <sys/time.h>
+#include "Undone.hpp"
 using namespace std;
 
 class IStream
@@ -60,6 +62,8 @@ public:
 	time_t			getTimeOut() const		{ return this->timeout; }
 	void			close()					{ ::close(fd); }
 
+
+
 /**========================================================================
 * !                            Exceptions
 *========================================================================**/
@@ -72,9 +76,28 @@ public:
 					virtual const char * what() const throw() { return msg.c_str(); }
 	};
 
-private:
-	virtual void			dummy() = 0;
+	class readMore: public exception
+	{
+		private:	string msg;
+		public:		explicit readMore(): msg("") {}
+					explicit readMore(const string& m): msg(m) {}
+					virtual ~readMore() throw() {};
+					virtual const char * what() const throw() { return msg.c_str(); }
+	};
 
+	class sendMore: public exception
+	{
+		private:	string msg;
+		public:		explicit sendMore(): msg("") {}
+					explicit sendMore(const string& m): msg(m) {}
+					virtual ~sendMore() throw() {};
+					virtual const char * what() const throw() { return msg.c_str(); }
+	};
+
+private:
+	virtual void	dummy() = 0;
+public:
+	virtual void	send(const string& content, map<int, undone>& writeUndoneBuf) = 0;
 };
 
 

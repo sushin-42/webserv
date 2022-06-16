@@ -49,7 +49,7 @@ print()
 # print("Hello world")
 
 for i in range(10):
-	time.sleep(1)
+	# time.sleep(1)
 	print(i, flush=True)
 # cgi.print_environ()
 

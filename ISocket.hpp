@@ -92,6 +92,7 @@ public:
 	};
 
 
+	void send(const string& s, map<int, struct undone>& u) {(void)s; (void)u;};
 private:
 	virtual void			dummy() = 0;
 };
