@@ -256,16 +256,20 @@ void parse_listen(vector<string> arg, Config *config)
         port = convertStringToPort(arg[0].substr(pos + 1, arg[0].length()));
     }
     else
-        port = convertStringToPort(arg[0]);
-    // server->port.push_back(convertStringToPort(arg[0]));
-    for (vector<string>::size_type i = 0; i < server->ip.size(); i++)
     {
-        if (server->ip[i] == ip && server->port[i] == port)
+        port = convertStringToPort(arg[0]);
+        ip = "127.0.0.1";
+    }
+    // server->port.push_back(convertStringToPort(arg[0]));
+
+    for (vector<pair<string, unsigned short> >::size_type i = 0; i < server->ipPort.size(); i++)
+    {
+        if (server->ipPort[i].first == ip && server->ipPort[i].second == port)
             throw Config::parseListenFail();
     }
-
-    server->ip.push_back(ip);
-    server->port.push_back(port);
+    server->ipPort.push_back(make_pair(ip, port));
+    // server->ip.push_back(ip);
+    // server->port.push_back(port);
 }
 
 void parse_server_name(vector<string> arg, Config *config)
@@ -437,8 +441,10 @@ void parse_limit_except_method(vector<string> arg, Config *config)
             if (location->limit_except_method[check] == method)
                 break;
         }
-        if (check == location->limit_except_method.size() || method == "GET" || method == "POST" || method == "PUT" || method == "DELETE")
+        if (check == location->limit_except_method.size() && (method == "GET" || method == "POST" || method == "PUT" || method == "DELETE"))
             location->limit_except_method.push_back(method);
+        else
+            throw parseLimitExceptMethodFail();
     }
 }
 
@@ -477,79 +483,79 @@ string ReadConfig(char **argv)
 
 //-----------------print config-----------------
 
-// void printConfig(Config *link)
-// {
-//     cout << "index : ";
-//     for (vector<string>::size_type i = 0; i < link->index.size(); i++)
-//     {
-//         cout << link->index[i] << " ";
-//     }
-//     cout << endl;
+void printConfig(Config *link)
+{
+    cout << "index : ";
+    for (vector<string>::size_type i = 0; i < link->index.size(); i++)
+    {
+        cout << link->index[i] << " ";
+    }
+    cout << endl;
 
-//     cout << "root : " << link->root << endl;
+    cout << "root : " << link->root << endl;
 
-//     cout << "auto_index : " << link->auto_index << endl;
+    cout << "auto_index : " << link->auto_index << endl;
 
-//     cout << "error_page :" << endl;
-//     ;
-//     for (map<int, string>::iterator iter = link->error_page.begin(); iter != link->error_page.end(); iter++)
-//     {
-//         cout << "key : " << iter->first << "value : " << iter->second << endl;
-//     }
-//     cout << "keepalive_requests : " << link->keepalive_requests << endl;
+    cout << "error_page :" << endl;
+    ;
+    for (map<int, string>::iterator iter = link->error_page.begin(); iter != link->error_page.end(); iter++)
+    {
+        cout << "key : " << iter->first << "value : " << iter->second << endl;
+    }
+    cout << "keepalive_requests : " << link->keepalive_requests << endl;
 
-//     cout << "default_type : " << link->default_type << endl;
+    cout << "default_type : " << link->default_type << endl;
 
-//     cout << "client_max_body_size : " << link->client_max_body_size << endl;
+    cout << "client_max_body_size : " << link->client_max_body_size << endl;
 
-//     cout << "reset_timedout_connection : " << link->reset_timedout_connection << endl;
+    cout << "reset_timedout_connection : " << link->reset_timedout_connection << endl;
 
-//     cout << "lingering_timeout : " << link->lingering_timeout << endl;
+    cout << "lingering_timeout : " << link->lingering_timeout << endl;
 
-//     cout << "lingering_time : " << link->lingering_time << endl;
+    cout << "lingering_time : " << link->lingering_time << endl;
 
-//     cout << "keepalive_time : " << link->keepalive_time << endl;
+    cout << "keepalive_time : " << link->keepalive_time << endl;
 
-//     cout << "keepalive_timeout : " << link->keepalive_timeout << endl;
+    cout << "keepalive_timeout : " << link->keepalive_timeout << endl;
 
-//     cout << "send_timeout : " << link->send_timeout << endl;
+    cout << "send_timeout : " << link->send_timeout << endl;
 
-//     cout << "client_body_timeout : " << link->client_body_timeout << endl;
-// }
+    cout << "client_body_timeout : " << link->client_body_timeout << endl;
+}
 
-// void pringConfigAll(Config *link)
-// {
-//     LocationConfig *location;
-//     ServerConfig *server;
+void pringConfigAll(Config *link)
+{
+    LocationConfig *location;
+    ServerConfig *server;
 
-//     cout << "=============== http ===============" << endl;
-//     printConfig(link);
-//     for (vector<Config *>::size_type i = 0; i < link->link.size(); i++)
-//     {
-//         cout << "=============== server " << i << "===============" << endl;
-//         server = dynamic_cast<ServerConfig *>(link->link[i]);
-//         for (vector<string>::size_type j = 0; j < server->ip.size(); j++)
-//         {
-//             cout << "ip : " << server->ip[j] << " port : " << server->port[j] << endl;
-//         }
-//         for (vector<string>::size_type j = 0; j < server->server_name.size(); j++)
-//         {
-//             cout << "serve_rname : " << server->server_name[j] << endl;
-//         }
-//         printConfig(link->link[i]);
-//         for (vector<Config *>::size_type j = 0; j < link->link[i]->link.size(); j++)
-//         {
-//             cout << "=============== location " << j << "===============" << endl;
-//             location = dynamic_cast<LocationConfig *>(link->link[i]->link[j]);
-//             cout << "URI : " << location->URI << endl;
-//             cout << "= : " << location->assign << endl;
-//             for (vector<string>::size_type k = 0; k < location->limit_except_method.size(); k++)
-//                 cout << "limit_except_method : " << location->limit_except_method[k] << endl;
-//             printConfig(link->link[i]->link[j]);
-//             cout << "=============== location " << j << "===============" << endl;
-//         }
-//         cout << "=============== server " << i << " ===============" << endl;
-//     }
-//     cout << "=============== http ===============" << endl;
-// }
+    cout << "=============== http ===============" << endl;
+    printConfig(link);
+    for (vector<Config *>::size_type i = 0; i < link->link.size(); i++)
+    {
+        cout << "=============== server " << i << "===============" << endl;
+        server = dynamic_cast<ServerConfig *>(link->link[i]);
+        for (vector<pair<string, unsigned short> >::size_type j = 0; j < server->ipPort.size(); j++)
+        {
+            cout << "ip : " << server->ipPort[j].first << " port : " << server->ipPort[j].second << endl;
+        }
+        for (vector<string>::size_type j = 0; j < server->server_name.size(); j++)
+        {
+            cout << "serve_rname : " << server->server_name[j] << endl;
+        }
+        printConfig(link->link[i]);
+        for (vector<Config *>::size_type j = 0; j < link->link[i]->link.size(); j++)
+        {
+            cout << "=============== location " << j << "===============" << endl;
+            location = dynamic_cast<LocationConfig *>(link->link[i]->link[j]);
+            cout << "URI : " << location->URI << endl;
+            cout << "= : " << location->assign << endl;
+            for (vector<string>::size_type k = 0; k < location->limit_except_method.size(); k++)
+                cout << "limit_except_method : " << location->limit_except_method[k] << endl;
+            printConfig(link->link[i]->link[j]);
+            cout << "=============== location " << j << "===============" << endl;
+        }
+        cout << "=============== server " << i << " ===============" << endl;
+    }
+    cout << "=============== http ===============" << endl;
+}
 #endif

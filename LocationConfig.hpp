@@ -57,6 +57,7 @@ public:
         if ((pos = uri.find("=")) != string::npos)
         {
             uri.erase(pos, 1);
+            uri = trim(uri, " ");
             return true;
         }
         return false;

@@ -148,10 +148,10 @@ public:
 						 it++)
 					{
 						s = CONVERT((*it), ServerConfig);
-						cout << "current ip: " << s->ip[0] << endl;
-						cout << "current port: " << s->port[0] << endl;
-						if (s->ip[0] == "127.0.0.1" &&
-							s->port[0] == port)
+						// cout << "current ip: " << s->ip[0] << endl;
+						// cout << "current port: " << s->port[0] << endl;
+						if (s->ipPort[0].first == "127.0.0.1" &&
+							s->ipPort[0].second == port)
 							break;
 					}
 

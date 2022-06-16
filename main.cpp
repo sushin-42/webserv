@@ -33,7 +33,6 @@ HttpConfig *HttpConfig::http;
 // 	return http;
 // }
 
-HttpConfig http;
 
 int main(int argc, char **argv)
 {
@@ -48,7 +47,7 @@ int main(int argc, char **argv)
 		http->setConfig(ReadConfig(argv));
 		http->defaultSet();
 
-		// pringConfigAll(&http);
+		pringConfigAll(http);
 	}
 	catch (const std::exception &e)
 	{

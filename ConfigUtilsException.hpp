@@ -100,5 +100,17 @@ public:
     virtual ~convertStringToByteFail() throw(){};
     virtual const char *what() const throw() { return msg.c_str(); }
 };
+
+class parseLimitExceptMethodFail : public exception
+{
+private:
+    string msg;
+
+public:
+    explicit parseLimitExceptMethodFail() : msg(RED("parseLimitExceptMethodFail")) {}
+    explicit parseLimitExceptMethodFail(const string &m) : msg(m) {}
+    virtual ~parseLimitExceptMethodFail() throw(){};
+    virtual const char *what() const throw() { return msg.c_str(); }
+};
 //=====================================parse_util exception========================================
 #endif
