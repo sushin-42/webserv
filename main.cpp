@@ -23,24 +23,15 @@
 #include "print.hpp"
 
 HttpConfig *HttpConfig::http;
-// HttpConfig *HttpConfig::getInstance()
-// {
-
-// 	if (http == NULL)
-// 	{
-// 		http = new HttpConfig();
-// 	}
-// 	return http;
-// }
-
 
 int main(int argc, char **argv)
 {
+
 	HttpConfig *http = HttpConfig::getInstance();
+
 	if (argvError(argc))
 		return (errMsg());
 	signal(SIGPIPE, SIG_IGN);
-	// HttpConfig http;
 	try
 	{
 

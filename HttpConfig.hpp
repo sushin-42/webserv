@@ -27,6 +27,7 @@ public:
         if (http == NULL)
         {
             http = new HttpConfig();
+            cout << "" << endl;
         }
         return http;
     }
