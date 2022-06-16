@@ -8,6 +8,8 @@
 
 #include "CGI.hpp"
 #include "Config.hpp"
+#include "HttpConfig.hpp"
+#include "ConfigUtils.hpp"
 #include "ConnSocket.hpp"
 #include "Pipe.hpp"
 #include "Poll.hpp"
@@ -19,9 +21,23 @@
 #include "core.hpp"
 #include "utils.hpp"
 
-int main()
+int main(int argc, char** argv)
  {
+	if (argvError(argc))
+		return (errMsg());
 	signal(SIGPIPE, SIG_IGN);
+	// HttpConfig http;
+	try
+	{
+		HttpConfig::getInstance()->setConfig(ReadConfig(argv));
+		HttpConfig::getInstance()->defaultSet();
+		// pringConfigAll(HttpConfig::getInstance());
+	}
+	catch (const std::exception &e)
+	{
+		std::cerr << e.what() << '\n';
+		return -1;
+	}
 
 	ServerSocket		serv("", 8888);	// put your IP, "" means ANY
 	ConnSocket*			connected;

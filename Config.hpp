@@ -57,29 +57,6 @@ string root = getcwd(NULL, 0);
 
 map<string, string> MIME = getMIME();
 
-// HttpConfig http;
-
-/* in main context */
-// map<string, string>	env;
-// string				user;
-// string				working_directory;
-
-// COMMON_CONFIG_TOKEN = {
-// "root",
-// "auto_index",
-// "error_page",
-// "keepalive_requests",
-// "default_type",
-// "client_max_body_size",
-// "reset_timedout_connection",
-// "lingering_timeout",
-// "lingering_time",
-// "keepalive_time",
-// "keepalive_timeout",
-// "send_timeout",
-// "client_body_timeout"
-// };
-
 typedef void (*PointerFunction)(vector<string> arg, Config *config);
 typedef map<std::string, PointerFunction> func_map;
 class ErrorPage
@@ -123,7 +100,6 @@ public:
 
 	/**========================================================================
 	* @                           Constructors
-
 	*========================================================================**/
 public:
 	Config() : link()
