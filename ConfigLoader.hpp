@@ -23,34 +23,27 @@ private:
 * %                          member variables
 *========================================================================**/
 private:
-	_Map	addrs;
+	static ConfigLoader*	conf;
+	_Map					addrs;
 
 /**========================================================================
 * @                           Constructors
 *========================================================================**/
 
-public:
+private:
 	ConfigLoader() : addrs() {}
-	ConfigLoader( const _Map& m ) : addrs(m) {}
-	ConfigLoader( const ConfigLoader& src ) : addrs(src.addrs) {}
 	~ConfigLoader() {}
-
-/**========================================================================
-* *                            operators
-*========================================================================**/
-
-	ConfigLoader&	operator=( const ConfigLoader& src )
-	{
-		if (this != &src)
-		{
-			this->addrs = src.addrs;
-		}
-		return *this;
-	}
 
 /**========================================================================
 * #                          member functions
 *========================================================================**/
+public:
+	static ConfigLoader*	_()
+	{
+		if (conf == NULL) conf = new ConfigLoader;
+		return conf;
+	}
+
 
 	ServerConfig*	getDefaultServer(ServerSocket* serv) const;
 	ServerConfig*	getDefaultServer(const string& ip, unsigned short port) const;
@@ -87,6 +80,7 @@ bool			isNotHostChar(char c)
 		return true;
 	return false;
 }
+ConfigLoader* ConfigLoader::conf;
 
 #endif
 
