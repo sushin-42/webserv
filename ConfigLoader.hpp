@@ -3,6 +3,7 @@
 
 #include "Config.hpp"
 #include "ServerConfig.hpp"
+#include "utils.hpp"
 # include <map>
 #include <string>
 using namespace std;
@@ -44,6 +45,37 @@ public:
 		return conf;
 	}
 
+	void			setAddrs(const _Map& m) { this->addrs = m; }
+	void			pritAddrs()
+	{
+		_Map::iterator it = addrs.begin();
+		_Map::iterator ite = addrs.end();
+
+		for(;it != ite; it++)
+		{
+			cout << "[" << (it->first.first) << ":" << it->first.second  << "]" << endl;
+			_Confs v = it->second;
+			_Confs::iterator vit = v.begin();
+			_Confs::iterator vite = v.end();
+
+			cout << "{" << endl;
+			for (;vit!=vite;vit++)
+			{
+				ServerConfig* s = CONVERT((*vit), ServerConfig);
+				if (s)
+				{
+					vector<string>::iterator sit = s->server_name.begin();
+					vector<string>::iterator site = s->server_name.end();
+					cout << "\tserver name: ";
+					for (;sit!=site;sit++)
+						cout << *sit << " ";
+					cout << endl;
+				}
+			}
+			cout << "}" << endl;
+		}
+
+	}
 
 	ServerConfig*	getDefaultServer(ServerSocket* serv) const;
 	ServerConfig*	getDefaultServer(const string& ip, unsigned short port) const;

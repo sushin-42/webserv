@@ -8,6 +8,7 @@
 
 #include "CGI.hpp"
 #include "Config.hpp"
+#include "ConfigLoader.hpp"
 #include "HttpConfig.hpp"
 #include "ConfigUtils.hpp"
 #include "ConnSocket.hpp"
@@ -39,7 +40,15 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	//IMPL: create all serverSocket
+	map<
+		pair<string, unsigned short>,
+		vector<Config*>
+	>			m;
+	m[make_pair(string("127.0.0.1"), 8888)] = HttpConfig::getInstance()->link;
+	ConfigLoader::_()->setAddrs(m);
+	ConfigLoader::_()->pritAddrs();
+
+	//IMPL: create all serverSocket from m.key(ip:port), each socket has vector<ServerConfig*>
 	ServerSocket		serv("", 8888);	// put your IP, "" means ANY
 	ConnSocket*			connected;
 	Pipe*				CGIpipe;
