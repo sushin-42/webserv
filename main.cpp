@@ -48,8 +48,9 @@ int main(int argc, char** argv)
 	ConfigLoader::_()->setAddrs(m);
 	ConfigLoader::_()->pritAddrs();
 
+
 	//IMPL: create all serverSocket from m.key(ip:port), each socket has vector<ServerConfig*>
-	ServerSocket		serv("", 8888);	// put your IP, "" means ANY
+	ServerSocket*		serv;
 	ConnSocket*			connected;
 	Pipe*				CGIpipe;
 	IStream*			stream;
@@ -61,13 +62,26 @@ int main(int argc, char** argv)
 	map<int, undone>	writeUndoneBuf;
 	root += "/static_file";
 
-	try						{ serv.bind(); }
-	catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
-	try						{ serv.listen(10 /*backlog*/); }
-	catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
+	map<
+		pair<string, unsigned short>,
+		vector<Config*>
+	>::iterator mit, mite;
+	mit = m.begin(), mite = m.end();
+
+	for (;mit != mite; mit++)
+	{
+		serv = new ServerSocket(mit->first.first, mit->first.second);
+		try						{ serv->bind(); }
+		catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
+		try						{ serv->listen(10 /*backlog*/); }
+		catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
+		serv->confs = mit->second;
+
+		pollset.enroll(serv);
+	}
 
 	pollset.createMonitor();
-	pollset.enroll(&serv);
+
 	while (1)
 	{
 //'----------------------catch and parse request header----------------------'//
@@ -132,10 +146,11 @@ int main(int argc, char** argv)
 
 //'-------------------------------- catch end--------------------------------'//
 _core:
-		core_wrapper(pollset, &serv, connected, CGIpipe);	//@ make response header, body//
+		serv = connected->linkServerSock;
+		core_wrapper(pollset, serv, connected, CGIpipe);	//@ make response header, body//
 		if (connected->pending)
 			continue;
-		if (!CGIpipe && connected->linkReadPipe)	/* pipe is just created */
+		if (!CGIpipe && connected->linkReadPipe)	/* pipe is just created, do not send 0 byte */
 			continue;
 		stream	= connected;
 		content = connected->ResH.getContent() +

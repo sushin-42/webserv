@@ -114,7 +114,7 @@ public:
 		Pipe*			P			= CONVERT(stream, Pipe);
 
 		TAG(PollSet, enroll); cout << GRAY("Enroll ") << stream->getFD()
-		<< (serv		? CYAN( " (ServerSocket)") :
+		<< (serv		? CYAN( " (ServerSocket) ") "[" _UL + serv->getIP() + ":" + toString(serv->getPort()) + _NC "]" :
 			connected	? BLUE( " (ConnSocket)") :
 			P			? PURPLE( " (Pipe)") : "") << endl;
 
@@ -222,7 +222,7 @@ private:
 				try
 				{
 					connected = new ConnSocket(serv->accept());
-					TAG(PollSet, examine); cout << GREEN("Serv ") << _UL << serv->getFD() << _NC <<  GREEN(" Got new connection, enroll ") << connected->getFD() << endl;
+					TAG(PollSet, examine); cout << GREEN("Server ") << _UL "[" << serv->getIP() + ":" + toString(serv->getPort()) + _NC "]"<<  GREEN(" Got new connection, enroll ") << connected->getFD() << endl;
 					this->enroll(connected);
 				}
 				catch (exception& e)	// accept() not ready

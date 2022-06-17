@@ -12,13 +12,18 @@
 class ServerSocket : public ISocket
 {
 /**========================================================================
+* %                           member variables
+*========================================================================**/
+public:
+	vector<Config*> confs;
+/**========================================================================
 * @                           Constructors
 *========================================================================**/
 
 public:
 	ServerSocket( const string&			ip,
 				  const unsigned short& port )
-	: ISocket(ip, port) {};
+	: ISocket(ip, port), confs() {};
 	~ServerSocket() {};
 
 /**========================================================================
@@ -46,6 +51,7 @@ public:
 		ConnSocket c;
 
 		c.fd = ::accept(this->fd, (struct sockaddr *)&c.info, &c.len);
+		c.linkServerSock = const_cast<ServerSocket*>(this);
 		if (c.fd == -1)
 		{
 			if (errno != EWOULDBLOCK && errno != EAGAIN)	exit(-1);

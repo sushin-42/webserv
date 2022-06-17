@@ -41,7 +41,7 @@
 
 
 char checkMethod(const string& content);
-
+class ServerSocket;
 class ConnSocket : public ISocket
 {
 friend class ServerSocket;
@@ -64,8 +64,9 @@ public:
 	bool		chunk;		/* to distinguish script output chunk with server chunk */
 	bool		FINsended;	/* we already sended FIN, DO NOT send more data. */
 
-	Pipe*		linkReadPipe;
-	Pipe*		linkWritePipe;
+	Pipe*			linkReadPipe;
+	Pipe*			linkWritePipe;
+	ServerSocket*	linkServerSock;
 
 
 /**========================================================================
@@ -74,7 +75,7 @@ public:
 
 public:
 	ConnSocket()
-	: ISocket(), len(sizeof(info)), recvContent(), ReqH(), ReqB(), ResH(), ResB(), pending(false), chunk(false), FINsended(false), linkReadPipe(NULL), linkWritePipe(NULL) {}
+	: ISocket(), len(sizeof(info)), recvContent(), ReqH(), ReqB(), ResH(), ResB(), pending(false), chunk(false), FINsended(false), linkReadPipe(NULL), linkWritePipe(NULL), linkServerSock(NULL) {}
 	~ConnSocket() {}
 
 /**========================================================================
@@ -95,6 +96,7 @@ public:
 			this->FINsended	= src.FINsended;
 			this->linkReadPipe	= src.linkReadPipe;
 			this->linkWritePipe	= src.linkWritePipe;
+			this->linkServerSock= src.linkServerSock;
 		}
 		return *this;
 	}
