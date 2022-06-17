@@ -19,6 +19,7 @@ void	core(PollSet& pollset, ServerSocket *serv, ConnSocket *connected)
 	connected->ResH.setStatusCode(status);
 	if (MIME.find(ext) != MIME.end())
 		connected->ResH["Content-Type"]	= MIME[ext];	// No matching MIME
+	//IMPL: else, load default_type
 	if (!connected->ResB.getContent().empty())
 		connected->ResH["Content-Length"]	= toString(connected->ResB.getContent().length());
 	if (status == 200 && getExt(filepath) == "py")

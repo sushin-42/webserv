@@ -126,6 +126,11 @@ public:
 		// Have to close() instantly after send FIN, with short timer.
 		shutdown(this->fd, SHUT_WR);
 		/*
+			IMPL: if lingering_time, last_active = now, this->setTimeOut(time_t to)
+			need to move FIN sended, we do not any processing
+		*/
+
+		/*
 			for case that client keep sending message even after FIN.
 			we prevent calling ConnSocket#send().
 		*/
@@ -138,6 +143,7 @@ public:
 	{
 		if (has2CRLF(recvContent))	//NOTE: what if bad-format request doesn't contain "\r\n\r\n"?
 		{
+			//IMPL: keep-alive request count--
 			if (isValidHeader(recvContent))
 			{
 				/* set ReqH here */
@@ -195,6 +201,7 @@ public:
 		{
 			if (!isNumber(ReqH["Content-Length"]))
 				throw badRequest();
+			//IMPL: compare "Content-Length" with client_max_body_size
 			if (toNum<unsigned int>(ReqH["Content-Length"]) <= recvContent.length())
 			{
 				ReqB.setContent(recvContent.substr(0, toNum<unsigned int>(ReqH["Content-Length"])));

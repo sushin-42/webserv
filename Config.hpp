@@ -75,24 +75,25 @@ public:
 	string configtemp;
 	//중복 체크 구조체
 	Duplicate dupeCheck;
+
 	//멤버 변수
-	vector<Config *> link;
-	vector<string> index;
-	string root;
-	bool auto_index; // directory listing
-	map<int, string> error_page;
-	ssize_t keepalive_requests;
+	map<int, string> error_page;					// key= status code, value = 문서
+	vector<Config *> 	link;
+	vector<string>		index;						// if (directory) 1. index file 2. (403 forbidden  || listing)
+	bool				auto_index; 				// if (directory && no index file) directory listing
+	string				root;						// 해당 블록의 루트 폴더. <--- 해당 path에 request Target을 붙이게 됨.
+	ssize_t				keepalive_requests;			// keep_alive --;
 
-	string default_type;
-	size_t client_max_body_size;
-	bool reset_timedout_connection;
+	string				default_type;				// 확장자가 mime.type에 없을때, 기본값
+	ssize_t				client_max_body_size;
+	bool				reset_timedout_connection;
 
-	time_t lingering_timeout;
-	time_t lingering_time;
-	time_t keepalive_time;
-	time_t keepalive_timeout;
-	time_t send_timeout;
-	time_t client_body_timeout;
+	time_t				lingering_time;				//총시간->  fin 보낸순간.
+	time_t				lingering_timeout;			//간격 ->  lastActive 일단 fin보낸순간, 그 다음부터 폴에서 갱신
+	time_t				keepalive_time;				//총시간 -> 생성시간
+	time_t				keepalive_timeout;			//간격 -> poll에서 갱신되는 lastActive
+	time_t				send_timeout;
+	time_t				client_body_timeout;
 
 // 	// bool				absolute_redirect;
 // 	// bool				server_name_in_redirect;

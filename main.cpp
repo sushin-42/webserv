@@ -39,6 +39,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
+	//IMPL: create all serverSocket
 	ServerSocket		serv("", 8888);	// put your IP, "" means ANY
 	ConnSocket*			connected;
 	Pipe*				CGIpipe;

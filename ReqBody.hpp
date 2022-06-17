@@ -195,6 +195,7 @@ public:
 				goto _invalid;
 
 	_SizeDone:
+			//IMPL: check total cummulated size, compare with limit_body_size
 			if (canGoAhead(chunk.data, chunk.cur,1))
 				chunk.cur++;
 			else
