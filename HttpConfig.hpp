@@ -1,8 +1,7 @@
 #ifndef HTTPCONFIG_HPP
 #define HTTPCONFIG_HPP
-#include "ServerConfig.hpp"
-#include "ConfigUtils.hpp"
-class Config;
+
+
 
 class HttpConfig : public Config
 {
@@ -12,6 +11,8 @@ class HttpConfig : public Config
 
 public:
     string etc; // http 블록 외에 있는 디렉티브 모음
+    vector<string> serverConfigtemp;
+    map<pair<string, unsigned short>, vector<ServerConfig *> > serverMap;
     virtual ~HttpConfig() {}
 
 private:
@@ -100,13 +101,15 @@ public:
     }
     void setConfig(string config)
     {
+        cout << RED(" http block ") << endl;
         etc = config;
+        defaultSet();
         separateHttpBlock();
-        cout << etc << endl;
         SeparateServerBlock();
-        cout << RED(" http block ") << endl;
         SetupConfig();
+        makeServerBlock();
         cout << RED(" http block ") << endl;
+        setServerMap();
     }
     void separateHttpBlock()
     {
@@ -127,16 +130,43 @@ public:
     {
         size_t start = 0;
         size_t end = 0;
-        string serverConfigtemp;
 
         while ((start = configtemp.find("server ", end)) != string::npos)
+            serverConfigtemp.push_back(ExtractBlock(configtemp, start));
+    }
+    void makeServerBlock()
+    {
+        for (size_t i = 0; i < serverConfigtemp.size(); i++)
         {
-            serverConfigtemp = ExtractBlock(configtemp, start);
-            Config *servConf = new ServerConfig(serverConfigtemp);
+            Config *servConf = new ServerConfig(serverConfigtemp[i], this);
             this->link.push_back(servConf);
         }
     }
+    void setServerMap()
+    {
+        // vector<vector<pair<string, unsigned short> > > AllipPort;
+        // vector<pair<pair<string, unsigned short>, vector<int> > >last;
+        // for (size_t i = 0; i < link.size(); i++)
+        // {
+        //     ServerConfig *temp = CONVERT(link[i], ServerConfig);
 
+        //     AllipPort.push_back(temp->ipPort);
+        // }
+        // for (size_t i = 0; i < AllipPort.size(); i++)
+        // {
+        //     for (size_t k = 0; k < AllipPort[i].size(); k++)
+        //     {
+        //         for (size_t j = 0; j < link.size(); j++)
+        //         {
+        //             ServerConfig *temp = CONVERT(link[j], ServerConfig);
+        //             if (temp->ipPort == AllipPort[i][k])
+        //             {
+        //                 last
+        //             }
+        //         }
+        //     }
+        // }
+    }
     /**========================================================================
      * !                            Exceptions
      *========================================================================**/

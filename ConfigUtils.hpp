@@ -1,13 +1,10 @@
 #ifndef CONFIGUTILS_HPP
 #define CONFIGUTILS_HPP
-// #include "Config.hpp"
-#include "ServerConfig.hpp"
-#include "ConfigUtilsException.hpp"
+
+
+
 #include <arpa/inet.h>
-class Config;
-class HttpConfig;
-class ServerConfig;
-class LocationConfig;
+
 
 using namespace std;
 

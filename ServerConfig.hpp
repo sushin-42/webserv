@@ -1,7 +1,7 @@
 #ifndef SERVERCONFIG_HPP
 #define SERVERCONFIG_HPP
-#include "LocationConfig.hpp"
-class Config;
+
+
 
 class ServerConfig : public Config
 {
@@ -10,11 +10,9 @@ class ServerConfig : public Config
      *========================================================================**/
 
 public:
+    vector<pair<string, string> > locationConfUri;
     vector<string> server_name;
-    // vector<string> ip;
-    
     vector<pair<string, unsigned short> > ipPort;
-    // vector<unsigned short> port;
 
     /**========================================================================
      * @                           Constructors
@@ -22,15 +20,15 @@ public:
 
 public:
     ServerConfig() : Config() {}
-    ServerConfig(string str) : Config()
+    ServerConfig(string str, Config *httpConf) : Config()
     {
-        // server_name[0] = "";
-        // ip[0] = "";
-        // port[0] = convertStringToPort("8888");
+        cout << PURPLE(" server block ") << endl;
+        setHttpDirective(httpConf);
+        //impl set serverconfig variables
         configtemp = str;
         SeparateLocationBlock();
-        cout << PURPLE(" server block ") << endl;
         SetupConfig();
+        makeLocationBlock();
         cout << PURPLE(" server block ") << endl;
     }
     // ServerConfig(const ServerConfig &src) : Config() {}
@@ -67,14 +65,37 @@ public:
         size_t start = 0;
         size_t end = 0;
         string locationConfigtemp;
-
+        string uri;
         while ((start = configtemp.find("location ", end)) != string::npos)
         {
-            string uri = ExtractURI(start + 8);
+            uri = ExtractURI(start + 8);
             locationConfigtemp = ExtractBlock(configtemp, start);
-            Config *locConf = new LocationConfig(locationConfigtemp, uri);
+            locationConfUri.push_back(make_pair(uri, locationConfigtemp));
+        }
+    }
+    void makeLocationBlock()
+    {
+        for (size_t i = 0; i < locationConfUri.size(); i++)
+        {
+            Config *locConf = new LocationConfig(locationConfUri[i], this);
             this->link.push_back(locConf);
         }
+    }
+    void setHttpDirective(Config *httpConf)
+    {
+        this->index = httpConf->index;
+        this->auto_index = httpConf->auto_index;
+        this->root = httpConf->root;
+        this->keepalive_requests = httpConf->keepalive_requests;
+        this->default_type = httpConf->default_type;
+        this->client_max_body_size = httpConf->client_max_body_size;
+        this->reset_timedout_connection = httpConf->reset_timedout_connection;
+        this->lingering_time = httpConf->lingering_time;
+        this->lingering_timeout = httpConf->lingering_timeout;
+        this->keepalive_time = httpConf->keepalive_time;
+        this->keepalive_timeout = httpConf->keepalive_timeout;
+        this->send_timeout = httpConf->send_timeout;
+        this->client_body_timeout = httpConf->client_body_timeout;
     }
     /**========================================================================
      * !                            Exceptions

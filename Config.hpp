@@ -8,7 +8,7 @@
 #include <sstream>
 #include <algorithm>
 #include "utils.hpp"
-// #include "ConfigUtils.hpp"
+
 using namespace std;
 class Config;
 struct Duplicate
@@ -77,43 +77,35 @@ public:
 	Duplicate dupeCheck;
 
 	//멤버 변수
-	map<int, string> error_page;					// key= status code, value = 문서
-	vector<Config *> 	link;
-	vector<string>		index;						// if (directory) 1. index file 2. (403 forbidden  || listing)
-	bool				auto_index; 				// if (directory && no index file) directory listing
-	string				root;						// 해당 블록의 루트 폴더. <--- 해당 path에 request Target을 붙이게 됨.
-	ssize_t				keepalive_requests;			// keep_alive --;
+	map<int, string> error_page; // key= status code, value = 문서
+	vector<Config *> link;
+	vector<string> index;		// if (directory) 1. index file 2. (403 forbidden  || listing)
+	bool auto_index;			// if (directory && no index file) directory listing
+	string root;				// 해당 블록의 루트 폴더. <--- 해당 path에 request Target을 붙이게 됨.
+	ssize_t keepalive_requests; // keep_alive --;
 
-	string				default_type;				// 확장자가 mime.type에 없을때, 기본값
-	ssize_t				client_max_body_size;
-	bool				reset_timedout_connection;
+	string default_type; // 확장자가 mime.type에 없을때, 기본값
+	ssize_t client_max_body_size;
+	bool reset_timedout_connection;
 
-	time_t				lingering_time;				//총시간->  fin 보낸순간.
-	time_t				lingering_timeout;			//간격 ->  lastActive 일단 fin보낸순간, 그 다음부터 폴에서 갱신
-	time_t				keepalive_time;				//총시간 -> 생성시간
-	time_t				keepalive_timeout;			//간격 -> poll에서 갱신되는 lastActive
-	time_t				send_timeout;
-	time_t				client_body_timeout;
+	time_t lingering_time;	  //총시간->  fin 보낸순간.
+	time_t lingering_timeout; //간격 ->  lastActive 일단 fin보낸순간, 그 다음부터 폴에서 갱신
+	time_t keepalive_time;	  //총시간 -> 생성시간
+	time_t keepalive_timeout; //간격 -> poll에서 갱신되는 lastActive
+	time_t send_timeout;
+	time_t client_body_timeout;
 
-// 	// bool				absolute_redirect;
-// 	// bool				server_name_in_redirect;
-// 	// bool				port_in_redirect;
+	// 	// bool				absolute_redirect;
+	// 	// bool				server_name_in_redirect;
+	// 	// bool				port_in_redirect;
 
 	/**========================================================================
-	* @                           Constructors
-	*========================================================================**/
+	 * @                           Constructors
+	 *========================================================================**/
 public:
 	Config() : link()
 	{
 		MapSetting();
-		keepalive_requests = 0;
-		client_max_body_size = 0;
-		lingering_timeout = 0;
-		lingering_time = 0;
-		keepalive_time = 0;
-		keepalive_timeout = 0;
-		send_timeout = 0;
-		client_body_timeout = 0;
 	}
 	Config(const Config &src) : link(src.link) {}
 	virtual ~Config() {}
@@ -166,7 +158,10 @@ public:
 		if ((it = m.find(pFunction)) != m.end())
 			(*it->second)(arg, this);
 		else
-			return -1; // 맞는거 없어서 에러 내뱉기 구현
+		{
+			cout << "worngDirective = " << pFunction << endl;
+			throw wrongDirective();
+		}
 		return 0;
 	}
 
@@ -175,7 +170,10 @@ public:
 		string line;
 		stringstream ss(configtemp);
 		while (getline(ss, line, ';'))
-			conf.push_back(line);
+		{
+			if (!ss.eof())
+				conf.push_back(line);
+		}
 		for (size_t i = 0; i < conf.size(); i++)
 		{
 			stringstream ss(conf[i]);
@@ -186,13 +184,7 @@ public:
 			ss >> directive;
 			while (ss >> tmp)
 				arg.push_back(tmp);
-
-			cout << dupeCheck.autoindex << endl;
 			call_function(directive, arg);
-			cout << directive << endl;
-			for (size_t i = 0; i < arg.size(); i++)
-				cout << arg[i] << endl;
-			cout << dupeCheck.autoindex << endl;
 		}
 	}
 	string ExtractBlock(string &configtemp, size_t start)
@@ -446,6 +438,17 @@ public:
 		explicit notExistHttpBlock() : msg(RED("notExistHttpBlock")) {}
 		explicit notExistHttpBlock(const string &m) : msg(m) {}
 		virtual ~notExistHttpBlock() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+	class wrongDirective : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit wrongDirective() : msg(RED("wrongDirective")) {}
+		explicit wrongDirective(const string &m) : msg(m) {}
+		virtual ~wrongDirective() throw(){};
 		virtual const char *what() const throw() { return msg.c_str(); }
 	};
 };
