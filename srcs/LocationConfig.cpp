@@ -6,14 +6,11 @@ LocationConfig::LocationConfig() : Config() {}
 LocationConfig::LocationConfig(pair<string, string> locationConfUri, ServerConfig *serverConf) : Config()
 {
     cout << BLUE(" location block ") << endl;
-    cout << serverConf->client_max_body_size << endl;
     setServerDirective(serverConf);
-    cout << client_max_body_size << endl;
     URI = locationConfUri.first;
     configtemp = locationConfUri.second;
     assign = checkAssign(URI);
     SetupConfig();
-    cout << client_max_body_size << endl;
     cout << BLUE(" location block ") << endl;
 }
 // LocationConfig(const LocationConfig &src) : Config() {}

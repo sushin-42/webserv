@@ -39,11 +39,12 @@ int main(int argc, char **argv)
 	}
 	root = getcwd(NULL, 0);
 	MIME = getMIME();
+	
 	map<
 		pair<string, unsigned short>,
 		vector<Config *> >
 		m;
-	m[make_pair(string("127.0.0.1"), 8888)] = HttpConfig::getInstance()->link;
+	m = HttpConfig::getInstance()->serverMap;
 	ConfigLoader::_()->setAddrs(m);
 	ConfigLoader::_()->pritAddrs();
 
