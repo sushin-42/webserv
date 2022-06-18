@@ -7,8 +7,18 @@
  * If it is a POST method and the Content-Length header is absent, which is most likely to happen, read until -1 is returned, which is the signal of EOF.
 */
 
+/**========================================================================
+* @                           Constructors
+*========================================================================**/
 
+	ConnSocket::ConnSocket()
+	: ISocket(), len(sizeof(info)),
+	  recvContent(), ReqH(), ReqB(), ResH(), ResB(),
+	  pending(false), chunk(false), FINsended(false),
+	  linkReadPipe(NULL), linkWritePipe(NULL), linkServerSock(NULL),
+	  conf(NULL) {}
 
+	ConnSocket::~ConnSocket() {}
 
 /**========================================================================
 * *                            operators
@@ -29,6 +39,7 @@
 			this->linkReadPipe	= src.linkReadPipe;
 			this->linkWritePipe	= src.linkWritePipe;
 			this->linkServerSock= src.linkServerSock;
+			this->conf			= src.conf;
 		}
 		return *this;
 	}

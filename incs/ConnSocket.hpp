@@ -67,6 +67,7 @@ public:
 	Pipe*			linkReadPipe;
 	Pipe*			linkWritePipe;
 	ServerSocket*	linkServerSock;
+	Config*			conf;
 
 
 /**========================================================================
@@ -74,9 +75,8 @@ public:
 *========================================================================**/
 
 public:
-	ConnSocket()
-	: ISocket(), len(sizeof(info)), recvContent(), ReqH(), ReqB(), ResH(), ResB(), pending(false), chunk(false), FINsended(false), linkReadPipe(NULL), linkWritePipe(NULL), linkServerSock(NULL) {}
-	~ConnSocket() {}
+	ConnSocket();
+	~ConnSocket();
 
 /**========================================================================
 * *                            operators

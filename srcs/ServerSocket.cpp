@@ -1,7 +1,6 @@
 #include "ServerSocket.hpp"
+#include "ConfigLoader.hpp"
 #include "Undone.hpp"
-
-
 
 /**========================================================================
 * #                          member functions
@@ -23,8 +22,9 @@
 	{
 		ConnSocket c;
 
-		c.fd = ::accept(this->fd, (struct sockaddr *)&c.info, &c.len);
-		c.linkServerSock = const_cast<ServerSocket*>(this);
+		c.fd			 	= ::accept(this->fd, (struct sockaddr *)&c.info, &c.len);
+		c.conf				= ConfigLoader::_()->getDefaultServer(this->getIP(), this->getPort());
+		c.linkServerSock	= const_cast<ServerSocket*>(this);
 		if (c.fd == -1)
 		{
 			if (errno != EWOULDBLOCK && errno != EAGAIN)	exit(-1);
