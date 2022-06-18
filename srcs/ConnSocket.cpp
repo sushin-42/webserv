@@ -117,9 +117,6 @@
 					/* find location matched with URI, or keep server config */
 					this->conf = CONF->getMatchedLocation(ReqH.getRequsetTarget(),
 														  CONVERT(this->conf, ServerConfig));
-
-					if (CONVERT(this->conf, LocationConfig))
-						cout << "MATCHED LOCATION URI is " <<CONVERT(this->conf, LocationConfig)->URI << endl;
 				}
 
 				/* extract trailing body */
@@ -194,13 +191,6 @@
 		bzero(buf, sizeof(buf));
 		byte = read(this->fd, this->buf, sizeof(buf));
 
-		// if (this->conf)
-		// {
-		// 	if (CONVERT(this->conf, ServerConfig))
-		// 		cout << "default server conf, " << CONVERT(this->conf, ServerConfig)->server_name[0] << endl;
-		// 	else
-		// 		cout << "loc conf! " << endl;
-		// }
 		switch (byte)
 		{
 		case 0:
