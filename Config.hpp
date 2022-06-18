@@ -7,6 +7,9 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <utility>
+#include <cstddef>
+#include "color.hpp"
 #include "utils.hpp"
 
 using namespace std;
@@ -29,36 +32,13 @@ struct Duplicate
 
 	bool &operator[](int ind) { return *(&index + ind); }
 };
-// ssize_t convertStringToByte(string val);
-// time_t convertStringToTime(string val);
-// unsigned short convertStringToPort(string code);
-
-void parse_root(vector<string> arg, Config *config);
-void parse_listen(vector<string> arg, Config *config);
-void parse_server_name(vector<string> arg, Config *config);
-void parse_index(vector<string> arg, Config *config);
-void parse_root(vector<string> arg, Config *config);
-void parse_auto_index(vector<string> arg, Config *config);
-void parse_error_page(vector<string> arg, Config *config);
-void parse_keepalive_requests(vector<string> arg, Config *config);
-void parse_keepalive_time(vector<string> arg, Config *config);
-void parse_keepalive_timeout(vector<string> arg, Config *config);
-void parse_lingering_time(vector<string> arg, Config *config);
-void parse_lingering_timeout(vector<string> arg, Config *config);
-void parse_send_timeout(vector<string> arg, Config *config);
-void parse_client_body_timeout(vector<string> arg, Config *config);
-void parse_reset_timedout_connection(vector<string> arg, Config *config);
-void parse_client_max_body_size(vector<string> arg, Config *config);
-void parse_default_type(vector<string> arg, Config *config);
-void parse_listen(vector<string> arg, Config *config);
-void parse_server_name(vector<string> arg, Config *config);
-void parse_limit_except_method(vector<string> arg, Config *config);
 string root = getcwd(NULL, 0);
 
 map<string, string> MIME = getMIME();
 
-typedef void (*PointerFunction)(vector<string> arg, Config *config);
-typedef map<std::string, PointerFunction> func_map;
+typedef pair<string, unsigned short> _Addr;
+typedef vector<Config *> _Confs;
+typedef map<_Addr, _Confs> _Map;
 class ErrorPage
 {
 };
@@ -69,6 +49,8 @@ class Config
 	 *========================================================================**/
 
 public:
+typedef void (*PointerFunction)(vector<string> arg, Config *config);
+typedef map<string, PointerFunction> func_map;
 	//파싱 변수
 	func_map m;
 	vector<string> conf;
@@ -103,113 +85,46 @@ public:
 	 * @                           Constructors
 	 *========================================================================**/
 public:
-	Config() : link()
-	{
-		MapSetting();
-	}
-	Config(const Config &src) : link(src.link) {}
-	virtual ~Config() {}
+	Config();
+	Config(const Config &src);
+	virtual ~Config();
 
 	/**========================================================================
 	 * *                            operators
 	 *========================================================================**/
 
-	Config &operator=(const Config &src)
-	{
-		if (this != &src)
-		{
-			this->link = src.link;
-		}
-		return *this;
-	}
+	Config &operator=(const Config &src);
 
 	/**========================================================================
 	 * #                          member functions
 	 *========================================================================**/
 
-	void MapSetting()
-	{
-		m["index"] = &parse_index;
-		m["root"] = &parse_root;
-		m["auto_index"] = &parse_auto_index;
-		m["error_page"] = &parse_error_page;
-		m["keepalive_requests"] = &parse_keepalive_requests;
-		m["keepalive_time"] = &parse_keepalive_time;
-		m["keepalive_timeout"] = &parse_keepalive_timeout;
-		m["lingering_time"] = &parse_lingering_time;
-		m["lingering_timeout"] = &parse_lingering_timeout;
-		m["send_timeout"] = &parse_send_timeout;
-		m["client_body_timeout"] = &parse_client_body_timeout;
-		m["reset_timedout_connection"] = &parse_reset_timedout_connection;
-		m["client_max_body_size"] = &parse_client_max_body_size;
-		m["default_type"] = &parse_default_type;
+	void MapSetting();
+	int call_function(const std::string &pFunction, const vector<string> arg);
 
-		// only server block
-		m["listen"] = &parse_listen;
-		m["server_name"] = &parse_server_name;
+	void SetupConfig();
+	string ExtractBlock(string &configtemp, size_t start);
+	/**========================================================================
+	 * !                            Parse_utils
+	 *========================================================================**/
 
-		// only location_block
-		m["limit_except_method"] = &parse_limit_except_method;
-	}
-	int call_function(const std::string &pFunction, const vector<string> arg)
-	{
-		func_map::iterator it;
-
-		if ((it = m.find(pFunction)) != m.end())
-			(*it->second)(arg, this);
-		else
-		{
-			cout << "worngDirective = " << pFunction << endl;
-			throw wrongDirective();
-		}
-		return 0;
-	}
-
-	void SetupConfig()
-	{
-		string line;
-		stringstream ss(configtemp);
-		while (getline(ss, line, ';'))
-		{
-			if (!ss.eof())
-				conf.push_back(line);
-		}
-		for (size_t i = 0; i < conf.size(); i++)
-		{
-			stringstream ss(conf[i]);
-			string directive, tmp;
-			vector<string> arg;
-
-			ss.str(conf[i]);
-			ss >> directive;
-			while (ss >> tmp)
-				arg.push_back(tmp);
-			call_function(directive, arg);
-		}
-	}
-	string ExtractBlock(string &configtemp, size_t start)
-	{
-		int countBracket = 1;
-		string extractConfig;
-		size_t i;
-		size_t end;
-
-		i = configtemp.find('{', start);
-
-		for (end = i + 1; end < configtemp.length(); end++)
-		{
-			if (configtemp[end] == '{')
-				countBracket += 1;
-			else if (configtemp[end] == '}')
-				countBracket -= 1;
-			if (countBracket == 0)
-				break;
-			extractConfig.push_back(configtemp[end]);
-		}
-		configtemp.erase(start, end - start + 1);
-
-		return extractConfig;
-	}
+	// void parse_root(vector<string> arg, Config *config);
+	// void parse_listen(vector<string> arg, Config *config);
+	// void parse_server_name(vector<string> arg, Config *config);
+	// void parse_index(vector<string> arg, Config *config);
+	// void parse_auto_index(vector<string> arg, Config *config);
+	// void parse_error_page(vector<string> arg, Config *config);
+	// void parse_keepalive_requests(vector<string> arg, Config *config);
+	// void parse_default_type(vector<string> arg, Config *config);
+	// void parse_client_max_body_size(vector<string> arg, Config *config);
+	// void parse_reset_timedout_connection(vector<string> arg, Config *config);
+	// void parse_lingering_timeout(vector<string> arg, Config *config);
+	// void parse_lingering_time(vector<string> arg, Config *config);
+	// void parse_keepalive_time(vector<string> arg, Config *config);
+	// void parse_keepalive_timeout(vector<string> arg, Config *config);
+	// void parse_send_timeout(vector<string> arg, Config *config);
+	// void parse_client_body_timeout(vector<string> arg, Config *config);
+	// void parse_limit_except_method(vector<string> arg, Config *config);
 	/**========================================================================
 	 * !                            Exceptions
 	 *========================================================================**/

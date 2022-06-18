@@ -4,8 +4,9 @@
 #include <exception>
 #include <string>
 #include "color.hpp"
-
-
+#include "LocationConfig.hpp"
+#include "ServerConfig.hpp"
+using namespace std;
 //=====================================util exception========================================
 class isPathFail : public exception
 {

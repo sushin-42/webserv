@@ -1,6 +1,6 @@
 CC = c++ 
 CFLAGS = -Wall -Werror -Wextra -std=c++98 -g -fsanitize=address
-SRCS = main.cpp
+SRCS = main.cpp Config.cpp HttpConfig.cpp ServerConfig.cpp LocationConfig.cpp
 OBJS = $(SRCS:.cpp=.o)
 NAME = webserv 
 
