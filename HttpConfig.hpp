@@ -109,7 +109,6 @@ public:
         SetupConfig();
         makeServerBlock();
         cout << RED(" http block ") << endl;
-        setServerMap();
     }
     void separateHttpBlock()
     {
@@ -142,31 +141,7 @@ public:
             this->link.push_back(servConf);
         }
     }
-    void setServerMap()
-    {
-        // vector<vector<pair<string, unsigned short> > > AllipPort;
-        // vector<pair<pair<string, unsigned short>, vector<int> > >last;
-        // for (size_t i = 0; i < link.size(); i++)
-        // {
-        //     ServerConfig *temp = CONVERT(link[i], ServerConfig);
-
-        //     AllipPort.push_back(temp->ipPort);
-        // }
-        // for (size_t i = 0; i < AllipPort.size(); i++)
-        // {
-        //     for (size_t k = 0; k < AllipPort[i].size(); k++)
-        //     {
-        //         for (size_t j = 0; j < link.size(); j++)
-        //         {
-        //             ServerConfig *temp = CONVERT(link[j], ServerConfig);
-        //             if (temp->ipPort == AllipPort[i][k])
-        //             {
-        //                 last
-        //             }
-        //         }
-        //     }
-        // }
-    }
+   
     /**========================================================================
      * !                            Exceptions
      *========================================================================**/
