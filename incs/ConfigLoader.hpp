@@ -1,13 +1,15 @@
 #ifndef CONFIGLOADER_HPP
 # define CONFIGLOADER_HPP
 
-#include "Config.hpp"
-#include "LocationConfig.hpp"
-#include "ServerConfig.hpp"
-#include "ServerSocket.hpp"
-#include "utils.hpp"
+# include "Config.hpp"
+# include "LocationConfig.hpp"
+# include "ServerConfig.hpp"
+# include "ServerSocket.hpp"
+# include "utils.hpp"
 # include <map>
-#include <string>
+# include <string>
+
+# define CONF	ConfigLoader::_()
 using namespace std;
 
 class ConfigLoader

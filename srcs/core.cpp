@@ -1,5 +1,5 @@
 # include "core.hpp"
-extern string root;
+
 extern map<string, string> MIME;
 
 void			core(PollSet& pollset, ServerSocket *serv, ConnSocket *connected)
@@ -47,9 +47,9 @@ void	core_wrapper(PollSet& pollset, ServerSocket *serv, ConnSocket *connected, P
 
 status_code_t	writeResponseBody(ConnSocket* connected, const string& filepath)
 {
-	status_code_t	status = connected->ResB.readFile(root + filepath);
+	status_code_t	status = connected->ResB.readFile(connected->conf->root + filepath);
 	if (status == 404)
-		connected->ResB.readFile(root + "/404/404.html");
+		connected->ResB.readFile(connected->conf->root + "/404/404.html");
 
 	return status;
 }

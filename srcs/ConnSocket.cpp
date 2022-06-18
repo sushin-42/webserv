@@ -1,4 +1,7 @@
 # include "ConnSocket.hpp"
+# include "utils.hpp"
+# include "ServerConfig.hpp"
+# include "ConfigLoader.hpp"
 
 /*
  @ There are 3 ways of detecting the end of the stream depending on what requests you are handling:
@@ -105,6 +108,20 @@
 				ReqH.setContent(extractHeader(recvContent));
 				ReqH.setHeaderField(KVtoMap(recvContent, ':'));
 
+				/* conf is still default_server conf */
+				if (ReqH.exist("Host"))
+				{
+					/* find server_name matched with Host */
+					this->conf = CONF->getMatchedServer(this->linkServerSock, ReqH["Host"]);
+
+					/* find location matched with URI, or keep server config */
+					this->conf = CONF->getMatchedLocation(ReqH.getRequsetTarget(),
+														  CONVERT(this->conf, ServerConfig));
+
+					if (CONVERT(this->conf, LocationConfig))
+						cout << "MATCHED LOCATION URI is " <<CONVERT(this->conf, LocationConfig)->URI << endl;
+				}
+
 				/* extract trailing body */
 				recvContent = extractBody(recvContent);
 			}
@@ -177,6 +194,13 @@
 		bzero(buf, sizeof(buf));
 		byte = read(this->fd, this->buf, sizeof(buf));
 
+		// if (this->conf)
+		// {
+		// 	if (CONVERT(this->conf, ServerConfig))
+		// 		cout << "default server conf, " << CONVERT(this->conf, ServerConfig)->server_name[0] << endl;
+		// 	else
+		// 		cout << "loc conf! " << endl;
+		// }
 		switch (byte)
 		{
 		case 0:

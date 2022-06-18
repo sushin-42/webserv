@@ -8,9 +8,6 @@
 //@                client-redir-response | client-redirdoc-response          @//
 //@--------------------------------------------------------------------------@//
 # include "CGI.hpp"
-extern string root;
-
-
 
 pair<status_code_t, string>	checkStatusField(const string& status)
 {
@@ -111,7 +108,7 @@ int childRoutine(
 {
 	vector<char*> argv, envp;
 
-	string				path = root + connected->ReqH.getRequsetTarget();
+	string				path = connected->conf->root + connected->ReqH.getRequsetTarget();
 	argv.push_back(const_cast<char*>(path.c_str()));
 	argv.push_back(NULL);
 
