@@ -1,26 +1,4 @@
-#ifndef UTILS_HPP
-#define UTILS_HPP
-
-#include <cctype>
-#include <iostream>
-#include <map>
-#include <sstream>
-#include <fstream>
-#include <string>
-#include <sys/_types/_ssize_t.h>
-#include <unistd.h>
-#include <pthread.h>
-#include "color.hpp"
-#define CONVERT(X, Y) dynamic_cast<Y *>(X)
-using namespace std;
-
-template <class T>
-string toString(T whatever)
-{
-	stringstream out;
-	out << whatever;
-	return out.str();
-}
+#include "utils.hpp"
 
 string fileToString(const string &path)
 {
@@ -69,19 +47,7 @@ string getExt(const string &path)
 	return ext;
 }
 
-inline std::string rtrim(std::string s, const char *t)
-{
-	s.erase(s.find_last_not_of(t) + 1);
-	return s;
-}
-
-inline std::string ltrim(std::string s, const char *t)
-{
-	s.erase(0, s.find_first_not_of(t));
-	return s;
-}
-
-inline std::string trim(std::string s, const char *t)
+std::string trim(std::string s, const char *t)
 {
 	return ltrim(rtrim(s, t), t);
 }
@@ -247,34 +213,6 @@ string errorpage(const string &title, const string &header, const string &messag
 	// The document has moved <a href=\"http://localhost:8080/es.png\">here</a>.
 }
 
-template <class T>
-string toHex(T num)
-{
-	stringstream sstream;
-	sstream << std::hex << num;
-	return sstream.str();
-}
-
-template <class T>
-T	toHexNum(string s)
-{
-	T x;
-	std::stringstream ss;
-	ss << std::hex << s;
-	ss >> x;
-
-	return x;
-}
-
-template <class T>
-T	toNum(const string& s)
-{
-	std::istringstream sstream(s);
-	T num;
-	sstream >> num;
-	return num;
-}
-
 string makeChunk(const string &s)
 {
 	return (toHex(s.length()) + "\n" + s + "\n");
@@ -291,11 +229,6 @@ pair<pid_t, int> whoDied()
 	we don't allow obs-fold
 	VCHAR  0x21~0x7E
 */
-
-inline bool isVchar(int c) { return (0x21 <= c && c <= 0x7E); }
-inline bool isOWS(int c) { return (c == ' ' || c == '\t'); }
-inline bool isFieldchar(int c) { return (isVchar(c) || isOWS(c)); }
-
 bool isValidHeaderField(const string &line)
 {
 	string::size_type pDelim = 0;
@@ -370,4 +303,4 @@ int errMsg()
 	cerr << RED("argument error") << endl;
 	return (-1);
 }
-#endif
+

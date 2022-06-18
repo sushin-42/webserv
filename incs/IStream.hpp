@@ -54,13 +54,13 @@ public:
 * #                          member functions
 *========================================================================**/
 
-	int				getFD()	const			{ return fd; }
-	void			setFD( int fd )			{ this->fd = fd; }
-	void			updateLastActive()		{ this->lastActive = time(NULL); }
-	time_t			getLastActive()	const	{ return lastActive; }
-	void			setTimeOut(time_t to)	{ this->timeout = to; }
-	time_t			getTimeOut() const		{ return this->timeout; }
-	void			close()					{ ::close(fd); }
+	int				getFD()	const;
+	void			setFD( int fd );
+	void			updateLastActive();
+	time_t			getLastActive() const;
+	void			setTimeOut(time_t to);
+	time_t			getTimeOut() const;
+	void			close();
 
 
 

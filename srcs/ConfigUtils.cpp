@@ -1,11 +1,4 @@
-#ifndef CONFIGUTILS_HPP
-#define CONFIGUTILS_HPP
-
-#include "ConfigUtilsException.hpp"
-#include <sstream>
-#include <fstream>
-#include <arpa/inet.h>
-
+#include "ConfigUtils.hpp"
 using namespace std;
 
 typedef pair<string, unsigned short> _Addr;
@@ -542,4 +535,3 @@ string ReadConfig(char **argv)
 //     }
 //     cout << "=============== http ===============" << endl;
 // }
-#endif

@@ -63,33 +63,16 @@ public:
 * #                          member functions
 *========================================================================**/
 
-	void						clear()											{ content.clear(); headerField.clear(); }
-	void						setHTTPversion(const string& v)					{ this->HTTPversion = v; }
-	const string&				getHTTPversion() const							{ return this->HTTPversion; }
-	void						setHeaderField(const _Map& hf)					{ this->headerField = hf; }
-	const map<string, string>&	getHeaderField() const							{ return this->headerField; }
-	void						removeKey(const string& key)					{ this->headerField.erase(lowerize(key)); }
-	void						insertRange(iterator from, iterator to)			{ this->headerField.insert(from, to); }
-	bool						exist(const string& key)						{ return this->headerField.find(lowerize(key)) != this->headerField.end(); }
+	void						clear();
+	void						setHTTPversion(const string& v);
+	const string&				getHTTPversion() const;
+	void						setHeaderField(const _Map& hf);
+	const map<string, string>&	getHeaderField() const;
+	void						removeKey(const string& key);
+	void						insertRange(iterator from, iterator to);
+	bool						exist(const string& key);
 
-	void	append(const string& key, const string& value)
-	{
-		if (this->exist(key))
-		{
-			if ((*this)[key] != value)
-				(*this)[key] += (", " + value);
-		}
-		else
-			(*this)[key] = value;
-	}
-
-	void	integrate()
-	{
-		map<string, string>::iterator it;
-		map<string, string>::iterator ite = headerField.end();
-		for (it = headerField.begin(); it != ite; it++ )
-			content.append(capitalize(it->first, '-') + ": " + it->second + "\r\n");
-		content.append("\r\n");
-	}
+	void						append(const string& key, const string& value);
+	void						integrate();
 };
 #endif

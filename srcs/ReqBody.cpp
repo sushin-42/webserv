@@ -1,46 +1,14 @@
-#ifndef REQBODY_HPP
-# define REQBODY_HPP
-
-#include "IText.hpp"
-#include "utils.hpp"
-#include <exception>
-#include <iostream>
-# include <string>
-# include <sys/fcntl.h>
-# include <unistd.h>
-# include <fstream>
-using namespace std;
-
-
-class ReqBody : public IText
-{
-/**========================================================================
-* %                          member variables
-*========================================================================**/
-friend class ConnSocket;
-	struct {
-		unsigned int				state;
-		long long					size;
-		string						data;
-		string::size_type			cur;
-		string::size_type			newChunkStart;
-
-		bool						isAllDone() { return state ==  8 ;}
-	}								chunk;
+# include "ReqBody.hpp"
 
 /**========================================================================
 * @                           Constructors
 *========================================================================**/
-public:
-	ReqBody(): IText() {clearChunk();}
-	ReqBody( const ReqBody& src ): IText(src.content){}
-	~ReqBody() {}
 
 /**========================================================================
 * *                            operators
 *========================================================================**/
 
-	ReqBody&	operator=( const ReqBody& src )
+	ReqBody&	ReqBody::operator=( const ReqBody& src )
 	{
 		if (this != &src)
 		{
@@ -52,7 +20,7 @@ public:
 /**========================================================================
 * #                          member functions
 *========================================================================**/
-	void	clearChunk()
+	void	ReqBody::clearChunk()
 	{
 		chunk.state = 0;
 		chunk.cur = 0;
@@ -61,24 +29,24 @@ public:
 		chunk.size = -1;
 	}
 
-	void	appendChunk(const string& newdata)
+	void	ReqBody::appendChunk(const string& newdata)
 	{
 		chunk.data.append(newdata);
 	}
 
-	void	setChunk(const string& newdata)
+	void	ReqBody::setChunk(const string& newdata)
 	{
 		chunk.data = newdata;
 	}
 
-	bool	canGoAhead(const string& s, string::size_type cur, string::size_type i)
+	bool	ReqBody::canGoAhead(const string& s, string::size_type cur, string::size_type i)
 	{
 		if (cur + i < s.length())
 			return true;
 		return false;
 	}
 
-	void	printState(int state)
+	void	ReqBody::printState(int state)
 	{
 		cout << "state is " ;
 		switch (state) {
@@ -94,7 +62,7 @@ public:
 		default:;
 		}
 	}
-	void	decodingChunk()
+	void	ReqBody::decodingChunk()
 	{
 		long long i = 0;
 		enum t {
@@ -275,24 +243,4 @@ _AllDone:
 		return;
 	}
 
-	void	clear() { content.clear(); /*IText::clear();*/ }
-
-	class readMore: public exception
-	{
-		private:	string msg;
-		public:		explicit readMore(): msg("") {}
-					explicit readMore(const string& m): msg(m) {}
-					virtual ~readMore() throw() {};
-					virtual const char * what() const throw() { return msg.c_str(); }
-	};
-	class invalidChunk: public exception
-	{
-		private:	string msg;
-		public:		explicit invalidChunk(): msg("") {}
-					explicit invalidChunk(const string& m): msg(m) {}
-					virtual ~invalidChunk() throw() {};
-					virtual const char * what() const throw() { return msg.c_str(); }
-	};
-
-};
-#endif
+	void	ReqBody::clear() { content.clear(); /*IText::clear();*/ }

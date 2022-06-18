@@ -7,34 +7,10 @@
 //@ CGI-Response = document-response | local-redir-response |			     @//
 //@                client-redir-response | client-redirdoc-response          @//
 //@--------------------------------------------------------------------------@//
+# include "CGI.hpp"
+extern string root;
 
-#ifndef CGI_HPP
-# define CGI_HPP
 
-# include <_ctype.h>
-# include <cstddef>
-# include <cstring>
-# include <string>
-# include <sys/_types/_ssize_t.h>
-# include <sys/fcntl.h>
-# include <sys/wait.h>
-# include <utility>
-# include <vector>
-
-# include "ConnSocket.hpp"
-# include "Poll.hpp"
-# include "ServerSocket.hpp"
-# include "ReqBody.hpp"
-# include "ReqHeader.hpp"
-# include "ResBody.hpp"
-# include "ResHeader.hpp"
-# include "utils.hpp"
-using namespace std;
-
-void	documentResponse(ConnSocket* connected);
-void	clientRedir(ConnSocket* connected);
-void	localRedir(PollSet& pollset, ServerSocket* serv, ConnSocket* connected);
-void	core(PollSet& pollset, ServerSocket *serv, ConnSocket *connected);
 
 pair<status_code_t, string>	checkStatusField(const string& status)
 {
@@ -441,4 +417,4 @@ void	documentResponse(ConnSocket* connected)
 	if (!connected->ResH.exist("Status"))
 		connected->ResH["Status"] = "200 OK";
 }
-#endif
+

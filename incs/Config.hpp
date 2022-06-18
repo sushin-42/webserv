@@ -11,8 +11,8 @@
 #include <cstddef>
 #include "color.hpp"
 #include "utils.hpp"
-
 using namespace std;
+
 class Config;
 struct Duplicate
 {
@@ -32,9 +32,7 @@ struct Duplicate
 
 	bool &operator[](int ind) { return *(&index + ind); }
 };
-string root = getcwd(NULL, 0);
 
-map<string, string> MIME = getMIME();
 
 typedef pair<string, unsigned short> _Addr;
 typedef vector<Config *> _Confs;

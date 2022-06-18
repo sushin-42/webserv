@@ -1,36 +1,4 @@
-#ifndef CONNSOCKET_HPP
-# define CONNSOCKET_HPP
-
-#include <cstring>
-#include <exception>
-# include <iostream>
-#include <string>
-#include <sys/_types/_ssize_t.h>
-#include <sys/errno.h>
-#include <sys/poll.h>
-#include <sys/wait.h>
-#include <typeinfo>
-# include <utility>
-
-# include <sys/fcntl.h>
-
-# include "ISocket.hpp"
-# include "Config.hpp"
-#include "ReqBody.hpp"
-#include "ReqHeader.hpp"
-#include "ResBody.hpp"
-# include "color.hpp"
-
-# include "Pipe.hpp"
-# include "ResHeader.hpp"
-# include "utils.hpp"
-# include "Undone.hpp"
-
-# define GET	1
-# define PUT	2
-# define POST	3
-# define DELETE	4
-
+# include "ConnSocket.hpp"
 
 /*
  @ There are 3 ways of detecting the end of the stream depending on what requests you are handling:
@@ -40,49 +8,13 @@
 */
 
 
-char checkMethod(const string& content);
-class ServerSocket;
-class ConnSocket : public ISocket
-{
-friend class ServerSocket;
 
-/**========================================================================
-* %                          member variables
-*========================================================================**/
-
-private:
-	socklen_t			len;
-	char				buf[1024];
-	string				recvContent;	// cumulate received content
-
-public:
-	ReqHeader	ReqH;
-	ReqBody		ReqB;
-	ResHeader	ResH;
-	ResBody		ResB;
-	bool		pending;
-	bool		chunk;		/* to distinguish script output chunk with server chunk */
-	bool		FINsended;	/* we already sended FIN, DO NOT send more data. */
-
-	Pipe*			linkReadPipe;
-	Pipe*			linkWritePipe;
-	ServerSocket*	linkServerSock;
-
-
-/**========================================================================
-* @                           Constructors
-*========================================================================**/
-
-public:
-	ConnSocket()
-	: ISocket(), len(sizeof(info)), recvContent(), ReqH(), ReqB(), ResH(), ResB(), pending(false), chunk(false), FINsended(false), linkReadPipe(NULL), linkWritePipe(NULL), linkServerSock(NULL) {}
-	~ConnSocket() {}
 
 /**========================================================================
 * *                            operators
 *========================================================================**/
 
-	ConnSocket&	operator=( const ConnSocket& src )
+	ConnSocket&	ConnSocket::operator=( const ConnSocket& src )
 	{
 		if (this != &src)
 		{
@@ -105,7 +37,7 @@ public:
 * #                          member functions
 *========================================================================**/
 
-	bool	isPipeAlive()
+	bool	ConnSocket::isPipeAlive()
 	{
 		pid_t	pid	= 0;
 
@@ -122,7 +54,7 @@ public:
 		}
 	}
 
-	void	gracefulClose()
+	void	ConnSocket::gracefulClose()
 	{
 		//NOTE: what if client doesn't send FIN? now we send FIN and close "after client send FIN too".
 		// Have to close() instantly after send FIN, with short timer.
@@ -141,7 +73,7 @@ public:
 		TAG(ConnSocket, gracefulClose) << _GOOD(server send FIN: ) << _UL << this->fd << _NC << endl;
 	}
 
-	void	setHeaderOrReadMore()
+	void	ConnSocket::setHeaderOrReadMore()
 	{
 		if (has2CRLF(recvContent))	//NOTE: what if bad-format request doesn't contain "\r\n\r\n"?
 		{
@@ -172,7 +104,7 @@ public:
 			throw readMore();
 	}
 
-	void	setBodyOrReadMore()
+	void	ConnSocket::setBodyOrReadMore()
 	{
 		if (ReqH.exist("Transfer-Encoding"))	// it will override Content-Length
 		{
@@ -228,7 +160,7 @@ public:
 		}
 	}
 
-	void	recvRequest()
+	void	ConnSocket::recvRequest()
 	{
 		ssize_t		byte	= 0;
 		bzero(buf, sizeof(buf));
@@ -276,7 +208,7 @@ public:
 
 	}
 
-	void	send(const string& content, map<int, undone>& writeUndoneBuf)
+	void	ConnSocket::send(const string& content, map<int, undone>& writeUndoneBuf)
 	{
 		if (FINsended) return;
 		try						{ writeUndoneBuf.at(this->fd); }
@@ -321,7 +253,7 @@ public:
 	}
 
 
-	void	setErrorPage(status_code_t status, const string& reason, const string& text)
+	void	ConnSocket::setErrorPage(status_code_t status, const string& reason, const string& text)
 	{
 		this->ResH.setHTTPversion("HTTP/1.1");
 		this->ResH.setStatusCode(status);
@@ -337,40 +269,8 @@ public:
 		this->ResH["Content-Length"] = toString(this->ResB.getContent().length());
 	}
 
-/**========================================================================
-* !                            Exceptions
-*========================================================================**/
-	class connClosed: public exception
-	{
-		private:	string msg;
-		public:		explicit connClosed(): msg("") {}
-					explicit connClosed(const string& m): msg(m) {}
-					virtual ~connClosed() throw() {};
-					virtual const char * what() const throw() { return msg.c_str(); }
-	};
+	void	ConnSocket::dummy() {}
 
-	class badRequest: public exception
-	{
-		private:	string msg;
-		public:		explicit badRequest(): msg("") {}
-					explicit badRequest(const string& m): msg(m) {}
-					virtual ~badRequest() throw() {};
-					virtual const char * what() const throw() { return msg.c_str(); }
-	};
-
-	class methodNotAllowed: public exception
-	{
-		private:	string msg;
-		public:		explicit methodNotAllowed(): msg("") {}
-					explicit methodNotAllowed(const string& m): msg(m) {}
-					virtual ~methodNotAllowed() throw() {};
-					virtual const char * what() const throw() { return msg.c_str(); }
-	};
-
-private:
-	void	dummy() {}
-
-};
 
 char checkMethod(const string& content)
 {
@@ -383,7 +283,3 @@ char checkMethod(const string& content)
 	return 0;
 }
 
-
-
-
-#endif

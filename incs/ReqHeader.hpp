@@ -33,40 +33,17 @@ public:
 * *                            operators
 *========================================================================**/
 
-	ReqHeader&	operator=( const ReqHeader& src )
-	{
-		if (this != &src)
-		{
-			this->IHeader::operator=(src);
-			this->method		= src.method;
-			this->requestTarget	= src.requestTarget;
-		}
-
-		return *this;
-	}
+	ReqHeader&	operator=( const ReqHeader& src );
 
 /**========================================================================
 * #                          member functions
 *========================================================================**/
 
-	void	setRequsetTarget(const string& content)
-	{
-		string::size_type start = content.find(" ") + 1;
-		string::size_type end	= content.find(" ", start);
+	void			setRequsetTarget(const string& content);
+	const string&	getRequsetTarget() const;
+	void			setMethod(const string& m);
+	const string&	getMethod() const;
 
-		this->requestTarget = content.substr(start, end - (start));
-	}
-	const string&	getRequsetTarget() const	{ return this->requestTarget; }
-
-	void			setMethod(const string& m)	{ this->method = m; }
-	const string&	getMethod() const			{ return this->method; };
-
-	void	clear()
-	{
-		IHeader::clear();
-		method.clear();
-		requestTarget.clear();
-		HTTPversion.clear();
-	}
+	void		clear();
 };
 #endif
