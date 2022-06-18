@@ -2,14 +2,18 @@
 # define CONFIGLOADER_HPP
 
 #include "Config.hpp"
+#include "LocationConfig.hpp"
 #include "ServerConfig.hpp"
+#include "ServerSocket.hpp"
 #include "utils.hpp"
 # include <map>
 #include <string>
 using namespace std;
 
-class ServerSocket;
-bool  isNotHostChar(char c);
+// class ServerSocket;
+bool  	isNotHostChar(char c);
+string	validateHost(const string& host);
+
 class ConfigLoader
 {
 /**========================================================================
@@ -77,33 +81,102 @@ public:
 
 	}
 
-	ServerConfig*	getDefaultServer(ServerSocket* serv) const;
-	ServerConfig*	getDefaultServer(const string& ip, unsigned short port) const;
+public:
+	ServerConfig*	getDefaultServer(ServerSocket* serv) const
+	{
+		return CONVERT(serv->confs[0], ServerConfig);
+	}
+	ServerConfig*	getDefaultServer(const string& ip, unsigned short port) const
+	{
+		_Addr	a(ip, port);
+		_Confs	v = addrs.find(a)->second;
+
+		return CONVERT(v[0], ServerConfig);
+	}
 
 	/* return server matched with host, or default server */
-	ServerConfig*	getMatchedServer(ServerSocket* serv, const string& host) const;
-	ServerConfig*	getMatchedServer(const string& ip, unsigned short port, const string& host) const;
+	ServerConfig*	getMatchedServer(ServerSocket* serv, const string& host) const
+	{
+		string	Host = validateHost(host);
+		_Confs	v = serv->confs;
+		_Confs::iterator it, ite;
+		it = v.begin(), ite = v.end();
+
+		for (; it < ite ; it++)
+		{
+			ServerConfig* servConf = CONVERT(*it, ServerConfig);
+			vector<string> names = servConf->server_name;
+			vector<string>::iterator itName, iteName;
+			itName = names.begin(), iteName = names.end();
+			for (; itName < iteName ; itName++)
+			{
+				if (itName->compare(Host) == 0)
+					return servConf;
+			}
+		}
+		return CONVERT(v[0], ServerConfig);
+	}
+
+	ServerConfig*	getMatchedServer(const string& ip, unsigned short port, const string& host) const
+	{
+		string	Host = validateHost(host);
+		_Addr	a(ip, port);
+		_Confs	v = addrs.find(a)->second;
+		_Confs::iterator it, ite;
+		it = v.begin(), ite = v.end();
+
+		for (; it < ite ; it++)
+		{
+			ServerConfig* servConf = CONVERT(*it, ServerConfig);
+			vector<string> names = servConf->server_name;
+			vector<string>::iterator itName, iteName;
+			itName = names.begin(), iteName = names.end();
+			for (; itName < iteName ; itName++)
+			{
+				if (itName->compare(Host) == 0)
+					return servConf;
+			}
+		}
+		return CONVERT(v[0], ServerConfig);
+	}
 
 	/* return LocationConfig matched with URI, or ServerConfig */
-	Config*			getMatchedLocation(const string& URI, const string& host) const;
-
-private:
-	string			validateHost(const string& host)
+	Config*			getMatchedLocation(const string& URI, ServerConfig* servConf) const
 	{
-		string	ret;
-		string::size_type	pos;
+		LocationConfig*		locConf;
+		_Confs				locConfs = servConf->link;
+		_Confs::iterator	it, ite;
+		string				locURI;
+		string::size_type	locURIlen;
+		string::size_type	URIlen = URI.length();
 
-		switch (pos = host.find("http://"))
+		string::size_type	max = 0;
+		Config*				mostMatched = servConf;
+
+		it = locConfs.begin(), ite = locConfs.end();
+
+		for (; it < ite ; it++)
 		{
-		case 0:				ret = host.substr(7); break;
-		case string::npos:	ret = host.substr(7); break;
-		default:			return "";
-		}
+			locConf = CONVERT(*it, LocationConfig);
+			locURI = locConf->URI;
+			locURIlen = locURI.length();
+			if (locURIlen > URIlen)
+				continue;
 
-		if (find_if(ret.begin(), ret.end(), isNotHostChar) == ret.end())
-			return ret;
-		return "";
+			if ( URI.compare(0, locURIlen, locURI) == 0 )
+			{
+				if (locConf->assign)
+					return locConf;
+				if (locURIlen > max)
+				{
+					max = locURIlen;
+					mostMatched = locConf;
+				}
+			}
+		}
+		return mostMatched;
 	}
+
 };
 
 bool			isNotHostChar(char c)
@@ -111,6 +184,22 @@ bool			isNotHostChar(char c)
 	if (c <= 0x20 || c == 0x7f || c == '\\' || c == '/')
 		return true;
 	return false;
+}
+string			validateHost(const string& host)
+{
+	string	ret;
+	string::size_type	pos;
+
+	switch (pos = host.find("http://"))
+	{
+	case 0:				ret = host.substr(7); break;
+	case string::npos:	ret = host.substr(7); break;
+	default:			return "";
+	}
+
+	if (find_if(ret.begin(), ret.end(), isNotHostChar) == ret.end())
+		return ret;
+	return "";
 }
 ConfigLoader* ConfigLoader::conf;
 
