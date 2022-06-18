@@ -8,6 +8,10 @@
 
 
 #include "CGI.hpp"
+#include "Config.hpp"
+#include "ConfigLoader.hpp"
+#include "HttpConfig.hpp"
+#include "ConfigUtils.hpp"
 #include "ConnSocket.hpp"
 #include "Pipe.hpp"
 #include "Poll.hpp"
@@ -35,41 +39,49 @@ int main(int argc, char **argv)
 		std::cerr << e.what() << '\n';
 		return -1;
 	}
-	return 0;
-	// IMPL: create all serverSocket
-	ServerSocket serv("", 8888); // put your IP, "" means ANY
-	ConnSocket *connected;
-	Pipe *CGIpipe;
-	IStream *stream;
 
-	PollSet pollset;
-	PollSet::iterator it;
+	map<
+		pair<string, unsigned short>,
+		vector<Config*>
+	>			m;
+	m[make_pair(string("127.0.0.1"), 8888)] = HttpConfig::getInstance()->link;
+	ConfigLoader::_()->setAddrs(m);
+	ConfigLoader::_()->pritAddrs();
 
-	string content;
-	map<int, undone> writeUndoneBuf;
+
+	//IMPL: create all serverSocket from m.key(ip:port), each socket has vector<ServerConfig*>
+	ServerSocket*		serv;
+	ConnSocket*			connected;
+	Pipe*				CGIpipe;
+	IStream*			stream;
+
+	PollSet				pollset;
+	PollSet::iterator	it;
+
+	string				content;
+	map<int, undone>	writeUndoneBuf;
 	root += "/static_file";
 
-	try
+	map<
+		pair<string, unsigned short>,
+		vector<Config*>
+	>::iterator mit, mite;
+	mit = m.begin(), mite = m.end();
+
+	for (;mit != mite; mit++)
 	{
-		serv.bind();
-	}
-	catch (exception &e)
-	{
-		cerr << e.what() << endl;
-		exit(errno);
-	}
-	try
-	{
-		serv.listen(10 /*backlog*/);
-	}
-	catch (exception &e)
-	{
-		cerr << e.what() << endl;
-		exit(errno);
+		serv = new ServerSocket(mit->first.first, mit->first.second);
+		try						{ serv->bind(); }
+		catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
+		try						{ serv->listen(10 /*backlog*/); }
+		catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
+		serv->confs = mit->second;
+
+		pollset.enroll(serv);
 	}
 
 	pollset.createMonitor();
-	pollset.enroll(&serv);
+
 	while (1)
 	{
 		//'----------------------catch and parse request header----------------------'//
@@ -107,52 +119,52 @@ int main(int argc, char **argv)
 			goto _send;
 		}
 
-		try
-		{
-			connected->recvRequest();
-		}
-		catch (exception &e)
-		{
+		if (it.first->revents & POLLOUT)	{ it.first->events &= ~POLLOUT;
+									  		  goto _send; }
 
-			if (CONVERT(&e, ConnSocket::connClosed) || // NOTE: what if client does not close after we send FIN? (cause we do graceful-close)
-				CONVERT(&e, ConnSocket::somethingWrong))
-			{
-				connected->close();
-				pollset.drop(it);
-				continue;
-			}
+	try										{ connected->recvRequest(); }
+	catch	(exception& e)					{
 
-			if (CONVERT(&e, IStream::readMore))
-			{
-				continue;
-			}
+												if (CONVERT(&e, ConnSocket::connClosed) ||		//NOTE: what if client does not close after we send FIN? (cause we do graceful-close)
+													CONVERT(&e, ConnSocket::somethingWrong))
+												{
+													connected->close();
+													pollset.drop(it);
+													continue;
+												}
 
-			if (CONVERT(&e, ConnSocket::badRequest)) // TODO: we need to close connection. not just SHUT_WR!
-			{
-				/* clear all existing? */
-				connected->setErrorPage(400, "Bad Request", "Bad Request");
-				connected->ResH.setDefaultHeaders();
-				connected->ResH.makeStatusLine();
-				connected->ResH.integrate();
-				goto _send;
-			}
-			if (CONVERT(&e, ConnSocket::methodNotAllowed))
-			{
-				/* clear all existing? */
-				connected->setErrorPage(405, "Method Not Allowed", "Method Not Allowed");
-				connected->ResH.setDefaultHeaders();
-				connected->ResH.makeStatusLine();
-				connected->ResH.integrate();
-				goto _send;
-			}
-		}
+												if (CONVERT(&e, IStream::readMore))
+												{
+													continue;
+												}
 
-	//'-------------------------------- catch end--------------------------------'//
-	_core:
-		core_wrapper(pollset, &serv, connected, CGIpipe); //@ make response header, body//
+												if (CONVERT(&e, ConnSocket::badRequest))	//TODO: we need to close connection. not just SHUT_WR!
+												{
+													/* clear all existing? */
+													connected->setErrorPage(400, "Bad Request", "Bad Request");
+													connected->ResH.setDefaultHeaders();
+													connected->ResH.makeStatusLine();
+													connected->ResH.integrate();
+													goto _send;
+												}
+												if (CONVERT(&e, ConnSocket::methodNotAllowed))
+												{
+													/* clear all existing? */
+													connected->setErrorPage(405, "Method Not Allowed", "Method Not Allowed");
+													connected->ResH.setDefaultHeaders();
+													connected->ResH.makeStatusLine();
+													connected->ResH.integrate();
+													goto _send;
+												}
+											}
+
+//'-------------------------------- catch end--------------------------------'//
+_core:
+		serv = connected->linkServerSock;
+		core_wrapper(pollset, serv, connected, CGIpipe);	//@ make response header, body//
 		if (connected->pending)
 			continue;
-		if (!CGIpipe && connected->linkReadPipe) /* pipe is just created */
+		if (!CGIpipe && connected->linkReadPipe)	/* pipe is just created, do not send 0 byte */
 			continue;
 		stream = connected;
 		content = connected->ResH.getContent() +
