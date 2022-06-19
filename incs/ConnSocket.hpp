@@ -20,7 +20,7 @@
 #include "ReqHeader.hpp"
 #include "ResBody.hpp"
 # include "color.hpp"
-#include "Exceptions.hpp"
+#include "httpError.hpp"
 
 # include "Pipe.hpp"
 # include "ResHeader.hpp"

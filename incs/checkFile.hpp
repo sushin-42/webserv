@@ -3,7 +3,7 @@
 #include <string>
 #include <sys/stat.h>
 #include <dirent.h>
-#include "Exceptions.hpp"
+#include "httpError.hpp"
 using namespace std;
 
 void	_checkFile(const string& path, bool auto_index);

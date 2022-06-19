@@ -11,7 +11,7 @@ SRCS =  $(SRC_DIR)/checkFile.cpp \
 		$(SRC_DIR)/ConfigChecker.cpp \
 		$(SRC_DIR)/ConfigLoader.cpp \
 		$(SRC_DIR)/ConnSocket.cpp \
-		$(SRC_DIR)/Exceptions.cpp \
+		$(SRC_DIR)/httpError.cpp \
 		$(SRC_DIR)/HttpConfig.cpp \
 		$(SRC_DIR)/IHeader.cpp \
 		$(SRC_DIR)/ISocket.cpp \

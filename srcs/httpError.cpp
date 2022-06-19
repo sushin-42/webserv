@@ -1,4 +1,4 @@
-#include "Exceptions.hpp"
+#include "httpError.hpp"
 #include <iostream>
 httpError::httpError(): msg(""), status(500) {}
 httpError::httpError(status_code_t s, const string& m): msg(m), status(s) {}

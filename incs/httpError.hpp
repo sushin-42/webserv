@@ -1,5 +1,5 @@
-#ifndef EXCEPTIONS_HPP
-# define EXCEPTIONS_HPP
+#ifndef HTTPERROR_HPP
+# define HTTPERROR_HPP
 
 #include <exception>
 #include <string>
