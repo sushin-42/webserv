@@ -102,32 +102,32 @@ public:
 /**========================================================================
 * !                            Exceptions
 *========================================================================**/
-	class connClosed: public exception
-	{
-		private:	string msg;
-		public:		explicit connClosed(): msg("") {}
-					explicit connClosed(const string& m): msg(m) {}
-					virtual ~connClosed() throw() {};
-					virtual const char * what() const throw() { return msg.c_str(); }
-	};
+class connClosed: public exception
+{
+	private:	string msg;
+	public:		explicit connClosed();
+				explicit connClosed(const string& m);
+				virtual ~connClosed() throw();
+				virtual const char * what() const throw();
+};
 
-	class badRequest: public exception
-	{
-		private:	string msg;
-		public:		explicit badRequest(): msg("") {}
-					explicit badRequest(const string& m): msg(m) {}
-					virtual ~badRequest() throw() {};
-					virtual const char * what() const throw() { return msg.c_str(); }
-	};
+class badRequest: public exception
+{
+	private:	string msg;
+	public:		explicit badRequest();
+				explicit badRequest(const string& m);
+				virtual ~badRequest() throw();
+				virtual const char * what() const throw();
+};
 
-	class methodNotAllowed: public exception
-	{
-		private:	string msg;
-		public:		explicit methodNotAllowed(): msg("") {}
-					explicit methodNotAllowed(const string& m): msg(m) {}
-					virtual ~methodNotAllowed() throw() {};
-					virtual const char * what() const throw() { return msg.c_str(); }
-	};
+class methodNotAllowed: public exception
+{
+	private:	string msg;
+	public:		explicit methodNotAllowed();
+				explicit methodNotAllowed(const string& m);
+				virtual ~methodNotAllowed() throw();
+				virtual const char * what() const throw();
+};
 
 private:
 	void	dummy();

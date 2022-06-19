@@ -1,7 +1,3 @@
-
-
-
-
 #include <algorithm>
 #include <cstdio>
 #include <iostream>
@@ -39,7 +35,6 @@ int main(int argc, char** argv)
 	{
 		HttpConfig::getInstance()->setConfig(ReadConfig(argv));
 		HttpConfig::getInstance()->defaultSet();
-		// pringConfigAll(HttpConfig::getInstance());
 	}
 	catch (const std::exception &e)
 	{
@@ -48,7 +43,7 @@ int main(int argc, char** argv)
 	}
 
 	ConfigLoader::_()->setAddrs(HttpConfig::getInstance()->serverMap);
-	ConfigLoader::_()->pritAddrs();
+	// ConfigLoader::_()->pritAddrs();
 
 
 	//IMPL: create all serverSocket from m.key(ip:port), each socket has vector<ServerConfig*>
@@ -114,6 +109,9 @@ int main(int argc, char** argv)
 													connected->ResH.setDefaultHeaders();
 													connected->ResH.makeStatusLine();
 													connected->ResH.integrate();
+													stream = connected;
+													content = connected->ResH.getContent() +
+															  connected->ResB.getContent();
 													goto _send;
 												}
 												if (CONVERT(&e, ConnSocket::methodNotAllowed))
@@ -123,6 +121,9 @@ int main(int argc, char** argv)
 													connected->ResH.setDefaultHeaders();
 													connected->ResH.makeStatusLine();
 													connected->ResH.integrate();
+													stream = connected;
+													content = connected->ResH.getContent() +
+				  											  connected->ResB.getContent();
 													goto _send;
 												}
 											}

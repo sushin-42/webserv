@@ -35,6 +35,7 @@ private:
 
 private:
 	ConfigLoader();
+public:
 	~ConfigLoader();
 
 /**========================================================================

@@ -2,13 +2,7 @@
 # include "utils.hpp"
 # include "ServerConfig.hpp"
 # include "ConfigLoader.hpp"
-
-/*
- @ There are 3 ways of detecting the end of the stream depending on what requests you are handling:
- * If it is a GET or HEAD request, you only need to read the HTTP headers, request body is normally ignored if it exists, so when you encounter \r\n\r\n, you reach the end of the request(actually the request headers).
- * If it is a POST method, read the Content-Length in the header and read up to Content-Length bytes.
- * If it is a POST method and the Content-Length header is absent, which is most likely to happen, read until -1 is returned, which is the signal of EOF.
-*/
+# include "ConfigChecker.hpp"
 
 /**========================================================================
 * @                           Constructors
@@ -120,6 +114,12 @@
 				}
 
 				//IMPL: check limit_except if got locationConf
+				if (CHECK->isAllowed(this->conf, ReqH.getMethod()) == false)
+				{
+					// printConfig(this->conf);
+					cout << "METHOD: "  << ReqH.getMethod() << endl;
+					throw methodNotAllowed();
+				}
 
 				/* extract trailing body */
 				recvContent = extractBody(recvContent);
@@ -246,13 +246,11 @@
 		ssize_t&	rWrited		= writeUndoneBuf[this->fd].totalWrited;
 		ssize_t		rContentLen	= rContent.length();
 		ssize_t		byte		= 0;
-
 		byte = write( this->fd,
 					  rContent.data() + rWrited,
 					  rContentLen - rWrited );
 		if (byte > 0)
 			rWrited += byte;
-
 
 		//@ all data sended @//
 		if (rWrited == rContentLen)
@@ -310,3 +308,22 @@ char checkMethod(const string& content)
 	return 0;
 }
 
+/**========================================================================
+* !                            Exceptions
+*========================================================================**/
+
+ConnSocket::connClosed::connClosed(): msg("") {}
+ConnSocket::connClosed::connClosed(const string& m): msg(m) {}
+ConnSocket::connClosed::~connClosed() throw() {};
+const char *	ConnSocket::connClosed::what() const throw() { return msg.c_str(); }
+
+
+ConnSocket::badRequest::badRequest(): msg("") {}
+ConnSocket::badRequest::badRequest(const string& m): msg(m) {}
+ConnSocket::badRequest::~badRequest() throw() {};
+const char * 	ConnSocket::badRequest::what() const throw() { return msg.c_str(); }
+
+ConnSocket::methodNotAllowed::methodNotAllowed(): msg("") {}
+ConnSocket::methodNotAllowed::methodNotAllowed(const string& m): msg(m) {}
+ConnSocket::methodNotAllowed::~methodNotAllowed() throw() {};
+const char * 	ConnSocket::methodNotAllowed::what() const throw() { return msg.c_str(); }

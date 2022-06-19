@@ -7,6 +7,7 @@ OBJS =  ${SRCS:.cpp=.o}
 SRCS =  $(SRC_DIR)/CGI.cpp \
 		$(SRC_DIR)/Config.cpp \
 		$(SRC_DIR)/ConfigUtils.cpp \
+		$(SRC_DIR)/ConfigChecker.cpp \
 		$(SRC_DIR)/ConfigLoader.cpp \
 		$(SRC_DIR)/ConnSocket.cpp \
 		$(SRC_DIR)/HttpConfig.cpp \
