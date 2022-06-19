@@ -39,7 +39,9 @@ int main(int argc, char **argv)
 	}
 	root = getcwd(NULL, 0);
 	MIME = getMIME();
-	
+	LocationConfig * asdf = CONVERT(HttpConfig::getInstance()->link[1]->link[0], LocationConfig);
+	for (size_t i = 0; i < asdf->index.size(); i++)
+		cout << asdf->index[i] << endl;
 	map<
 		pair<string, unsigned short>,
 		vector<Config *> >

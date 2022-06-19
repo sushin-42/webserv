@@ -274,6 +274,7 @@ void parse_server_name(vector<string> arg, Config *config)
 
 void parse_index(vector<string> arg, Config *config)
 {
+    config->index.clear();
     for (vector<string>::size_type i = 0; i < arg.size(); i++)
     {
         isPath(arg[i]);
@@ -409,6 +410,7 @@ void parse_limit_except_method(vector<string> arg, Config *config)
     vector<string>::size_type check;
 
     location = dynamic_cast<LocationConfig *>(config);
+    location->checkSetLimitExceptMethod = true;
     for (vector<string>::size_type i = 0; i < arg.size(); i++)
     {
         method = convertStringToUpper(arg[i]);
