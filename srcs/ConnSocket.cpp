@@ -119,6 +119,8 @@
 														  CONVERT(this->conf, ServerConfig));
 				}
 
+				//IMPL: check limit_except if got locationConf
+
 				/* extract trailing body */
 				recvContent = extractBody(recvContent);
 			}
