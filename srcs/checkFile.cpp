@@ -104,7 +104,7 @@ string    directoryListing(const string& path, const string& uri)
         body += *it;
         body += "\">";
 
-		body += (it->back() == '/') ? "&#x1F4C1" : "&#x1F4C4 ";
+		body += (it->back() == '/') ? "&#x1F4C1 " : "&#x1F4C4 ";
 		body += *it;
         body += "</a>\r\n";
     }
