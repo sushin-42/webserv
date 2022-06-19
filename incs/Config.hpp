@@ -53,6 +53,9 @@ typedef map<string, PointerFunction> func_map;
 	func_map m;
 	vector<string> conf;
 	string configtemp;
+	//파싱 플래그 index, error_page
+	bool handdownIndex;
+	bool handdownErrorPage;
 	//중복 체크 구조체
 	Duplicate dupeCheck;
 

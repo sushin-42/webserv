@@ -81,6 +81,7 @@ void HttpConfig::defaultSet()
             }
         }
     }
+    error_page[404] = "404.html"; 
 }
 void HttpConfig::setConfig(string config)
 {

@@ -274,7 +274,11 @@ void parse_server_name(vector<string> arg, Config *config)
 
 void parse_index(vector<string> arg, Config *config)
 {
-    config->index.clear();
+    if (!config->handdownIndex)
+    {
+        config->index.clear();
+        config->handdownIndex = true;
+    }
     for (vector<string>::size_type i = 0; i < arg.size(); i++)
     {
         isPath(arg[i]);
@@ -307,6 +311,11 @@ void parse_error_page(vector<string> arg, Config *config)
 
     if (arg.size() < 2)
         throw Config::parseErrorPageFail();
+    if (!config->handdownErrorPage)
+    {
+        config->error_page.clear();
+        config->handdownErrorPage = true;
+    }
     isPath(arg[arg.size() - 1]);
     path = arg[arg.size() - 1];
 
