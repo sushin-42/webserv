@@ -13,6 +13,7 @@ public:
     string URI;  // location URI(/admin/)  {}
     bool assign; //
     vector<string> limit_except_method;
+    bool checkSetLimitExceptMethod;
 
     // server directive
     vector<string> server_name;
@@ -39,6 +40,7 @@ public:
     bool checkAssign(string &uri);
 
     void setServerDirective(ServerConfig *serverConf);
+    void setLimitExceptMethod();
     /**========================================================================
      * !                            Exceptions
      *========================================================================**/

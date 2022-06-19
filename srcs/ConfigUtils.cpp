@@ -274,6 +274,11 @@ void parse_server_name(vector<string> arg, Config *config)
 
 void parse_index(vector<string> arg, Config *config)
 {
+    if (!config->handdownIndex)
+    {
+        config->index.clear();
+        config->handdownIndex = true;
+    }
     for (vector<string>::size_type i = 0; i < arg.size(); i++)
     {
         isPath(arg[i]);
@@ -306,6 +311,11 @@ void parse_error_page(vector<string> arg, Config *config)
 
     if (arg.size() < 2)
         throw Config::parseErrorPageFail();
+    if (!config->handdownErrorPage)
+    {
+        config->error_page.clear();
+        config->handdownErrorPage = true;
+    }
     isPath(arg[arg.size() - 1]);
     path = arg[arg.size() - 1];
 
@@ -409,6 +419,7 @@ void parse_limit_except_method(vector<string> arg, Config *config)
     vector<string>::size_type check;
 
     location = dynamic_cast<LocationConfig *>(config);
+    location->checkSetLimitExceptMethod = true;
     for (vector<string>::size_type i = 0; i < arg.size(); i++)
     {
         method = convertStringToUpper(arg[i]);

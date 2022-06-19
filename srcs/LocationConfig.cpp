@@ -11,6 +11,7 @@ LocationConfig::LocationConfig(pair<string, string> locationConfUri, ServerConfi
     configtemp = locationConfUri.second;
     assign = checkAssign(URI);
     SetupConfig();
+    setLimitExceptMethod();
     cout << BLUE(" location block ") << endl;
 }
 // LocationConfig(const LocationConfig &src) : Config() {}
@@ -61,11 +62,21 @@ void LocationConfig::setServerDirective(ServerConfig *serverConf)
     this->keepalive_timeout = serverConf->keepalive_timeout;
     this->send_timeout = serverConf->send_timeout;
     this->client_body_timeout = serverConf->client_body_timeout;
+    this->error_page = serverConf->error_page;
 
     // only server directive
     this->server_name = serverConf->server_name;
     this->ipPort = serverConf->ipPort;
 }
+void LocationConfig::setLimitExceptMethod()
+{
+    if (!this->checkSetLimitExceptMethod)
+    {
+        this->limit_except_method.push_back("GET");
+        this->limit_except_method.push_back("POST");
+    }
+}
+
 /**========================================================================
  * !                            Exceptions
  *========================================================================**/
