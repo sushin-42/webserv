@@ -19,7 +19,6 @@ class httpError: public exception
 
 class badRequest: public httpError
 {
-	private:	string msg;
 	public:		explicit badRequest();
 				explicit badRequest(status_code_t s, const string& m);
 				virtual ~badRequest() throw();
@@ -27,10 +26,30 @@ class badRequest: public httpError
 
 class methodNotAllowed: public httpError
 {
-	private:	string msg;
 	public:		explicit methodNotAllowed();
 				explicit methodNotAllowed(status_code_t s, const string& m);
 				virtual ~methodNotAllowed() throw();
+};
+
+class notFound: public httpError
+{
+	public:		explicit notFound();
+				explicit notFound(status_code_t s, const string& m);
+				virtual ~notFound() throw();
+};
+
+class forbidden: public httpError
+{
+	public:		explicit forbidden();
+				explicit forbidden(status_code_t s, const string& m);
+				virtual ~forbidden() throw();
+};
+
+class internalServerError: public httpError
+{
+	public:		explicit internalServerError();
+				explicit internalServerError(status_code_t s, const string& m);
+				virtual ~internalServerError() throw();
 };
 
 

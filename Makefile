@@ -4,7 +4,8 @@ SRCS = main.cpp Config.cpp HttpConfig.cpp ServerConfig.cpp LocationConfig.cpp
 INC_DIR = incs
 SRC_DIR = srcs
 OBJS =  ${SRCS:.cpp=.o}
-SRCS =  $(SRC_DIR)/CGI.cpp \
+SRCS =  $(SRC_DIR)/checkFile.cpp \
+		$(SRC_DIR)/CGI.cpp \
 		$(SRC_DIR)/Config.cpp \
 		$(SRC_DIR)/ConfigUtils.cpp \
 		$(SRC_DIR)/ConfigChecker.cpp \

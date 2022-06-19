@@ -3,6 +3,7 @@
 # include "ServerConfig.hpp"
 # include "ConfigLoader.hpp"
 # include "ConfigChecker.hpp"
+# include "checkFile.hpp"
 
 /**========================================================================
 * @                           Constructors
@@ -113,13 +114,14 @@
 														  CONVERT(this->conf, ServerConfig));
 				}
 
-				//IMPL: check limit_except if got locationConf
 				if (CHECK->isAllowed(this->conf, ReqH.getMethod()) == false)
 				{
-					// printConfig(this->conf);
-					cout << "METHOD: "  << ReqH.getMethod() << endl;
+					// cout << "METHOD: "  << ReqH.getMethod() << endl;
 					throw methodNotAllowed();
 				}
+
+				/* throw httpError or not */
+				_checkFile(this->conf->root+ReqH.getRequsetTarget(), conf->auto_index);
 
 				/* extract trailing body */
 				recvContent = extractBody(recvContent);

@@ -10,3 +10,12 @@ badRequest::~badRequest() throw() {};
 
 methodNotAllowed::methodNotAllowed(): httpError(405, "Method Not Allowed") {}
 methodNotAllowed::~methodNotAllowed() throw() {};
+
+notFound::notFound(): httpError(404, "Not Found") {}
+notFound::~notFound() throw() {};
+
+forbidden::forbidden(): httpError(403, "Forbidden") {}
+forbidden::~forbidden() throw() {};
+
+internalServerError::internalServerError(): httpError(500, "Internal Server Error") {}
+internalServerError::~internalServerError() throw() {};

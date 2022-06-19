@@ -24,7 +24,6 @@ bool	ConfigChecker::isAllowed(Config* conf, const string& method)
 
 	for (; itMethod != iteMethod ; itMethod++)
 	{
-		cout << "list: " << (*itMethod) << endl;
 		if (*itMethod == method)
 			return true;
 	}
