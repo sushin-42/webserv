@@ -20,6 +20,7 @@
 #include "ReqHeader.hpp"
 #include "ResBody.hpp"
 # include "color.hpp"
+#include "Exceptions.hpp"
 
 # include "Pipe.hpp"
 # include "ResHeader.hpp"
@@ -110,25 +111,6 @@ class connClosed: public exception
 				virtual ~connClosed() throw();
 				virtual const char * what() const throw();
 };
-
-class badRequest: public exception
-{
-	private:	string msg;
-	public:		explicit badRequest();
-				explicit badRequest(const string& m);
-				virtual ~badRequest() throw();
-				virtual const char * what() const throw();
-};
-
-class methodNotAllowed: public exception
-{
-	private:	string msg;
-	public:		explicit methodNotAllowed();
-				explicit methodNotAllowed(const string& m);
-				virtual ~methodNotAllowed() throw();
-				virtual const char * what() const throw();
-};
-
 private:
 	void	dummy();
 

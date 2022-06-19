@@ -88,7 +88,6 @@ int main(int argc, char** argv)
 
 	try										{ connected->recvRequest(); }
 	catch	(exception& e)					{
-
 												if (CONVERT(&e, ConnSocket::connClosed) ||		//NOTE: what if client does not close after we send FIN? (cause we do graceful-close)
 													CONVERT(&e, ConnSocket::somethingWrong))
 												{
@@ -102,28 +101,18 @@ int main(int argc, char** argv)
 													continue;
 												}
 
-												if (CONVERT(&e, ConnSocket::badRequest))	//TODO: we need to close connection. not just SHUT_WR!
+												//TODO: we need to close connection. not just SHUT_WR!
+												httpError* err = CONVERT(&e, httpError);
+												if (err)
 												{
 													/* clear all existing? */
-													connected->setErrorPage(400, "Bad Request", "Bad Request");
+													connected->setErrorPage(err->status, err->what(), err->what());
 													connected->ResH.setDefaultHeaders();
 													connected->ResH.makeStatusLine();
 													connected->ResH.integrate();
 													stream = connected;
 													content = connected->ResH.getContent() +
 															  connected->ResB.getContent();
-													goto _send;
-												}
-												if (CONVERT(&e, ConnSocket::methodNotAllowed))
-												{
-													/* clear all existing? */
-													connected->setErrorPage(405, "Method Not Allowed", "Method Not Allowed");
-													connected->ResH.setDefaultHeaders();
-													connected->ResH.makeStatusLine();
-													connected->ResH.integrate();
-													stream = connected;
-													content = connected->ResH.getContent() +
-				  											  connected->ResB.getContent();
 													goto _send;
 												}
 											}

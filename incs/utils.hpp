@@ -13,6 +13,7 @@
 #include "color.hpp"
 
 #define CONVERT(X, Y) dynamic_cast<Y *>(X)
+#define CONVERT_REF(X, Y) dynamic_cast<Y &>(X)
 using namespace std;
 class Config;
 class PollSet;

@@ -316,14 +316,3 @@ ConnSocket::connClosed::connClosed(): msg("") {}
 ConnSocket::connClosed::connClosed(const string& m): msg(m) {}
 ConnSocket::connClosed::~connClosed() throw() {};
 const char *	ConnSocket::connClosed::what() const throw() { return msg.c_str(); }
-
-
-ConnSocket::badRequest::badRequest(): msg("") {}
-ConnSocket::badRequest::badRequest(const string& m): msg(m) {}
-ConnSocket::badRequest::~badRequest() throw() {};
-const char * 	ConnSocket::badRequest::what() const throw() { return msg.c_str(); }
-
-ConnSocket::methodNotAllowed::methodNotAllowed(): msg("") {}
-ConnSocket::methodNotAllowed::methodNotAllowed(const string& m): msg(m) {}
-ConnSocket::methodNotAllowed::~methodNotAllowed() throw() {};
-const char * 	ConnSocket::methodNotAllowed::what() const throw() { return msg.c_str(); }
