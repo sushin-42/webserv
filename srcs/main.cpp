@@ -47,12 +47,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	map<
-		pair<string, unsigned short>,
-		vector<Config*>
-	>			m;
-	m[make_pair(string("127.0.0.1"), 8888)] = HttpConfig::getInstance()->link;
-	ConfigLoader::_()->setAddrs(m);
+	ConfigLoader::_()->setAddrs(HttpConfig::getInstance()->serverMap);
 	ConfigLoader::_()->pritAddrs();
 
 
@@ -67,25 +62,7 @@ int main(int argc, char** argv)
 
 	string				content;
 	map<int, undone>	writeUndoneBuf;
-
-	map<
-		pair<string, unsigned short>,
-		vector<Config*>
-	>::iterator mit, mite;
-	mit = m.begin(), mite = m.end();
-
-	for (;mit != mite; mit++)
-	{
-		serv = new ServerSocket(mit->first.first, mit->first.second);
-		try						{ serv->bind(); }
-		catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
-		try						{ serv->listen(10 /*backlog*/); }
-		catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
-		serv->confs = mit->second;
-
-		pollset.enroll(serv);
-	}
-
+	createServerSockets(CONF->getAddrs(), pollset);
 	pollset.createMonitor();
 
 	while (1)

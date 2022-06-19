@@ -6,8 +6,6 @@ class ServerConfig : public Config
     /**========================================================================
      * %                          member variables
      *========================================================================**/
-private:
-    typedef pair<string, string> _LocUri;
 
 public:
     vector<_LocUri> locationConfUri;

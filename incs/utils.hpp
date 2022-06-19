@@ -11,8 +11,11 @@
 #include <unistd.h>
 #include <pthread.h>
 #include "color.hpp"
+
 #define CONVERT(X, Y) dynamic_cast<Y *>(X)
 using namespace std;
+class Config;
+class PollSet;
 
 string fileToString(const string &path);
 
@@ -41,6 +44,10 @@ string 				capitalize(const string &s);
 string 				capitalize(const string &s, char delim);
 string 				errorpage(const string &title, const string &header, const string &message);
 string				makeChunk(const string &s);
+void				createServerSockets(map<
+											pair<string, unsigned short>,
+											vector<Config*>
+										>& addrs, PollSet& pollset );
 map<string, string> getMIME();
 
 

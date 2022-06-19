@@ -2,6 +2,10 @@
 #define HTTPCONFIG_HPP
 #include <iostream>
 #include "Config.hpp"
+// typedef pair<string, string> _LocUri;
+// typedef pair<string, unsigned short> _Addr;
+// typedef vector<Config *> _Confs;
+// typedef map<_Addr, _Confs> _Map;
 class HttpConfig : public Config
 {
     /**========================================================================
@@ -11,7 +15,7 @@ class HttpConfig : public Config
 public:
     string etc; // http 블록 외에 있는 디렉티브 모음
     vector<string> serverConfigtemp;
-    map<_Addr, _Confs> serverMap;
+    _Map serverMap;
     virtual ~HttpConfig();
 
 private:
@@ -35,7 +39,7 @@ public:
     void separateHttpBlock();
     void SeparateServerBlock();
     void makeServerBlock();
-
+    void makeServerMap();
     /**========================================================================
      * !                            Exceptions
      *========================================================================**/

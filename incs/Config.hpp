@@ -33,7 +33,7 @@ struct Duplicate
 	bool &operator[](int ind) { return *(&index + ind); }
 };
 
-
+typedef pair<string, string> _LocUri;
 typedef pair<string, unsigned short> _Addr;
 typedef vector<Config *> _Confs;
 typedef map<_Addr, _Confs> _Map;

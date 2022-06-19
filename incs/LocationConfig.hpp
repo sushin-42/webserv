@@ -24,7 +24,7 @@ public:
 
 public:
     LocationConfig();
-    LocationConfig(pair<string, string> locationConfUri, ServerConfig *serverConf);
+    LocationConfig(_LocUri locationConfUri, ServerConfig *serverConf);
     // LocationConfig(const LocationConfig &src) : Config() {}
     virtual ~LocationConfig();
     /**========================================================================

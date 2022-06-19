@@ -13,7 +13,8 @@ ConfigLoader::~ConfigLoader() {}
 * #                          member functions
 *========================================================================**/
 
-void			ConfigLoader::setAddrs(const _Map& m) { this->addrs = m; }
+void			ConfigLoader::setAddrs(const _Map& m)	{ this->addrs = m; }
+_Map&			ConfigLoader::getAddrs() 				{ return this->addrs; }
 void			ConfigLoader::pritAddrs()
 {
 	_Map::iterator it = addrs.begin();

@@ -1,4 +1,7 @@
 #include "utils.hpp"
+#include "ServerSocket.hpp"
+#include "Poll.hpp"
+
 
 string fileToString(const string &path)
 {
@@ -304,3 +307,32 @@ int errMsg()
 	return (-1);
 }
 
+
+void				createServerSockets(map<
+											pair<string, unsigned short>,
+											vector<Config*>
+										>& addrs, PollSet& pollset )
+{
+	ServerSocket* serv;
+	map<
+		pair<string, unsigned short>,
+		vector<Config*>
+	>::iterator mit, mite;
+	mit = addrs.begin(), mite = addrs.end();
+
+
+
+	for (;mit != mite; mit++)
+	{
+		serv = new ServerSocket(mit->first.first, mit->first.second);
+		try						{ serv->bind(); }
+		catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
+		try						{ serv->listen(10 /*backlog*/); }
+		catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
+		serv->confs = mit->second;
+
+		pollset.enroll(serv);
+	}
+
+
+}

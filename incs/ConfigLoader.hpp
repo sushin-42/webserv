@@ -48,6 +48,7 @@ public:
 	}
 
 	void			setAddrs(const _Map& m);
+	_Map&			getAddrs();
 	void			pritAddrs();
 
 	ServerConfig*	getDefaultServer(ServerSocket* serv) const;
