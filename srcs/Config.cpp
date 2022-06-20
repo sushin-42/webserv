@@ -370,6 +370,18 @@ public:
     virtual const char *what() const throw() { return msg.c_str(); }
 };
 
+class parseCgiFail : public exception
+{
+private:
+    string msg;
+
+public:
+    explicit parseCgiFail() : msg(RED("parseCgiFail")) {}
+    explicit parseCgiFail(const string &m) : msg(m) {}
+    virtual ~parseCgiFail() throw(){};
+    virtual const char *what() const throw() { return msg.c_str(); }
+};
+
 class parseKeepRequestsFail : public exception
 {
 private:
@@ -554,6 +566,7 @@ void Config::MapSetting()
     m["reset_timedout_connection"] = &parse_reset_timedout_connection;
     m["client_max_body_size"] = &parse_client_max_body_size;
     m["default_type"] = &parse_default_type;
+    m["cgi"] = &parse_cgi;
 
     // only server block
     m["listen"] = &parse_listen;

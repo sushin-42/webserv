@@ -64,7 +64,7 @@ void LocationConfig::setServerDirective(ServerConfig *serverConf)
     this->send_timeout = serverConf->send_timeout;
     this->client_body_timeout = serverConf->client_body_timeout;
     this->error_page = serverConf->error_page;
-
+    this->cgi = serverConf->cgi;
     // only server directive
     this->server_name = serverConf->server_name;
     this->ipPort = serverConf->ipPort;

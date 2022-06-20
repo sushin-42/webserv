@@ -338,6 +338,15 @@ void parse_error_page(vector<string> arg, Config *config)
     }
 }
 
+void parse_cgi(vector<string> arg, Config *config)
+{
+    if (arg.size() != 2)
+        throw Config::parseCgiFail("parseCgiFail : size");
+    if (arg[0][0] != '.')
+        throw Config::parseCgiFail("parseCgiFail : dot");
+    config->cgi[arg[0]] = arg[1];
+}
+
 void parse_keepalive_requests(vector<string> arg, Config *config)
 {
     if (arg.size() != 1 || config->dupeCheck.keepalive_requests == true)
