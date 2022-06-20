@@ -40,10 +40,11 @@ public:
 		return checker;
 	}
 
-	bool	isAllowed(Config* conf, const string& method);
-	string	getAlias(Config* conf);
-	string	getAliasOrRoot(Config* conf);
-
+	bool				isAllowed(Config* conf, const string& method);
+	string				getAlias(Config* conf);
+	string				replaceURI(const string& reqTarget, const string& locURI, const string& alias);
+	string				trimLocationURI(const string& reqTarget, const string& locURI);
+	pair<string,string>	routeRequestTarget(Config* conf, const string& reqTarget);
 };
 
 #endif

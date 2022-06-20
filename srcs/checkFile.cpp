@@ -56,13 +56,10 @@ struct stat	_checkFile(const string& path)
 	return s;
 }
 
-string	findFirstMatched(const string& filepath, const vector<string>& indices)
+string	findFirstMatched(const string& dirname, const vector<string>& indices)
 {
 	struct stat ss;
-	string		dirname;
 	string		index;
-
-	dirname = (filepath.back() == '/') ? filepath : filepath + '/';
 
 	vector<string>::const_iterator it, ite;
 	it = indices.begin(), ite = indices.end();
@@ -78,29 +75,28 @@ string	findFirstMatched(const string& filepath, const vector<string>& indices)
 
 }
 
-string findIndexFile(Config* conf, const string& uri)
+string findIndexFile(Config* conf, const string& prefix, const string& uri)
 {
 	struct stat s;
-	string		dirname;
-	string		final = uri;
-	string		index;
-	string		filepath = CHECK->getAliasOrRoot(conf) + uri;
 
-	try						{ s = _checkFile(filepath); }
+	string	filename = prefix+uri;
+	string	index;
+	string	ret = uri;
+
+	// cout << "CHECK INDEX FILE : starting " << filename << endl;
+	try						{ s = _checkFile(filename); }
 	catch (httpError& e)	{ throw; }
 
 	if (S_ISDIR(s.st_mode))
 	{
-		dirname = (uri.back() == '/') ? uri : uri + '/';
+		if (uri.back() != '/') {filename += '/', ret+= '/';}
 
-		index = findFirstMatched(filepath, conf->index);
-		if (!index.empty())
-			final = findIndexFile(conf, dirname + index);
+		index = findFirstMatched(filename, conf->index);
 
-		else	// NO matched index file.
-			final = dirname;
+		if (!index.empty())	// found
+			ret += findIndexFile(conf, filename, index);
 	}
-	return final;	// indexFile is not directory.
+	return ret;	// DIR or FILE?
 
 	/**========================================================================
 	 * @  if FOUND final (deepest) index file

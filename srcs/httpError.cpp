@@ -1,6 +1,6 @@
 #include "httpError.hpp"
 #include <iostream>
-httpError::httpError(): msg(""), status(500) {}
+httpError::httpError(): msg(""), status(0) {}
 httpError::httpError(status_code_t s, const string& m): msg(m), status(s) {}
 httpError::~httpError() throw() {};
 const char*	httpError::what() const throw() { return msg.c_str(); }
@@ -25,3 +25,12 @@ payloadTooLarge::~payloadTooLarge() throw() {};
 
 lengthRequired::lengthRequired(): httpError(411, "Length Required") {}
 lengthRequired::~lengthRequired() throw() {};
+
+
+redirectError::redirectError(): httpError(300, "Error"), location() {}
+redirectError::redirectError(status_code_t s, const string& m, const string& loc): httpError(s, m), location(loc) {}
+redirectError::~redirectError() throw() {};
+
+movedPermanently::movedPermanently(): redirectError(301, "Moved Permanently", "") {}
+movedPermanently::movedPermanently(const string& loc): redirectError(301, "Moved Permanently", loc) {}
+movedPermanently::~movedPermanently() throw() {};

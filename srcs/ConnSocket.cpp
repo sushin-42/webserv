@@ -114,6 +114,9 @@
 					this->conf = CONF->getMatchedLocation(ReqH.getRequsetTarget(),
 														  CONVERT(this->conf, ServerConfig));
 				}
+				else
+					throw badRequest();
+
 
 				if (CHECK->isAllowed(this->conf, ReqH.getMethod()) == false)
 				{

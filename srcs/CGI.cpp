@@ -110,7 +110,9 @@ int childRoutine(
 {
 	vector<char*> argv, envp;
 
-	string	path = CHECK->getAliasOrRoot(connected->conf) + connected->ReqH.getRequsetTarget();
+	pair<string, string> _path;
+	string	path = _path.first + _path.second;
+
 	argv.push_back(const_cast<char*>(path.c_str()));
 	argv.push_back(NULL);
 
