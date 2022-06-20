@@ -1,7 +1,9 @@
 # include "core.hpp"
 # include "checkFile.hpp"
 # include "ConfigLoader.hpp"
+# include "ConfigChecker.hpp"
 #include "httpError.hpp"
+#include <string>
 # include <sys/stat.h>
 
 void			core(PollSet& pollset, ServerSocket *serv, ConnSocket *connected)
@@ -53,7 +55,8 @@ status_code_t	writeResponseBody(ConnSocket* connected, const string& uri)
 	struct stat 	s;
 	status_code_t	status;
 	string			indexfile;
-	string			filepath = connected->conf->root + uri;
+	string			prefix = CHECK->getAliasOrRoot(connected->conf);
+	string			filepath = prefix + uri;
 
 	try						{ s = _checkFile(filepath); }
 	catch (httpError& e)	{ throw; }	// for 404
@@ -77,13 +80,13 @@ status_code_t	writeResponseBody(ConnSocket* connected, const string& uri)
 		{
 			if (connected->conf->auto_index)
 			{
-				connected->ResB.setContent(directoryListing(connected->conf->root, indexfile));
+				connected->ResB.setContent(directoryListing(prefix, indexfile));
 				return 200;
 			}
 			else
 				throw forbidden();
 		}
-		filepath = connected->conf->root + indexfile;
+		filepath = prefix + indexfile;
 	}
 	status = connected->ResB.readFile(filepath);
 

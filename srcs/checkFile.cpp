@@ -1,5 +1,6 @@
 #include "checkFile.hpp"
 #include "utils.hpp"
+#include "ConfigChecker.hpp"
 #include <iostream>
 #include <string>
 #include <unistd.h>
@@ -83,7 +84,7 @@ string findIndexFile(Config* conf, const string& uri)
 	string		dirname;
 	string		final = uri;
 	string		index;
-	string		filepath = conf->root + uri;
+	string		filepath = CHECK->getAliasOrRoot(conf) + uri;
 
 	try						{ s = _checkFile(filepath); }
 	catch (httpError& e)	{ throw; }

@@ -9,6 +9,7 @@
 //@--------------------------------------------------------------------------@//
 # include "CGI.hpp"
 # include "core.hpp"
+# include "ConfigChecker.hpp"
 
 pair<status_code_t, string>	checkStatusField(const string& status)
 {
@@ -109,7 +110,7 @@ int childRoutine(
 {
 	vector<char*> argv, envp;
 
-	string				path = connected->conf->root + connected->ReqH.getRequsetTarget();
+	string	path = CHECK->getAliasOrRoot(connected->conf) + connected->ReqH.getRequsetTarget();
 	argv.push_back(const_cast<char*>(path.c_str()));
 	argv.push_back(NULL);
 

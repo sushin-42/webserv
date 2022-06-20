@@ -41,6 +41,8 @@ public:
 	}
 
 	bool	isAllowed(Config* conf, const string& method);
+	string	getAlias(Config* conf);
+	string	getAliasOrRoot(Config* conf);
 
 };
 

@@ -121,10 +121,6 @@
 					throw methodNotAllowed();
 				}
 
-				/* throw httpError or not */
-				// _checkFile(this->conf->root+ReqH.getRequsetTarget());
-				ReqH.print();
-
 				/* extract trailing body */
 				recvContent = extractBody(recvContent);
 			}
