@@ -154,6 +154,18 @@ public:
 		virtual const char *what() const throw() { return msg.c_str(); }
 	};
 
+	class parseAliasFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseAliasFail() : msg(RED("parseAliasFail")) {}
+		explicit parseAliasFail(const string &m) : msg(m) {}
+		virtual ~parseAliasFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+
 	class parseListenFail : public exception
 	{
 	private:
