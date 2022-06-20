@@ -4,6 +4,7 @@
 # include "ConfigLoader.hpp"
 # include "ConfigChecker.hpp"
 # include "checkFile.hpp"
+#include <string>
 
 /**========================================================================
 * @                           Constructors
@@ -122,6 +123,7 @@
 
 				/* throw httpError or not */
 				// _checkFile(this->conf->root+ReqH.getRequsetTarget());
+				ReqH.print();
 
 				/* extract trailing body */
 				recvContent = extractBody(recvContent);
@@ -135,6 +137,9 @@
 
 	void	ConnSocket::setBodyOrReadMore()
 	{
+		string method = ReqH.getMethod();
+		if (method == "GET" || method == "HEAD")
+			return;
 		if (ReqH.exist("Transfer-Encoding"))	// it will override Content-Length
 		{
 			/*
@@ -145,7 +150,7 @@
 			ReqB.setChunk(recvContent);
 			try
 			{
-				ReqB.decodingChunk();
+				ReqB.decodingChunk(conf->client_max_body_size);
 				cout << "------------" << endl;
 				cout << ReqB.getContent() << endl;
 				cout << "------------" << endl;
@@ -154,39 +159,37 @@
 			{
 				if (CONVERT(&e, ReqBody::invalidChunk))
 					throw badRequest();
+				if (CONVERT(&e, ReqBody::limitExeeded))
+					throw payloadTooLarge();
 				if (CONVERT(&e, ReqBody::readMore) ||
 					CONVERT(&e, ConnSocket::readMore))
 					throw readMore();
 			}
-
 		}
 		else if (ReqH.exist("Content-Length"))
 		{
 			if (!isNumber(ReqH["Content-Length"]))
 				throw badRequest();
-			//IMPL: compare "Content-Length" with client_max_body_size
-			if (toNum<unsigned int>(ReqH["Content-Length"]) <= recvContent.length())
+
+			unsigned CL = toNum<unsigned int>(ReqH["Content-Length"]);
+			if (CL <= recvContent.length())
 			{
-				ReqB.setContent(recvContent.substr(0, toNum<unsigned int>(ReqH["Content-Length"])));
+				if (CL > conf->client_max_body_size)
+				{
+					ReqB.setContent(recvContent.substr(0, conf->client_max_body_size));
+					throw payloadTooLarge();		//NOTE: 버리는 데이터 처리 필요?
+				}
+				ReqB.setContent(recvContent.substr(0, CL));
 			}
 			else
 				throw readMore();
-			/*
-				if invalid content-length,
-				send 400(Bad request), close connection.	// @
-			*/
 			/*
 				if timeout before read all content-length,
 				send 408(Request timeout), close connection.
 			*/
 		}
 		else
-		{
-			/*
-				if got body without length
-				send 411(Length Required)
-			*/
-		}
+			throw lengthRequired();
 	}
 
 	void	ConnSocket::recvRequest()

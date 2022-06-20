@@ -41,3 +41,13 @@
 		HTTPversion.clear();
 	}
 
+	void	ReqHeader::print()
+	{
+		map<string, string>::iterator it = headerField.begin();
+		map<string, string>::iterator ite = headerField.end();
+
+		cout << "===========Header-Field===========" << endl;
+		for (; it != ite; it++)
+			cout << it->first << endl;
+		cout << "===========-------------==========" << endl;
+	}

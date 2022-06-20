@@ -42,8 +42,8 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	ConfigLoader::_()->setAddrs(HttpConfig::getInstance()->serverMap);
-	// ConfigLoader::_()->pritAddrs();
+	CONF->setAddrs(HttpConfig::getInstance()->serverMap);
+	CONF->loadMIME();
 
 
 	//IMPL: create all serverSocket from m.key(ip:port), each socket has vector<ServerConfig*>

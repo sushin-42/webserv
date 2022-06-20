@@ -52,5 +52,19 @@ class internalServerError: public httpError
 				virtual ~internalServerError() throw();
 };
 
+class payloadTooLarge: public httpError
+{
+	public:		explicit payloadTooLarge();
+				explicit payloadTooLarge(status_code_t s, const string& m);
+				virtual ~payloadTooLarge() throw();
+};
+
+class lengthRequired: public httpError
+{
+	public:		explicit lengthRequired();
+				explicit lengthRequired(status_code_t s, const string& m);
+				virtual ~lengthRequired() throw();
+};
+
 
 #endif

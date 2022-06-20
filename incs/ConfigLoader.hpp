@@ -21,6 +21,7 @@ private:
 	typedef	pair<string, unsigned short>	_Addr;
 	typedef	vector<Config*>					_Confs;
 	typedef	map<_Addr, _Confs>				_Map;
+	typedef	map<string, string>				_MIME;
 
 /**========================================================================
 * %                          member variables
@@ -28,6 +29,9 @@ private:
 private:
 	static ConfigLoader*	conf;
 	_Map					addrs;
+public:
+	_MIME					MIME;
+
 
 /**========================================================================
 * @                           Constructors
@@ -44,9 +48,15 @@ public:
 public:
 	static ConfigLoader*	_()
 	{
-		if (conf == NULL) conf = new ConfigLoader;
+		if (conf == NULL)
+		{
+			conf = new ConfigLoader;
+		}
 		return conf;
 	}
+
+	void			loadMIME();
+	// const _MIME&	getMIME() const;
 
 	void			setAddrs(const _Map& m);
 	_Map&			getAddrs();

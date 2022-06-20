@@ -49,8 +49,6 @@ void				createServerSockets(map<
 											pair<string, unsigned short>,
 											vector<Config*>
 										>& addrs, PollSet& pollset );
-map<string, string> getMIME();
-
 
 pair<pid_t, int> whoDied();	/* we will check periodically all process forked. */
 

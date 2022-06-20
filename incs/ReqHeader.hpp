@@ -45,5 +45,6 @@ public:
 	const string&	getMethod() const;
 
 	void		clear();
+	void		print();
 };
 #endif

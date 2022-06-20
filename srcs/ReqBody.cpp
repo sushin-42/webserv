@@ -27,6 +27,7 @@
 		chunk.newChunkStart = 0;
 		chunk.data = "";
 		chunk.size = -1;
+		chunk.total = 0;
 	}
 
 	void	ReqBody::appendChunk(const string& newdata)
@@ -62,7 +63,7 @@
 		default:;
 		}
 	}
-	void	ReqBody::decodingChunk()
+	void	ReqBody::decodingChunk(ssize_t bodyLimit)
 	{
 		long long i = 0;
 		enum t {
@@ -158,12 +159,17 @@
 			{
 				state = SizeDone;
 				chunk.size = toHexNum<long long>(chunk.data.substr(chunk.newChunkStart,chunk.cur-1));
+				cout << "CHUNK SIZE: " << chunk.size << endl;
 			}
 			else
 				goto _invalid;
 
 	_SizeDone:
-			//IMPL: check total cummulated size, compare with limit_body_size
+			chunk.total += chunk.size;
+
+			if (bodyLimit && (bodyLimit < chunk.total))		//NOTE: 어디서부터 데이터를 버려야 하나?
+				goto _limitExceeded;
+
 			if (canGoAhead(chunk.data, chunk.cur,1))
 				chunk.cur++;
 			else
@@ -237,6 +243,11 @@ _invalid:
 		// printState(chunk.state);
 		clearChunk();
 		throw invalidChunk();
+_limitExceeded:
+		chunk.state=state;
+		// printState(chunk.state);
+		clearChunk();
+		throw limitExeeded();
 _AllDone:
 		if (chunk.state == AllDone)
 			clearChunk();

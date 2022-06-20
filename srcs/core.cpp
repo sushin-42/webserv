@@ -4,8 +4,6 @@
 #include "httpError.hpp"
 # include <sys/stat.h>
 
-extern map<string, string> MIME;
-
 void			core(PollSet& pollset, ServerSocket *serv, ConnSocket *connected)
 {
 	string			uri = connected->ReqH.getRequsetTarget();
@@ -14,8 +12,8 @@ void			core(PollSet& pollset, ServerSocket *serv, ConnSocket *connected)
 
 	status = writeResponseBody(connected, uri);
 	connected->ResH.setStatusCode(status);
-	if (MIME.find(ext) != MIME.end())
-		connected->ResH["Content-Type"]	= MIME[ext];	// No matching MIME
+	if (CONF->MIME.find(ext) != CONF->MIME.end())
+		connected->ResH["Content-Type"]	= CONF->MIME[ext];
 	else
 		connected->ResH["Content-Type"] = connected->conf->default_type;
 	if (!connected->ResB.getContent().empty())

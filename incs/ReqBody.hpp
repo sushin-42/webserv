@@ -21,6 +21,7 @@ friend class ConnSocket;
 	struct {
 		unsigned int				state;
 		long long					size;
+		long long					total;
 		string						data;
 		string::size_type			cur;
 		string::size_type			newChunkStart;
@@ -53,7 +54,7 @@ public:
 	bool	canGoAhead(const string& s, string::size_type cur, string::size_type i);
 
 	void	printState(int state);
-	void	decodingChunk();
+	void	decodingChunk(ssize_t bodyLimit);
 	void	clear();
 
 	class readMore: public exception
@@ -70,6 +71,14 @@ public:
 		public:		explicit invalidChunk(): msg("") {}
 					explicit invalidChunk(const string& m): msg(m) {}
 					virtual ~invalidChunk() throw() {};
+					virtual const char * what() const throw() { return msg.c_str(); }
+	};
+	class limitExeeded: public exception
+	{
+		private:	string msg;
+		public:		explicit limitExeeded(): msg("") {}
+					explicit limitExeeded(const string& m): msg(m) {}
+					virtual ~limitExeeded() throw() {};
 					virtual const char * what() const throw() { return msg.c_str(); }
 	};
 

@@ -19,3 +19,9 @@ forbidden::~forbidden() throw() {};
 
 internalServerError::internalServerError(): httpError(500, "Internal Server Error") {}
 internalServerError::~internalServerError() throw() {};
+
+payloadTooLarge::payloadTooLarge(): httpError(413, "Payload Too Large") {}
+payloadTooLarge::~payloadTooLarge() throw() {};
+
+lengthRequired::lengthRequired(): httpError(411, "Length Required") {}
+lengthRequired::~lengthRequired() throw() {};

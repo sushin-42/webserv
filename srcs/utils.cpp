@@ -1,6 +1,7 @@
 #include "utils.hpp"
 #include "ServerSocket.hpp"
 #include "Poll.hpp"
+#include <string>
 
 
 string fileToString(const string &path)
@@ -10,38 +11,6 @@ string fileToString(const string &path)
 						(std::istreambuf_iterator<char>()));
 
 	return content;
-}
-
-map<string, string> getMIME()
-{
-	map<string, string> MIME;
-
-	string content = fileToString("./mime.types");
-	string type;
-	string ext;
-	// string::size_type found = 0;
-	string::size_type typestart = 0;
-	string::size_type typeend = 0;
-	string::size_type extstart = 0;
-	string::size_type extend = 0;
-	while (1)
-	{
-		typestart = content.find_first_not_of(" \t\n;", extend);
-		typeend = content.find_first_of(" \t\n", typestart + 1);
-		if (typestart == string::npos)
-			break;
-
-		type = content.substr(typestart, typeend - typestart);
-		extend = content.find('|', typeend + 1);
-		while (content[extend] != ';')
-		{
-			extstart = content.find_first_not_of(" \t", extend + 1);
-			extend = content.find_first_of(" \t;", extstart + 1);
-			ext = content.substr(extstart, extend - extstart);
-			MIME[ext] = type;
-		}
-	}
-	return MIME;
 }
 
 string getExt(const string &path)
