@@ -1,5 +1,6 @@
 # include "core.hpp"
 # include "checkFile.hpp"
+#include "httpError.hpp"
 # include <sys/stat.h>
 
 extern map<string, string> MIME;
@@ -14,6 +15,8 @@ void			core(PollSet& pollset, ServerSocket *serv, ConnSocket *connected)
 	connected->ResH.setStatusCode(status);
 	if (MIME.find(ext) != MIME.end())
 		connected->ResH["Content-Type"]	= MIME[ext];	// No matching MIME
+	else
+		// CONF->
 	//IMPL: else, load default_type
 	if (!connected->ResB.getContent().empty())
 		connected->ResH["Content-Length"]	= toString(connected->ResB.getContent().length());
@@ -49,25 +52,45 @@ void	core_wrapper(PollSet& pollset, ServerSocket *serv, ConnSocket *connected, P
 
 status_code_t	writeResponseBody(ConnSocket* connected, const string& uri)
 {
-	status_code_t	status;
 	struct stat 	s;
+	status_code_t	status;
+	string			indexfile;
 	string			filepath = connected->conf->root + uri;
 
-	stat(filepath.c_str(), &s);		//NOTE: stat 이 앞에서 체크한거랑 달라졌을 수 있음!
-	if (S_ISDIR(s.st_mode) && connected->conf->auto_index)
-	{
-		connected->ResB.setContent(directoryListing(connected->conf->root, uri));
-		status = 200;
-	}
-	else
-		status = connected->ResB.readFile(filepath);
+	try						{ s = _checkFile(filepath); }
+	catch (httpError& e)	{ throw; }	// for 404
 
-	if (status == 404)
-		connected->ResB.readFile(connected->conf->root + "/404/404.html");		//FIXIT
+	if (S_ISDIR(s.st_mode))
+	{
+	/**========================================================================
+	 * @  if FOUND final (deepest) index file
+	 * @  	if final index file was directory
+	 * @		auto index on ? directory listing() : forbidden();
+	 * @	else
+	 * @		if final index file forbidden? forbidden();
+	 * @		else print index file;
+	 * '  else NOT FOUND
+	 * '	auto index on ? directory listing() : forbidden();
+	 *========================================================================**/
+		try							{ indexfile = findIndexFile(connected->conf, uri); }
+		catch (httpError& e)		{ throw; }
+
+		if (indexfile.back() == '/')
+		{
+			if (connected->conf->auto_index)
+			{
+				connected->ResB.setContent(directoryListing(connected->conf->root, indexfile));
+				return 200;
+			}
+			else
+				throw forbidden();
+		}
+		filepath = connected->conf->root + indexfile;
+	}
+	status = connected->ResB.readFile(filepath);
 
 	return status;
 }
-
 
 
 void	writeResponseHeader(ConnSocket* connected)

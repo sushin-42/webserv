@@ -1,5 +1,7 @@
 #include "checkFile.hpp"
+#include "utils.hpp"
 #include <iostream>
+#include <string>
 #include <unistd.h>
 #include <vector>
 /*
@@ -21,10 +23,13 @@
 	}
 
  */
-void	_checkFile(const string& path, bool auto_index)
+
+
+struct stat	_checkFile(const string& path)
 {
 	struct	stat s;
 	int		status = 0;
+
 	bzero(&s, sizeof(struct stat));
 
 	status = stat(path.c_str(), &s);
@@ -47,9 +52,65 @@ void	_checkFile(const string& path, bool auto_index)
 	}
 	else if (access(path.c_str(), R_OK) == -1)
 		throw forbidden();
+	return s;
+}
+
+string	findFirstMatched(const string& filepath, const vector<string>& indices)
+{
+	struct stat ss;
+	string		dirname;
+	string		index;
+
+	dirname = (filepath.back() == '/') ? filepath : filepath + '/';
+
+	vector<string>::const_iterator it, ite;
+	it = indices.begin(), ite = indices.end();
+	for (; it < ite ; it++)
+	{
+		index = (*it);
+		try					{ ss = _checkFile(dirname + index); }
+		catch (notFound& e)	{ continue; }
+
+		return index;
+	}
+	return "";
+
+}
+
+string findIndexFile(Config* conf, const string& uri)
+{
+	struct stat s;
+	string		dirname;
+	string		final = uri;
+	string		index;
+	string		filepath = conf->root + uri;
+
+	try						{ s = _checkFile(filepath); }
+	catch (httpError& e)	{ throw; }
 
 	if (S_ISDIR(s.st_mode))
-		!auto_index ? throw forbidden() : (0);
+	{
+		dirname = (uri.back() == '/') ? uri : uri + '/';
+
+		index = findFirstMatched(filepath, conf->index);
+		if (!index.empty())
+			final = findIndexFile(conf, dirname + index);
+
+		else	// NO matched index file.
+			final = dirname;
+	}
+	return final;	// indexFile is not directory.
+
+	/**========================================================================
+	 * @  if FOUND final (deepest) index file
+	 * @  	if final index file was directory
+	 * @		auto index on ? directory listing() : forbidden();
+	 * @	else
+	 * @		if final index file forbidden? forbidden();
+	 * @		else print index file;
+	 * '  else NOT FOUND
+	 * '	auto index on ? directory listing() : forbidden();
+	 *========================================================================**/
 }
 
 static void	indexing(vector<string>& dirs, const string& path)
@@ -75,7 +136,10 @@ static void	indexing(vector<string>& dirs, const string& path)
 
         	bzero(&sb, sizeof(sb));
         	if (stat((path + filename).c_str(), &sb) != 0)
+			{
+				cout << "error : " << path + filename <<endl;
             	throw exception();
+			}
         	if (S_ISDIR(sb.st_mode))
             	filename += "/";
 
@@ -113,3 +177,9 @@ string    directoryListing(const string& path, const string& uri)
 
     return body;
 }
+
+
+indexIsDirectory::indexIsDirectory(): msg(""){}
+indexIsDirectory::indexIsDirectory(const string& m): msg(m) {}
+indexIsDirectory::~indexIsDirectory() throw() {};
+const char*	indexIsDirectory::what() const throw() { return msg.c_str(); }

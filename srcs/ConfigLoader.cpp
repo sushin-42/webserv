@@ -74,7 +74,9 @@ ServerConfig*	ConfigLoader::getMatchedServer(ServerSocket* serv, const string& h
 		itName = names.begin(), iteName = names.end();
 		for (; itName < iteName ; itName++)
 		{
-			if (itName->compare(Host) == 0)
+			if (itName->compare(Host) == 0 ||
+				(*itName + ":" + toString(serv->getPort())).compare(Host) == 0)
+
 				return servConf;
 		}
 	}
@@ -97,7 +99,8 @@ ServerConfig*	ConfigLoader::getMatchedServer(const string& ip, unsigned short po
 		itName = names.begin(), iteName = names.end();
 		for (; itName < iteName ; itName++)
 		{
-			if (itName->compare(Host) == 0)
+			if (itName->compare(Host) == 0 ||
+				(*itName + ":" + toString(port)).compare(Host) == 0)
 				return servConf;
 		}
 	}
@@ -155,7 +158,7 @@ string			validateHost(const string& host)
 	switch (pos = host.find("http://"))
 	{
 	case 0:				ret = host.substr(7); break;
-	case string::npos:	ret = host.substr(7); break;
+	case string::npos:	ret = host; break;
 	default:			return "";
 	}
 

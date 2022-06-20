@@ -31,11 +31,6 @@
 // # include "utils.hpp"
 using namespace std;
 
-void	documentResponse(ConnSocket* connected);
-void	clientRedir(ConnSocket* connected);
-void	localRedir(PollSet& pollset, ServerSocket* serv, ConnSocket* connected);
-void	core(PollSet& pollset, ServerSocket *serv, ConnSocket *connected);
-
 pair<status_code_t, string>	checkStatusField(const string& status);
 string	toMetaVar(const string& s, string scheme);
 map<string, string>	makeCGIEnv(ServerSocket* serv, ConnSocket* connected);

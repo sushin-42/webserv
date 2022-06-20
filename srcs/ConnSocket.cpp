@@ -121,7 +121,7 @@
 				}
 
 				/* throw httpError or not */
-				_checkFile(this->conf->root+ReqH.getRequsetTarget(), conf->auto_index);
+				// _checkFile(this->conf->root+ReqH.getRequsetTarget());
 
 				/* extract trailing body */
 				recvContent = extractBody(recvContent);
@@ -310,6 +310,13 @@ char checkMethod(const string& content)
 	return 0;
 }
 
+void	ConnSocket::returnError(status_code_t status, const string& message)
+{
+	this->setErrorPage(status, message, message);
+	this->ResH.setDefaultHeaders();
+	this->ResH.makeStatusLine();
+	this->ResH.integrate();
+}
 /**========================================================================
 * !                            Exceptions
 *========================================================================**/

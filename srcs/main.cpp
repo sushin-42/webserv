@@ -73,14 +73,13 @@ int main(int argc, char** argv)
 		if (CGIpipe)
 		{
 			connected =  CGIpipe->linkConn;
-			if (CGIpipe == connected->linkWritePipe)
+			if (CGIpipe == connected->linkWritePipe)	// write to child process
 			{
 				stream = CGIpipe;
 				content = connected->ReqB.getContent();
 				goto _send;
 			}
-			goto _core;
-
+			goto _core;	// read from child process
 		}
 
 		if (it.first->revents & POLLOUT)	{ it.first->events &= ~POLLOUT;
@@ -101,30 +100,26 @@ int main(int argc, char** argv)
 													continue;
 												}
 
-												//TODO: we need to close connection. not just SHUT_WR!
 												httpError* err = CONVERT(&e, httpError);
 												if (err)
 												{
-													/* clear all existing? */
-													connected->setErrorPage(err->status, err->what(), err->what());
-													connected->ResH.setDefaultHeaders();
-													connected->ResH.makeStatusLine();
-													connected->ResH.integrate();
-													stream = connected;
-													content = connected->ResH.getContent() +
-															  connected->ResB.getContent();
-													goto _send;
+													connected->returnError(err->status, err->what());
+													goto _set_stream_to_socket;
 												}
 											}
 
 //'-------------------------------- catch end--------------------------------'//
 _core:
 		serv = connected->linkServerSock;
-		core_wrapper(pollset, serv, connected, CGIpipe);	//@ make response header, body//
+		try							{ core_wrapper(pollset, serv, connected, CGIpipe); }	//@ make response header, body//
+		catch (httpError& e)		{ connected->returnError(e.status, e.what());
+								 	  goto _set_stream_to_socket;	}
 		if (connected->pending)
 			continue;
 		if (!CGIpipe && connected->linkReadPipe)	/* pipe is just created, do not send 0 byte */
 			continue;
+
+_set_stream_to_socket:
 		stream	= connected;
 		content = connected->ResH.getContent() +
 				  connected->ResB.getContent();

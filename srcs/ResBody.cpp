@@ -19,6 +19,7 @@
 
 	status_code_t	ResBody::readFile( const string& path )
 	{
+		errno = 0;
 		ifstream input_file(path);
 
 		if (!input_file.is_open())
@@ -36,8 +37,7 @@
 		switch (errno)
 		{
 		case 0:			return 200;
-		case ENOENT:	return 404;
-		default:		return 200;
+		default:		return 500;
 		}
 	}
 
