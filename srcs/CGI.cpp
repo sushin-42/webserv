@@ -8,6 +8,7 @@
 //@                client-redir-response | client-redirdoc-response          @//
 //@--------------------------------------------------------------------------@//
 # include "CGI.hpp"
+# include "core.hpp"
 
 pair<status_code_t, string>	checkStatusField(const string& status)
 {
