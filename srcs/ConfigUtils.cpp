@@ -232,6 +232,18 @@ void parse_root(vector<string> arg, Config *config)
     // // LocationConfig *location = dynamic_cast<LocationConfig *>(config);
 }
 
+void parse_alias(vector<string> arg, Config *config)
+{
+    LocationConfig *location;
+
+    if (arg.size() != 1 || config->dupeCheck.root == true)
+        throw Config::parseAliasFail();
+    isPath(arg[0]);
+    location = dynamic_cast<LocationConfig *>(config);
+    location->alias = arg[0];
+    config->dupeCheck.root = true;
+}
+
 void parse_listen(vector<string> arg, Config *config)
 {
 

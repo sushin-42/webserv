@@ -9,6 +9,7 @@ LocationConfig::LocationConfig(pair<string, string> locationConfUri, ServerConfi
     setServerDirective(serverConf);
     URI = locationConfUri.first;
     configtemp = locationConfUri.second;
+    alias = "";
     assign = checkAssign(URI);
     SetupConfig();
     setLimitExceptMethod();
