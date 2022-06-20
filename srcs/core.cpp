@@ -1,5 +1,6 @@
 # include "core.hpp"
 # include "checkFile.hpp"
+# include "ConfigLoader.hpp"
 #include "httpError.hpp"
 # include <sys/stat.h>
 
@@ -16,7 +17,7 @@ void			core(PollSet& pollset, ServerSocket *serv, ConnSocket *connected)
 	if (MIME.find(ext) != MIME.end())
 		connected->ResH["Content-Type"]	= MIME[ext];	// No matching MIME
 	else
-		// CONF->
+		connected->ResH["Content-Type"] = connected->conf->default_type;
 	//IMPL: else, load default_type
 	if (!connected->ResB.getContent().empty())
 		connected->ResH["Content-Length"]	= toString(connected->ResB.getContent().length());
