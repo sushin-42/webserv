@@ -8,11 +8,11 @@
 
 void			core(PollSet& pollset, ServerSocket *serv, ConnSocket *connected)
 {
-	string			uri = connected->ReqH.getRequsetTarget();
-	string			ext	= getExt(uri);
+	string			reqTarget = connected->ReqH.getRequsetTarget();
+	string			ext	= getExt(reqTarget);
 	status_code_t	status = 42;
 
-	status = writeResponseBody(connected, uri);
+	status = writeResponseBody(connected, reqTarget);
 	connected->ResH.setStatusCode(status);
 	if (CONF->MIME.find(ext) != CONF->MIME.end())
 		connected->ResH["Content-Type"]	= CONF->MIME[ext];
@@ -20,7 +20,7 @@ void			core(PollSet& pollset, ServerSocket *serv, ConnSocket *connected)
 		connected->ResH["Content-Type"] = connected->conf->default_type;
 	if (!connected->ResB.getContent().empty())
 		connected->ResH["Content-Length"]	= toString(connected->ResB.getContent().length());
-	if (status == 200 && getExt(uri) == "py")
+	if (status == 200 && getExt(reqTarget) == "py")
 	{
 		connected->ResB.clear();
 		connected->ResH.removeKey("content-length");
@@ -50,15 +50,21 @@ void	core_wrapper(PollSet& pollset, ServerSocket *serv, ConnSocket *connected, P
 }
 
 
-status_code_t	writeResponseBody(ConnSocket* connected, const string& uri)
+status_code_t	writeResponseBody(ConnSocket* connected, const string& reqTarget)
 {
 	struct stat 	s;
 	status_code_t	status;
 	string			indexfile;
-	string			prefix = CHECK->getAliasOrRoot(connected->conf);
-	string			filepath = prefix + uri;
+	string			prefix;
+	string			uri;
 
-	try						{ s = _checkFile(filepath); }
+	pair <string, string> p = CHECK->routeRequestTarget(connected->conf, reqTarget);
+	prefix = p.first;
+	uri = p.second;
+
+	string			filename = prefix + uri;
+
+	try						{ s = _checkFile(filename); }
 	catch (httpError& e)	{ throw; }	// for 404
 
 	if (S_ISDIR(s.st_mode))
@@ -73,22 +79,25 @@ status_code_t	writeResponseBody(ConnSocket* connected, const string& uri)
 	 * '  else NOT FOUND
 	 * '	auto index on ? directory listing() : forbidden();
 	 *========================================================================**/
-		try							{ indexfile = findIndexFile(connected->conf, uri); }
+		if (reqTarget.back() != '/')
+			throw movedPermanently("http://" + connected->ReqH["Host"] + reqTarget + '/');
+
+		try							{ indexfile = findIndexFile(connected->conf, filename); }
 		catch (httpError& e)		{ throw; }
 
 		if (indexfile.back() == '/')
 		{
 			if (connected->conf->auto_index)
 			{
-				connected->ResB.setContent(directoryListing(prefix, indexfile));
+				connected->ResB.setContent(directoryListing(indexfile, prefix));	/* alias case: need to append Loc URI || or req Target ? */
 				return 200;
 			}
 			else
 				throw forbidden();
 		}
-		filepath = prefix + indexfile;
+		filename = indexfile;
 	}
-	status = connected->ResB.readFile(filepath);
+	status = connected->ResB.readFile(filename);
 
 	return status;
 }

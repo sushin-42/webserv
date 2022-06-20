@@ -3,3 +3,4 @@ client.cpp
 *.o
 webserv
 memo
+*.conf

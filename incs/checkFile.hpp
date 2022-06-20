@@ -9,8 +9,8 @@ using namespace std;
 
 struct stat	_checkFile(const string& path);
 string		findFirstMatched(const string& filepath, const vector<string>& indices);
-string		directoryListing(const string& path, const string& uri);
-string		findIndexFile(Config* conf, const string& uri);
+string		directoryListing(const string& filename, const string& prefix);
+string		findIndexFile(Config* conf, const string& filename);
 
 class indexIsDirectory: public exception
 {

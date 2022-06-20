@@ -56,13 +56,10 @@ struct stat	_checkFile(const string& path)
 	return s;
 }
 
-string	findFirstMatched(const string& filepath, const vector<string>& indices)
+string	findFirstMatched(const string& dirname, const vector<string>& indices)
 {
 	struct stat ss;
-	string		dirname;
 	string		index;
-
-	dirname = (filepath.back() == '/') ? filepath : filepath + '/';
 
 	vector<string>::const_iterator it, ite;
 	it = indices.begin(), ite = indices.end();
@@ -78,29 +75,25 @@ string	findFirstMatched(const string& filepath, const vector<string>& indices)
 
 }
 
-string findIndexFile(Config* conf, const string& uri)
+string findIndexFile(Config* conf, const string& filename)
 {
 	struct stat s;
-	string		dirname;
-	string		final = uri;
-	string		index;
-	string		filepath = CHECK->getAliasOrRoot(conf) + uri;
 
-	try						{ s = _checkFile(filepath); }
+	string	indexfile;
+	string	_filename = filename;
+;
+	try						{ s = _checkFile(_filename); }
 	catch (httpError& e)	{ throw; }
 
 	if (S_ISDIR(s.st_mode))
 	{
-		dirname = (uri.back() == '/') ? uri : uri + '/';
+		if (_filename.back() != '/') { _filename += '/'; }
 
-		index = findFirstMatched(filepath, conf->index);
-		if (!index.empty())
-			final = findIndexFile(conf, dirname + index);
-
-		else	// NO matched index file.
-			final = dirname;
+		indexfile = findFirstMatched(_filename, conf->index);
+		if (!indexfile.empty())	// found
+			_filename = findIndexFile(conf, _filename + indexfile);
 	}
-	return final;	// indexFile is not directory.
+	return _filename;	// DIR or FILE?
 
 	/**========================================================================
 	 * @  if FOUND final (deepest) index file
@@ -138,7 +131,7 @@ static void	indexing(vector<string>& dirs, const string& path)
         	bzero(&sb, sizeof(sb));
         	if (stat((path + filename).c_str(), &sb) != 0)
 			{
-				cout << "error : " << path + filename <<endl;
+				cout << "error whild indexing : " << path + filename <<endl;
             	throw exception();
 			}
         	if (S_ISDIR(sb.st_mode))
@@ -152,15 +145,16 @@ static void	indexing(vector<string>& dirs, const string& path)
 	}
 }
 
-string    directoryListing(const string& path, const string& uri)
+string    directoryListing(const string& filename, const string& prefix)
 {
 	string body;
 	vector<string> dirs;
 	vector<string>::iterator it, ite;
 
-	indexing(dirs, path+uri);
+	indexing(dirs, filename);
 	it = dirs.begin(), ite = dirs.end();
 
+	string uri = filename.substr(prefix.length());
     body = "<html>\r\n<head><title>Index of " + uri + "</title></head>\r\n<body>\r\n<h1>Index of " + uri +"</h1><hr><pre>";
 
 	for (; it < ite ; it++)

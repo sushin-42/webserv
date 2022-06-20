@@ -20,6 +20,7 @@
 #include "ResHeader.hpp"
 #include "ServerSocket.hpp"
 #include "core.hpp"
+#include "httpError.hpp"
 #include "utils.hpp"
 
 
@@ -112,7 +113,10 @@ int main(int argc, char** argv)
 _core:
 		serv = connected->linkServerSock;
 		try							{ core_wrapper(pollset, serv, connected, CGIpipe); }	//@ make response header, body//
-		catch (httpError& e)		{ connected->returnError(e.status, e.what());
+		catch (httpError& e)		{
+									  redirectError* r = CONVERT(&e, redirectError);
+									  if (r) connected->ResH["Location"] = r->location;
+									  connected->returnError(e.status, e.what());
 								 	  goto _set_stream_to_socket;	}
 		if (connected->pending)
 			continue;

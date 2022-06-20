@@ -66,5 +66,20 @@ class lengthRequired: public httpError
 				virtual ~lengthRequired() throw();
 };
 
+class redirectError: public httpError
+{
+	public:		string	location;
+				explicit redirectError();
+				explicit redirectError(status_code_t s, const string& m, const string& loc);
+				virtual ~redirectError() throw();
+};
+
+class movedPermanently: public redirectError
+{
+	public:		explicit movedPermanently();
+				explicit movedPermanently(const string& loc);
+				virtual ~movedPermanently() throw();
+};
+
 
 #endif
