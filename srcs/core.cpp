@@ -67,7 +67,6 @@ status_code_t	writeResponseBody(ConnSocket* connected, const string& reqTarget)
 	try						{ s = _checkFile(filename); }
 	catch (httpError& e)	{ throw; }	// for 404
 
-
 	if (S_ISDIR(s.st_mode))
 	{
 	/**========================================================================
@@ -83,20 +82,20 @@ status_code_t	writeResponseBody(ConnSocket* connected, const string& reqTarget)
 		if (reqTarget.back() != '/')
 			throw movedPermanently("http://" + connected->ReqH["Host"] + reqTarget + '/');
 
-		try							{ indexfile = findIndexFile(connected->conf, prefix, uri); }
+		try							{ indexfile = findIndexFile(connected->conf, filename); }
 		catch (httpError& e)		{ throw; }
 
 		if (indexfile.back() == '/')
 		{
 			if (connected->conf->auto_index)
 			{
-				connected->ResB.setContent(directoryListing(prefix, indexfile));
+				connected->ResB.setContent(directoryListing(indexfile, prefix));	/* alias case: need to append Loc URI || or req Target ? */
 				return 200;
 			}
 			else
 				throw forbidden();
 		}
-		filename = prefix + indexfile;
+		filename = indexfile;
 	}
 	status = connected->ResB.readFile(filename);
 

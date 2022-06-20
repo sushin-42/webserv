@@ -75,28 +75,25 @@ string	findFirstMatched(const string& dirname, const vector<string>& indices)
 
 }
 
-string findIndexFile(Config* conf, const string& prefix, const string& uri)
+string findIndexFile(Config* conf, const string& filename)
 {
 	struct stat s;
 
-	string	filename = prefix+uri;
-	string	index;
-	string	ret = uri;
-
-	// cout << "CHECK INDEX FILE : starting " << filename << endl;
-	try						{ s = _checkFile(filename); }
+	string	indexfile;
+	string	_filename = filename;
+;
+	try						{ s = _checkFile(_filename); }
 	catch (httpError& e)	{ throw; }
 
 	if (S_ISDIR(s.st_mode))
 	{
-		if (uri.back() != '/') {filename += '/', ret+= '/';}
+		if (_filename.back() != '/') { _filename += '/'; }
 
-		index = findFirstMatched(filename, conf->index);
-
-		if (!index.empty())	// found
-			ret += findIndexFile(conf, filename, index);
+		indexfile = findFirstMatched(_filename, conf->index);
+		if (!indexfile.empty())	// found
+			_filename = findIndexFile(conf, _filename + indexfile);
 	}
-	return ret;	// DIR or FILE?
+	return _filename;	// DIR or FILE?
 
 	/**========================================================================
 	 * @  if FOUND final (deepest) index file
@@ -134,7 +131,7 @@ static void	indexing(vector<string>& dirs, const string& path)
         	bzero(&sb, sizeof(sb));
         	if (stat((path + filename).c_str(), &sb) != 0)
 			{
-				cout << "error : " << path + filename <<endl;
+				cout << "error whild indexing : " << path + filename <<endl;
             	throw exception();
 			}
         	if (S_ISDIR(sb.st_mode))
@@ -148,15 +145,16 @@ static void	indexing(vector<string>& dirs, const string& path)
 	}
 }
 
-string    directoryListing(const string& path, const string& uri)
+string    directoryListing(const string& filename, const string& prefix)
 {
 	string body;
 	vector<string> dirs;
 	vector<string>::iterator it, ite;
 
-	indexing(dirs, path+uri);
+	indexing(dirs, filename);
 	it = dirs.begin(), ite = dirs.end();
 
+	string uri = filename.substr(prefix.length());
     body = "<html>\r\n<head><title>Index of " + uri + "</title></head>\r\n<body>\r\n<h1>Index of " + uri +"</h1><hr><pre>";
 
 	for (; it < ite ; it++)
