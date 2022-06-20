@@ -81,7 +81,7 @@ status_code_t	writeResponseBody(ConnSocket* connected, const string& reqTarget)
 	 * '	auto index on ? directory listing() : forbidden();
 	 *========================================================================**/
 		if (reqTarget.back() != '/')
-			throw movedPermanently(connected->ReqH["Host"] + reqTarget + '/');	// scheme required?
+			throw movedPermanently("http://" + connected->ReqH["Host"] + reqTarget + '/');
 
 		try							{ indexfile = findIndexFile(connected->conf, prefix, uri); }
 		catch (httpError& e)		{ throw; }
