@@ -28,6 +28,8 @@ unsigned short convertStringToPort(string code);
 pair<ssize_t, string> splitStringToType(string val);
 time_t convertStringToTime(string val);
 ssize_t convertStringToByte(string val);
+
+bool exsitErrorpageEqual(string arg, int &equalstatus);
 //=====================================parse_util========================================
 //=====================================parse_arg========================================
 

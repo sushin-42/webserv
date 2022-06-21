@@ -60,7 +60,7 @@ public:
 	Duplicate dupeCheck;
 
 	//멤버 변수
-	map<int, string> error_page; // key= status code, value = 문서
+	map<int, pair<int, string> > error_page; // key= status code, value = 문서
 	vector<Config *> link;
 	vector<string> index;		// if (directory) 1. index file 2. (403 forbidden  || listing)
 	bool auto_index;			// if (directory && no index file) directory listing
