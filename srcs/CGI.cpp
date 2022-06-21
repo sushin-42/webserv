@@ -275,7 +275,6 @@ void	CGIRoutines(
 
 			if (connected->pending == false)
 			{
-				//NOTE: if read 0 byte after n byte ?
 				connected->ResB.setContent(
 											connected->chunk ?
 												makeChunk(CGIpipe->output) :
@@ -286,18 +285,27 @@ void	CGIRoutines(
 			break;
 
 		default:	/* output appended */
+			cout << "OUTPUT APPENDED" << endl;
 
 			/* wait full header */
-			if (CGIpipe->headerDone == false &&
-					(CGIpipe->output.rfind("\r\n\r\n") != string::npos ||
-					CGIpipe->output.rfind("\n\n") != string::npos))
+			if (CGIpipe->headerDone == false)
 			{
-				processOutputHeader(pollset, serv, connected, CGIpipe);
-				CGIpipe->headerDone = true;							// appended to conn->ResH
-				CGIpipe->output = extractBody(CGIpipe->output);		// store remained after header
+				connected->pending = true;
+				if	(CGIpipe->output.rfind("\r\n\r\n") != string::npos ||
+					 CGIpipe->output.rfind("\n\n") != string::npos)
+				{
+					processOutputHeader(pollset, serv, connected, CGIpipe);
+					CGIpipe->headerDone = true;							// appended to conn->ResH
+					CGIpipe->output = extractBody(CGIpipe->output);		// store remained after header
+					connected->pending = false;
+				}
+				else
+					return;
 			}
 			if (connected->pending == false)
 			{
+				cout << "CURRENT CGI OUTPUT ->\n" << "'" << CGIpipe->output << "'" << endl;
+				if (CGIpipe->output.empty())	return; // if extracted trailing Body == '', makeChunk will send '0\r\n\r\n'
 				connected->ResB.setContent(
 											connected->chunk ?
 												makeChunk(CGIpipe->output) :

@@ -32,23 +32,26 @@ import time
 
 
 # print("Location:  /es.png")
-print("Status: 302 Found")
+print("Status: 302 Found", flush=True)
 
-# time.sleep(3)
-print("Content-type: text/htmlss")
+time.sleep(3)
+print("Content-type: text/htmlss", flush=True)
 # print("Content-length: 2022")
-# time.sleep(3)
-print("Accept: text/abcd")
+time.sleep(3)
+print("Accept: text/abcd", flush=True)
+time.sleep(1)
 # time.sleep(3)
 # print("Transfer-Encoding: chunked")
 
 # print("Transfer-Encoding: gzip")
 # print("Content-length: 2022")
 
-print()
+
+print(flush=True)
 # print("Hello world")
 
 for i in range(10):
+	time.sleep(1)
 	# time.sleep(1)
 	print(i, flush=True)
 # cgi.print_environ()
