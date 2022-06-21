@@ -1,4 +1,5 @@
 #include "FileStream.hpp"
+#include "Exceptions.hpp"
 #include "fcntl.h"
 
 
@@ -105,4 +106,6 @@ void	FileStream::send(const string& content, map<int, struct undone>& writeUndon
 	}
 }
 
+void			FileStream::setFilename( const string& filename) { this->filename =filename;}
+const string&	FileStream::getFilename() const	{ return this->filename;}
 void FileStream::dummy() {}

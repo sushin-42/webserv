@@ -1,4 +1,5 @@
 #include "ResBody.hpp"
+#include "FileStream.hpp"
 
 
 
@@ -37,8 +38,18 @@
 		switch (errno)
 		{
 		case 0:			return 200;
+		case ENOENT:     return 404;
 		default:		return 500;
 		}
+	}
+
+	status_code_t	ResBody::readFile( FileStream* f )
+	{
+		ssize_t	byte;
+		byte = f->read();
+		if (byte != -1)
+			this->content.append(f->content);
+		return 200;
 	}
 
 	void	ResBody::clear() { content.clear(); /*IText::clear();*/ }

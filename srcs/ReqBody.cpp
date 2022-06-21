@@ -1,4 +1,5 @@
 # include "ReqBody.hpp"
+#include "Exceptions.hpp"
 
 /**========================================================================
 * @                           Constructors

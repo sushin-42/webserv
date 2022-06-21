@@ -1,6 +1,7 @@
 #ifndef RESBODY_HPP
 # define RESBODY_HPP
 
+#include "FileStream.hpp"
 #include "IText.hpp"
 #include "color.hpp"
 #include <iostream>
@@ -39,6 +40,7 @@ public:
 * #                          member functions
 *========================================================================**/
 
+	status_code_t	readFile( FileStream* f );
 	status_code_t	readFile( const string& path );
 	void	clear();
 };

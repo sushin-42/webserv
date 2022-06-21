@@ -1,4 +1,6 @@
 # include "core.hpp"
+#include "Exceptions.hpp"
+#include "FileStream.hpp"
 # include "checkFile.hpp"
 # include "ConfigLoader.hpp"
 # include "ConfigChecker.hpp"
@@ -6,27 +8,92 @@
 #include <string>
 # include <sys/stat.h>
 
+string			createInputFileStream(ConnSocket* connected, const string& reqTarget, PollSet& pollset)
+{
+	// string	autoindexBody;
+	string filename;
+	filename = getFileName(connected, reqTarget);	//FIXME: too many task here: check file, check index, auto index, ... throw httpError
+	FileStream* f = new FileStream(filename);
+	f->open(O_RDONLY);
+
+	if (filename.back() == '/')
+	{
+		if (connected->conf->auto_index)		// DO NOT READ. just do directory listing INSTANTLY.
+		{
+			f->close();
+			delete f;
+
+			throw autoIndex();
+		}
+		else
+			throw forbidden();
+	}
+	connected->linkInputFile = f;
+	f->linkConn = connected;
+	pollset.enroll(f);
+
+	throw readMore();
+}
+
+void			readInputFileStream(FileStream* inputFileStream)
+{
+	ssize_t byte;
+	switch (byte = inputFileStream->read())
+	{
+	case -1:
+		TAG(core#, core); cout << RED("Unexcpected error from file: ") << inputFileStream->getFilename() << endl;
+		inputFileStream->close();
+		throw internalServerError();
+
+	case 0:		/* close file, process output */
+				/* FIXIT: now linkInputFile/linkInputPipe need to be drop by dropLink() */
+
+		TAG(core#, core); cout << GRAY("file closed: ") << inputFileStream->getFilename() << endl;
+		inputFileStream->close();
+		break;
+
+	default:	/* content appended */
+		throw readMore();
+	}
+}
+
 void			core(PollSet& pollset, ServerSocket *serv, ConnSocket *connected)
 {
 	string			reqTarget = connected->ReqH.getRequsetTarget();
-	string			ext	= getExt(reqTarget);
-	status_code_t	status = 42;
+	string			filename;
+	string			ext;
 
-	status = writeResponseBody(connected, reqTarget);
-	connected->ResH.setStatusCode(status);
-	if (CONF->MIME.find(ext) != CONF->MIME.end())
-		connected->ResH["Content-Type"]	= CONF->MIME[ext];
-	else
-		connected->ResH["Content-Type"] = connected->conf->default_type;
+	FileStream*		inputFileStream = connected->linkInputFile;
+
+	if (!inputFileStream)
+	{
+		try					{ createInputFileStream(connected, reqTarget, pollset); }
+		catch (autoIndex& a){ goto _end; }
+	}
+	else if (inputFileStream)
+	{
+		try					{readInputFileStream(inputFileStream);}
+		catch (exception& e){ throw; }	// ( readMore | 500 | processing Response)
+	}
+
+	connected->ResB.setContent(inputFileStream->content);
+	connected->ResH.setStatusCode(200);
+
+	ext = getExt(inputFileStream->getFilename());
+	connected->ResH["Content-Type"]	= CONF->MIME.find(ext) != CONF->MIME.end() ?
+									  CONF->MIME[ext] : connected->conf->default_type;
+
 	if (!connected->ResB.getContent().empty())
 		connected->ResH["Content-Length"]	= toString(connected->ResB.getContent().length());
-	if (status == 200 && getExt(reqTarget) == "py")
+
+	if (getExt(inputFileStream->getFilename()) == "py")
 	{
 		connected->ResB.clear();
 		connected->ResH.removeKey("content-length");
 		CGIRoutines(pollset, serv, connected, NULL);
 		return ;
 	}
+_end:;
 }
 
 
@@ -50,10 +117,9 @@ void	core_wrapper(PollSet& pollset, ServerSocket *serv, ConnSocket *connected, P
 }
 
 
-status_code_t	writeResponseBody(ConnSocket* connected, const string& reqTarget)
+string	getFileName(ConnSocket* connected, const string& reqTarget)
 {
 	struct stat 	s;
-	status_code_t	status;
 	string			indexfile;
 	string			prefix;
 	string			uri;
@@ -89,17 +155,20 @@ status_code_t	writeResponseBody(ConnSocket* connected, const string& reqTarget)
 		{
 			if (connected->conf->auto_index)
 			{
+				connected->ResH.setStatusCode(200);
+				connected->ResH.setDefaultHeaders();
 				connected->ResB.setContent(directoryListing(indexfile, prefix));	/* alias case: need to append Loc URI || or req Target ? */
-				return 200;
+				connected->ResH["Content-Length"]	= toString(connected->ResB.getContent().length());
+				connected->ResH["Content-Type"]		= "text/html";
+				return indexfile;
 			}
 			else
 				throw forbidden();
 		}
 		filename = indexfile;
 	}
-	status = connected->ResB.readFile(filename);
+	return filename;
 
-	return status;
 }
 
 

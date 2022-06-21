@@ -57,14 +57,6 @@ public:
 	void	decodingChunk(ssize_t bodyLimit);
 	void	clear();
 
-	class readMore: public exception
-	{
-		private:	string msg;
-		public:		explicit readMore(): msg("") {}
-					explicit readMore(const string& m): msg(m) {}
-					virtual ~readMore() throw() {};
-					virtual const char * what() const throw() { return msg.c_str(); }
-	};
 	class invalidChunk: public exception
 	{
 		private:	string msg;

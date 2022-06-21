@@ -1,4 +1,6 @@
 #include "Pipe.hpp"
+#include "ConnSocket.hpp"
+#include "Exceptions.hpp"
 /**========================================================================
 * #                          member functions
 *========================================================================**/
@@ -35,6 +37,7 @@ void	Pipe::send(const string& content, map<int, struct undone>& writeUndoneBuf)
 	{
 		TAG(Pipe, send) << _GOOD(all data sended to child process) << this->fd << ": " << rWrited << " / " << rContentLen << " bytes" << endl;
 		writeUndoneBuf.erase(this->fd);
+		this->linkConn->linkOutputPipe = NULL;
 		close();
 		throw exception();
 	}

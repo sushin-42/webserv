@@ -14,6 +14,7 @@
 
 # include <sys/fcntl.h>
 
+#include "FileStream.hpp"
 # include "ISocket.hpp"
 # include "Config.hpp"
 #include "ReqBody.hpp"
@@ -65,8 +66,10 @@ public:
 	bool		chunk;		/* to distinguish script output chunk with server chunk */
 	bool		FINsended;	/* we already sended FIN, DO NOT send more data. */
 
-	Pipe*			linkReadPipe;
-	Pipe*			linkWritePipe;
+	Pipe*			linkInputPipe;
+	Pipe*			linkOutputPipe;
+	FileStream*		linkInputFile;
+	FileStream*		linkOutputFile;
 	ServerSocket*	linkServerSock;
 	Config*			conf;
 

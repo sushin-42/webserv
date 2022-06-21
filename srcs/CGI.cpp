@@ -110,7 +110,7 @@ int childRoutine(
 {
 	vector<char*> argv, envp;
 
-	pair<string, string> _path;
+	pair<string, string> _path = CHECK->routeRequestTarget(connected->conf, connected->ReqH.getRequsetTarget());
 	string	path = _path.first + _path.second;
 
 	argv.push_back(const_cast<char*>(path.c_str()));
@@ -132,9 +132,11 @@ int childRoutine(
 
 //#-----------------------------argv, envp done-----------------------------#//
 
+	cout << path << endl;
 	dup2(CtoP[1], STDOUT_FILENO), close(CtoP[0]), close(CtoP[1]);
 	dup2(PtoC[0], STDIN_FILENO), close(PtoC[1]), close(PtoC[1]);
 	// sleep(1);
+
 
 	if (execve(
 				(path).c_str(),
@@ -142,6 +144,7 @@ int childRoutine(
 				(char * const*)(envp.data())
 			) == -1) {
 				cerr << "exec error: " << strerror(errno) << errno <<endl;
+				exit(-1);
 			}
 	return -1;
 }
@@ -161,11 +164,11 @@ void parentRoutine(
 	Pipe*	pw = new Pipe(PtoC[1], pid);
 
 	pr->linkConn = connected;
-	connected->linkReadPipe = pr;
+	connected->linkInputPipe = pr;
 	pollset.enroll(pr);
 
 	pw->linkConn = connected;
-	connected->linkWritePipe = pw;
+	connected->linkOutputPipe = pw;
 	PollSet::iterator it =  pollset.enroll(pw);
 	it.first->events |= POLLOUT;
 }

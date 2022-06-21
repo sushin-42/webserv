@@ -76,24 +76,6 @@ public:
 					virtual const char * what() const throw() { return msg.c_str(); }
 	};
 
-	class readMore: public exception
-	{
-		private:	string msg;
-		public:		explicit readMore(): msg("") {}
-					explicit readMore(const string& m): msg(m) {}
-					virtual ~readMore() throw() {};
-					virtual const char * what() const throw() { return msg.c_str(); }
-	};
-
-	class sendMore: public exception
-	{
-		private:	string msg;
-		public:		explicit sendMore(): msg("") {}
-					explicit sendMore(const string& m): msg(m) {}
-					virtual ~sendMore() throw() {};
-					virtual const char * what() const throw() { return msg.c_str(); }
-	};
-
 private:
 	virtual void	dummy() = 0;
 public:

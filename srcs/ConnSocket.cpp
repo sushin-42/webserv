@@ -1,4 +1,5 @@
 # include "ConnSocket.hpp"
+#include "Exceptions.hpp"
 # include "utils.hpp"
 # include "ServerConfig.hpp"
 # include "ConfigLoader.hpp"
@@ -14,8 +15,9 @@
 	: ISocket(), len(sizeof(info)),
 	  recvContent(), ReqH(), ReqB(), ResH(), ResB(),
 	  pending(false), chunk(false), FINsended(false),
-	  linkReadPipe(NULL), linkWritePipe(NULL), linkServerSock(NULL),
-	  conf(NULL) {}
+	  linkInputPipe(NULL), linkOutputPipe(NULL),
+	  linkInputFile(NULL), linkOutputFile(NULL),
+	  linkServerSock(NULL), conf(NULL) {}
 
 	ConnSocket::~ConnSocket() {}
 
@@ -35,8 +37,10 @@
 			this->pending	= src.pending;
 			this->chunk		= src.chunk;
 			this->FINsended	= src.FINsended;
-			this->linkReadPipe	= src.linkReadPipe;
-			this->linkWritePipe	= src.linkWritePipe;
+			this->linkInputPipe	= src.linkInputPipe;
+			this->linkOutputPipe	= src.linkOutputPipe;
+			this->linkInputFile	= src.linkInputFile;
+			this->linkOutputFile	= src.linkOutputFile;
 			this->linkServerSock= src.linkServerSock;
 			this->conf			= src.conf;
 		}
@@ -51,15 +55,15 @@
 	{
 		pid_t	pid	= 0;
 
-		pid = waitpid(linkReadPipe->pid, &linkReadPipe->status, WNOHANG);
-		if (!(pid == linkReadPipe->pid || pid == -1))
+		pid = waitpid(linkInputPipe->pid, &linkInputPipe->status, WNOHANG);
+		if (!(pid == linkInputPipe->pid || pid == -1))
 		{
-			TAG(ConnSocket, isPipeAlive) <<  _NOTE(pipe still alive: ) <<  _UL << linkReadPipe->pid << _NC << endl;
+			TAG(ConnSocket, isPipeAlive) <<  _NOTE(pipe still alive: ) <<  _UL << linkInputPipe->pid << _NC << endl;
 			return true;
 		}
 		else
 		{
-			TAG(ConnSocket, isPipeAlive) << _GOOD(waitpid on ) << linkReadPipe->pid << CYAN(" returns ") << _UL << pid << _NC << endl;
+			TAG(ConnSocket, isPipeAlive) << _GOOD(waitpid on ) << linkInputPipe->pid << CYAN(" returns ") << _UL << pid << _NC << endl;
 			return false;
 		}
 	}
@@ -160,8 +164,7 @@
 					throw badRequest();
 				if (CONVERT(&e, ReqBody::limitExeeded))
 					throw payloadTooLarge();
-				if (CONVERT(&e, ReqBody::readMore) ||
-					CONVERT(&e, ConnSocket::readMore))
+				if (CONVERT(&e, readMore))
 					throw readMore();
 			}
 		}
@@ -261,7 +264,7 @@
 		{
 			TAG(ConnSocket, send) << _GOOD(all data sended to) << this->fd << ": " << rWrited << " / " << rContentLen << " bytes" << endl;
 			writeUndoneBuf.erase(this->fd);
-			if (linkReadPipe && isPipeAlive())
+			if (linkInputPipe && isPipeAlive())
 				throw sendMore();
 			else
 				gracefulClose();

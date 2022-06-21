@@ -5,8 +5,10 @@
 # include "ResBody.hpp"
 # include "ResHeader.hpp"
 #include "utils.hpp"
+#include <string>
 
-status_code_t	writeResponseBody(ConnSocket* connected, const string& filepath);
+string			getFileName(ConnSocket* connected, const string& filepath);
+status_code_t	writeResponseBody(ConnSocket* connected, const string& filepath, PollSet& pollset);
 void			writeResponseHeader(ConnSocket* connected);
 void			core(PollSet& pollset, ServerSocket *serv, ConnSocket *connected);
 void			core_wrapper(PollSet& pollset, ServerSocket *serv, ConnSocket *connected, Pipe* CGIpipe);

@@ -9,6 +9,7 @@
 #include "CGI.hpp"
 #include "Config.hpp"
 #include "ConfigLoader.hpp"
+#include "FileStream.hpp"
 #include "HttpConfig.hpp"
 #include "ConfigUtils.hpp"
 #include "ConnSocket.hpp"
@@ -22,6 +23,7 @@
 #include "core.hpp"
 #include "httpError.hpp"
 #include "utils.hpp"
+#include "Exceptions.hpp"
 
 
 map<string, string> MIME;
@@ -51,6 +53,7 @@ int main(int argc, char** argv)
 	ServerSocket*		serv;
 	ConnSocket*			connected;
 	Pipe*				CGIpipe;
+	FileStream*			filestream;
 	IStream*			stream;
 
 	PollSet				pollset;
@@ -71,10 +74,11 @@ int main(int argc, char** argv)
 
 		connected	= CONVERT(*it.second, ConnSocket);
 		CGIpipe		= CONVERT(*it.second, Pipe);
+		filestream	= CONVERT(*it.second, FileStream);
 		if (CGIpipe)
 		{
 			connected =  CGIpipe->linkConn;
-			if (CGIpipe == connected->linkWritePipe)	// write to child process
+			if (CGIpipe == connected->linkOutputPipe)	// write to child process
 			{
 				stream = CGIpipe;
 				content = connected->ReqB.getContent();
@@ -82,6 +86,18 @@ int main(int argc, char** argv)
 			}
 			goto _core;	// read from child process
 		}
+		else if (filestream)
+		{
+			connected =  filestream->linkConn;
+			if (filestream == connected->linkOutputFile)	// write to file
+			{
+				stream = filestream;
+				content = connected->ReqB.getContent();
+				goto _send;
+			}
+			goto _core;	// read from file
+		}
+
 
 		if (it.first->revents & POLLOUT)	{ it.first->events &= ~POLLOUT;
 									  		  goto _send; }
@@ -96,7 +112,7 @@ int main(int argc, char** argv)
 													continue;
 												}
 
-												if (CONVERT(&e, IStream::readMore))
+												if (CONVERT(&e, readMore))
 												{
 													continue;
 												}
@@ -118,9 +134,13 @@ _core:
 									  if (r) connected->ResH["Location"] = r->location;
 									  connected->returnError(e.status, e.what());
 								 	  goto _set_stream_to_socket;	}
+
+		catch (exception& e)		{ if (CONVERT(&e, readMore)) continue; }
+
+
 		if (connected->pending)
 			continue;
-		if (!CGIpipe && connected->linkReadPipe)	/* pipe is just created, do not send 0 byte */
+		if (!CGIpipe && connected->linkInputPipe)	/* pipe is just created, do not send 0 byte */
 			continue;
 
 _set_stream_to_socket:
@@ -133,7 +153,7 @@ _set_stream_to_socket:
 _send:
 		try									{ stream->send(content, writeUndoneBuf); }
 		catch (exception& e)				{
-											  if (CONVERT(&e, IStream::sendMore))
+											  if (CONVERT(&e, sendMore))
 												it.first->events |= POLLOUT; // not all data sended
 											  else
 												pollset.drop(it);

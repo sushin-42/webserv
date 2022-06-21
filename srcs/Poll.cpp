@@ -1,4 +1,6 @@
 #include "Poll.hpp"
+#include "FileStream.hpp"
+#include "Pipe.hpp"
 #include "Timer.hpp"
 
 
@@ -46,51 +48,70 @@ PollSet::iterator		PollSet::enroll( IStream* stream )
 
 	ServerSocket*	serv		= CONVERT(stream, ServerSocket);
 	ConnSocket*		connected	= CONVERT(stream, ConnSocket);
+	FileStream*		filestream	= CONVERT(stream, FileStream);
 	Pipe*			P			= CONVERT(stream, Pipe);
 
 	TAG(PollSet, enroll); cout << GRAY("Enroll ") << stream->getFD()
 	<< (serv		? CYAN( " (ServerSocket) ") "[" _UL + serv->getIP() + ":" + toString(serv->getPort()) + _NC "]" :
 		connected	? BLUE( " (ConnSocket)") :
+		filestream	? YELLOW( " (FileStream) ") :
 		P			? PURPLE( " (Pipe)") : "") << endl;
 
 	return make_iterator_pair(pollVec.end()-1, streamVec.end()-1);
 }
 
+
+void	PollSet::dropLink(IStream* link)
+{
+	Pipe*			linkPipe = CONVERT(link, Pipe);
+	FileStream*		linkFile = CONVERT(link, FileStream);
+	// cout << "lp = " << linkPipe << endl;
+	// cout << "lf = " << linkFile << endl;
+
+	Poll			p;
+	p.fd = link->getFD();
+
+	iterator_p		itPoll;
+	iterator_s		itLink;
+
+	itLink = find(streamVec.begin(), streamVec.end(), link);
+	itPoll = find(pollVec.begin(), pollVec.end(), p);
+
+	if (linkFile)	{ TAG(PollSet, dropLink); cout << GRAY("Destroy linked File ") << (*itLink)->getFD() << endl;}
+	if (linkPipe)	{TAG(PollSet, dropLink); cout << GRAY("Destroy linked pipe ") << (*itLink)->getFD() << endl; kill(linkPipe->pid, SIGKILL); }	//NOTE: cannot waitpid() here due to delay. we will check every child process later, because we don't want looping or blocking operation.
+
+	(*itLink)->close();
+	delete (*itLink);
+	pollVec.erase(itPoll);
+	streamVec.erase(itLink);
+}
+
 void	PollSet::drop( PollSet::iterator it )
 {
 	ConnSocket* connSock = CONVERT(*(it.second), ConnSocket);
-	Pipe*			link = NULL;
+	IStream*	link1 = NULL;
+	IStream*	link2 = NULL;
+	IStream*	link3 = NULL;
+	IStream*	link4 = NULL;
 
-
-	if (connSock && connSock->linkReadPipe)
-		link = connSock->linkReadPipe;
+	if (connSock && connSock->linkInputPipe)
+		link1 = connSock->linkInputPipe;
+	if (connSock && connSock->linkOutputPipe)
+		link2 = connSock->linkOutputPipe;
+	if (connSock && connSock->linkInputFile)
+		link3 = connSock->linkInputFile;
+	if (connSock && connSock->linkOutputFile)
+		link4 = connSock->linkOutputFile;
 
 	TAG(PollSet, drop); cout << GRAY("Drop ") << it.first->fd << endl;
 	delete (*it.second);
 	pollVec.erase(it.first);
 	streamVec.erase(it.second);
 
-
-	if (link)	/* if disconnected by client and if it was CGI, child process and Pipe still alive.
-					we will drop iterator of Pipe and kill child process here.	*/
-	{
-		Poll			p;
-		p.fd = link->getFD();
-
-		iterator_p		itPoll;
-		iterator_s		itPipe;
-
-		itPipe = find(streamVec.begin(), streamVec.end(), link);
-		itPoll = find(pollVec.begin(), pollVec.end(), p);
-
-		TAG(PollSet, drop); cout << GRAY("Destroy linked pipe ") << (*itPipe)->getFD() << endl;
-		kill(link->pid, SIGKILL);
-		//NOTE: cannot waitpid() here due to delay. we will check every child process later, because we don't want looping or blocking operation.
-		(*itPipe)->close();
-		delete (*itPipe);
-		pollVec.erase(itPoll);
-		streamVec.erase(itPipe);
-	}
+	if (link1)	{/* cout << "drop link 1 " << endl; */dropLink(link1);}
+	if (link2)	{/* cout << "drop link 2 " << endl; */dropLink(link2);}
+	if (link3)	{/* cout << "drop link 3 " << endl; */dropLink(link3);}
+	if (link4)	{/* cout << "drop link 4 " << endl; */dropLink(link4);}
 }
 
 PollSet::iterator	PollSet::examine()
@@ -143,6 +164,7 @@ PollSet::iterator	PollSet::readRoutine(PollSet::iterator it)
 	ServerSocket*	serv		= CONVERT(*(it.second),ServerSocket);
 	ConnSocket*		connected	= CONVERT(*(it.second),ConnSocket);
 	Pipe*			CGIpipe		= CONVERT(*(it.second),Pipe);
+	FileStream*		filestream	= CONVERT(*(it.second),FileStream);
 
 	if (serv)
 	{
@@ -175,6 +197,12 @@ PollSet::iterator	PollSet::readRoutine(PollSet::iterator it)
 	{
 		TAG(PollSet, examine); cout << GREEN("New data to read ")
 		<< it.first->fd << PURPLE(" (Pipe)") <<endl;
+		return it;
+	}
+	else if (filestream)
+	{
+		TAG(PollSet, examine); cout << GREEN("New data to read ")
+		<< it.first->fd << YELLOW(" (FileSteam)") <<endl;
 		return it;
 	}
 	else

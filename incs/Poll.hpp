@@ -17,6 +17,7 @@
 # include "ISocket.hpp"
 #include "IStream.hpp"
 # include "Pipe.hpp"
+# include "FileStream.hpp"
 # include "iterator_pair.hpp"
 # include "ResBody.hpp"
 # include "ServerSocket.hpp"
@@ -88,6 +89,9 @@ public:
 	const_iterator	end() const;
 
 	iterator	enroll( IStream* stream );
+	// void		dropPipe(Pipe* link);
+	// void		dropFile(FileStream* link);
+	void		dropLink(IStream* link);
 	void		drop( iterator it );
 
 	time_t		getMinimumRemaining();
