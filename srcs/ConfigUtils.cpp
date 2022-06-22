@@ -320,16 +320,25 @@ bool exsitErrorpageEqual(string arg, int &equalstatus)
 {
     size_t arglen = arg.size();
     
-    if (arglen == 1 || arg[0] != '=')
+    if (arglen == 1 && arg[0] == '=')
+    {
+        equalstatus = 200;
+        return true;
+    }
+    else if (arg[0] == '=')
+    {
+        arg = arg.substr(1);
+	
+        std::stringstream ssInt(arg);
+	
+        ssInt >> equalstatus;
+        if (ssInt.fail())
+		    return false;
+        return true;
+    }
+    else
         return false;
-    arg = arg.substr(1);
-	
-    std::stringstream ssInt(arg);
-	
-    ssInt >> equalstatus;
-    if (ssInt.fail())
-		return false;
-    return true;
+    
 }
 
 void parse_error_page(vector<string> arg, Config *config)
