@@ -48,8 +48,6 @@ int main(int argc, char** argv)
 	CONF->setAddrs(HttpConfig::getInstance()->serverMap);
 	CONF->loadMIME();
 
-
-	//IMPL: create all serverSocket from m.key(ip:port), each socket has vector<ServerConfig*>
 	ServerSocket*		serv;
 	ConnSocket*			connected;
 	Pipe*				CGIpipe;
@@ -67,7 +65,7 @@ int main(int argc, char** argv)
 
 	while (1)
 	{
-//'----------------------catch and parse request header----------------------'//
+//'--------------------------------CATCH EVENT-------------------------------'//
 		try												{ whoDied();
 														  it = pollset.examine(); }
 		catch	(exception& e)							{ continue; }
@@ -77,7 +75,7 @@ int main(int argc, char** argv)
 		CGIpipe		= CONVERT(*it.second, Pipe);
 		filestream	= CONVERT(*it.second, FileStream);
 
-
+//.---------------------------------POLL OUT---------------------------------.//
 		if (it.first->revents & POLLOUT)
 		{
 			it.first->events &= ~POLLOUT;
@@ -100,8 +98,8 @@ int main(int argc, char** argv)
 			else /* ConnSocket */
 				goto _set_stream_to_socket;
 		}
-
-		else	//POLLIN
+//#----------------------------------POLLIN----------------------------------#//
+		else
 		{
 			if (CGIpipe)
 			{
@@ -124,7 +122,7 @@ int main(int argc, char** argv)
 
 		}
 
-
+//*-----------------------ConnSocket: parse request--------------------------*//
 	try										{ connected->recvRequest(); }
 	catch	(exception& e)					{
 												if (CONVERT(&e, ConnSocket::connClosed) ||		//NOTE: what if client does not close after we send FIN? (cause we do graceful-close)
@@ -147,8 +145,7 @@ int main(int argc, char** argv)
 													goto _set_stream_to_socket;
 												}
 											}
-
-//'-------------------------------- catch end--------------------------------'//
+//@---------------------------CORE: PROCESS INSTREAM-------------------------@//
 _core:
 		serv = connected->linkServerSock;
 		try							{ core_wrapper(pollset, serv, inputStream); }	//@ make response header, body//
@@ -189,20 +186,15 @@ _set_stream_to_socket:
 				  connected->ResB.getContent();
 
 
-
-
-
-//.------------------------send response header, body------------------------.//
+//.-----------------------------SEND TO OUTSTREAM----------------------------.//
 _send:
 		try									{ outputStream->send(content, writeUndoneBuf); }
 		catch (exception& e)				{
-											  if		(CONVERT(&e, sendMore))	it.first->events |= POLLOUT; // not all data sended
-											  else if	(CONVERT(&e, readMore)) ;	// not all data sended, and have to read from pipe
+											  if		(CONVERT(&e, sendMore))	it.first->events |= POLLOUT;	// not all data sended
+											  else if	(CONVERT(&e, readMore)) ;							 	// not all data sended, and have to read from pipe
 											  else								pollset.drop(it);
 											}
-
 		connected->ReqH.clear(), connected->ResH.clear(), connected->ResB.clear();
-//.---------------------------------send end---------------------------------.//
 	}
 }
 
