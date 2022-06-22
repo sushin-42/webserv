@@ -13,6 +13,7 @@ const char * sendMore::what() const throw() {return ""; }
 
 
 autoIndex::autoIndex() {}
+autoIndex::autoIndex(const string& p): path(p) {}
 autoIndex::~autoIndex() throw() {}
 const char * autoIndex::what() const throw() {return ""; }
 

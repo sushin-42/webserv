@@ -1,6 +1,7 @@
 #ifndef EXCEPTIONS_HPP
 # define EXCEPTIONS_HPP
 # include <exception>
+#include <string>
 
 using namespace std;
 
@@ -18,9 +19,18 @@ class sendMore: public exception
 				virtual const char * what() const throw();
 };
 
+class sendMoreAfterRead: public exception
+{
+	public:		explicit sendMoreAfterRead();
+				virtual ~sendMoreAfterRead() throw();
+				virtual const char * what() const throw();
+};
+
 class autoIndex: public exception
 {
-	public:		explicit autoIndex();
+	public:		string	 path;
+				explicit autoIndex();
+				explicit autoIndex(const string& p);
 				virtual ~autoIndex() throw();
 				virtual const char * what() const throw();
 };

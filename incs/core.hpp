@@ -8,8 +8,8 @@
 #include <string>
 
 string			getFileName(ConnSocket* connected, const string& filepath);
-status_code_t	writeResponseBody(ConnSocket* connected, const string& filepath, PollSet& pollset);
+// status_code_t	writeResponseBody(ConnSocket* connected, const string& filepath, PollSet& pollset);
 void			writeResponseHeader(ConnSocket* connected);
-void			core(PollSet& pollset, ServerSocket *serv, ConnSocket *connected);
-void			core_wrapper(PollSet& pollset, ServerSocket *serv, ConnSocket *connected, Pipe* CGIpipe);
+void			core(PollSet& pollset, ServerSocket *serv, IStream *stream);
+void			core_wrapper(PollSet& pollset, ServerSocket *serv, IStream* stream);
 

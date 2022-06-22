@@ -50,6 +50,17 @@
 /**========================================================================
 * #                          member functions
 *========================================================================**/
+	void	ConnSocket::unlink(IStream* link)
+	{
+		if (linkInputFile == link)
+			linkInputFile = NULL;
+		else if (linkOutputFile == link)
+			linkOutputFile = NULL;
+		else if (linkInputPipe == link)
+			linkInputPipe = NULL;
+		else if (linkOutputPipe == link)
+			linkOutputPipe = NULL;
+	}
 
 	bool	ConnSocket::isPipeAlive()
 	{
@@ -265,7 +276,7 @@
 			TAG(ConnSocket, send) << _GOOD(all data sended to) << this->fd << ": " << rWrited << " / " << rContentLen << " bytes" << endl;
 			writeUndoneBuf.erase(this->fd);
 			if (linkInputPipe && isPipeAlive())
-				throw sendMore();
+				throw readMore();
 			else
 				gracefulClose();
 		}

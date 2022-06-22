@@ -1,6 +1,7 @@
 # include "core.hpp"
 #include "Exceptions.hpp"
 #include "FileStream.hpp"
+#include "Pipe.hpp"
 # include "checkFile.hpp"
 # include "ConfigLoader.hpp"
 # include "ConfigChecker.hpp"
@@ -8,26 +9,11 @@
 #include <string>
 # include <sys/stat.h>
 
-string			createInputFileStream(ConnSocket* connected, const string& reqTarget, PollSet& pollset)
+string			createInputFileStream(ConnSocket* connected, const string& filename, PollSet& pollset)
 {
-	// string	autoindexBody;
-	string filename;
-	filename = getFileName(connected, reqTarget);	//FIXME: too many task here: check file, check index, auto index, ... throw httpError
 	FileStream* f = new FileStream(filename);
 	f->open(O_RDONLY);
 
-	if (filename.back() == '/')
-	{
-		if (connected->conf->auto_index)		// DO NOT READ. just do directory listing INSTANTLY.
-		{
-			f->close();
-			delete f;
-
-			throw autoIndex();
-		}
-		else
-			throw forbidden();
-	}
 	connected->linkInputFile = f;
 	f->linkConn = connected;
 	pollset.enroll(f);
@@ -46,8 +32,6 @@ void			readInputFileStream(FileStream* inputFileStream)
 		throw internalServerError();
 
 	case 0:		/* close file, process output */
-				/* FIXIT: now linkInputFile/linkInputPipe need to be drop by dropLink() */
-
 		TAG(core#, core); cout << GRAY("file closed: ") << inputFileStream->getFilename() << endl;
 		inputFileStream->close();
 		break;
@@ -57,58 +41,98 @@ void			readInputFileStream(FileStream* inputFileStream)
 	}
 }
 
-void			core(PollSet& pollset, ServerSocket *serv, ConnSocket *connected)
+
+//! check if OK for CGI local redir...
+void			core(PollSet& pollset, ServerSocket *serv, IStream* stream)
 {
-	string			reqTarget = connected->ReqH.getRequsetTarget();
-	string			filename;
-	string			ext;
+	ConnSocket*	connected = CONVERT(stream, ConnSocket);
+	Pipe*		inputPipe = CONVERT(stream, Pipe);
+	FileStream*	inputFileStream = CONVERT(stream, FileStream);
 
-	FileStream*		inputFileStream = connected->linkInputFile;
+	struct stat s;
 
-	if (!inputFileStream)
+
+//*---------------------------------ConnSocket-------------------------------*//
+	if (connected)
 	{
-		try					{ createInputFileStream(connected, reqTarget, pollset); }
-		catch (autoIndex& a){ goto _end; }
+		string			reqTarget = connected->ReqH.getRequsetTarget();
+		string			filename;
+		string			ext;
+
+		try 						{ filename = getFileName(connected, reqTarget); }
+		catch (httpError& e)		{ throw; }
+
+		try							{ s =_checkFile(filename);
+									  if (S_ISDIR(s.st_mode) && filename.back() != '/')
+									  		throw movedPermanently("http://" + connected->ReqH["Host"] + reqTarget + '/');
+									}
+		catch (httpError& e)		{
+									  throw;
+									}
+
+		try							{ filename = checkIndex(connected->conf, filename); }
+		catch (httpError& e)		{ throw; }
+		catch (autoIndex& a)		{ connected->ResH.setStatusCode(200);
+									  connected->ResH.setDefaultHeaders();					//FIXIT: prefix
+									  connected->ResB.setContent(directoryListing(a.path, "/"));	/* alias case: need to append Loc URI || or req Target ? */
+									  connected->ResH["Content-Length"]	= toString(connected->ResB.getContent().length());
+									  connected->ResH["Content-Type"]		= "text/html";
+									  return ;
+									}
+
+		if (getExt(filename) == "py")	//! check case (.py == DIRECTORY)
+		{
+			connected->ResB.clear();
+			connected->ResH.removeKey("content-length");
+			if (connected->linkInputPipe == NULL)
+				return createCGI(pollset, serv, connected);
+		}
+		createInputFileStream(connected, filename, pollset);	//readMore
 	}
+//%-----------------------------Input FileStream-----------------------------%//
 	else if (inputFileStream)
 	{
-		try					{readInputFileStream(inputFileStream);}
+		connected = inputFileStream->linkConn;
+		string ext		= getExt(connected->ReqH.getRequsetTarget());
+
+		try					{ readInputFileStream(inputFileStream); }
 		catch (exception& e){ throw; }	// ( readMore | 500 | processing Response)
+
+		connected->ResB.setContent(inputFileStream->content);
+		connected->ResH.setStatusCode(200);
+		connected->ResH["Content-Type"]	= CONF->MIME.find(ext) != CONF->MIME.end() ?
+										CONF->MIME[ext] : connected->conf->default_type;
+
+		if (!connected->ResB.getContent().empty())
+			connected->ResH["Content-Length"]	= toString(connected->ResB.getContent().length());
 	}
 
-	connected->ResB.setContent(inputFileStream->content);
-	connected->ResH.setStatusCode(200);
-
-	ext = getExt(inputFileStream->getFilename());
-	connected->ResH["Content-Type"]	= CONF->MIME.find(ext) != CONF->MIME.end() ?
-									  CONF->MIME[ext] : connected->conf->default_type;
-
-	if (!connected->ResB.getContent().empty())
-		connected->ResH["Content-Length"]	= toString(connected->ResB.getContent().length());
-
-	if (getExt(inputFileStream->getFilename()) == "py")
+//,------------------------------Input CGI Pipe------------------------------,//
+	else if (inputPipe)
 	{
-		connected->ResB.clear();
-		connected->ResH.removeKey("content-length");
-		CGIRoutines(pollset, serv, connected, NULL);
-		return ;
+		readFromCGI(pollset, serv, inputPipe);
 	}
-_end:;
 }
 
 
 
-void	core_wrapper(PollSet& pollset, ServerSocket *serv, ConnSocket *connected, Pipe* CGIpipe)
+void	core_wrapper(PollSet& pollset, ServerSocket *serv, IStream* stream)
 {
-	if (!CGIpipe)
-		core(pollset, serv, connected);
-	else
+	FileStream*	inputFileStream = CONVERT(stream, FileStream);
+	Pipe*		inputPipe = CONVERT(stream, Pipe);
+	ConnSocket*	connected = CONVERT(stream, ConnSocket);
+
+	if (!connected)
 	{
-		CGIRoutines(pollset, serv, connected, CGIpipe);
-		if (connected->pending)
-			return;
+		if		(inputPipe)			connected = inputPipe->linkConn;
+		else if (inputFileStream)	connected = inputFileStream->linkConn;
 	}
-	if (!connected->ResH.getHeaderField().empty())
+
+	core(pollset, serv, stream);
+	if (connected->pending)
+		return;
+
+	if (!connected->ResH.getHeaderField().empty())	/* cannot enter if readMore() */
 	{
 		writeResponseHeader(connected);
 		connected->ResH.makeStatusLine();
@@ -116,10 +140,8 @@ void	core_wrapper(PollSet& pollset, ServerSocket *serv, ConnSocket *connected, P
 	}
 }
 
-
 string	getFileName(ConnSocket* connected, const string& reqTarget)
 {
-	struct stat 	s;
 	string			indexfile;
 	string			prefix;
 	string			uri;
@@ -130,45 +152,7 @@ string	getFileName(ConnSocket* connected, const string& reqTarget)
 
 	string			filename = prefix + uri;
 
-	try						{ s = _checkFile(filename); }
-	catch (httpError& e)	{ throw; }	// for 404
-
-	if (S_ISDIR(s.st_mode))
-	{
-	/**========================================================================
-	 * @  if FOUND final (deepest) index file
-	 * @  	if final index file was directory
-	 * @		auto index on ? directory listing() : forbidden();
-	 * @	else
-	 * @		if final index file forbidden? forbidden();
-	 * @		else print index file;
-	 * '  else NOT FOUND
-	 * '	auto index on ? directory listing() : forbidden();
-	 *========================================================================**/
-		if (reqTarget.back() != '/')
-			throw movedPermanently("http://" + connected->ReqH["Host"] + reqTarget + '/');
-
-		try							{ indexfile = findIndexFile(connected->conf, filename); }
-		catch (httpError& e)		{ throw; }
-
-		if (indexfile.back() == '/')
-		{
-			if (connected->conf->auto_index)
-			{
-				connected->ResH.setStatusCode(200);
-				connected->ResH.setDefaultHeaders();
-				connected->ResB.setContent(directoryListing(indexfile, prefix));	/* alias case: need to append Loc URI || or req Target ? */
-				connected->ResH["Content-Length"]	= toString(connected->ResB.getContent().length());
-				connected->ResH["Content-Type"]		= "text/html";
-				return indexfile;
-			}
-			else
-				throw forbidden();
-		}
-		filename = indexfile;
-	}
 	return filename;
-
 }
 
 

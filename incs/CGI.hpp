@@ -51,14 +51,13 @@ void parentRoutine(
 					int CtoP[2]
 				);
 
-void	newProc(PollSet& pollset, ServerSocket* serv, ConnSocket* connected);
+void	createCGI(PollSet& pollset, ServerSocket* serv, ConnSocket* connected);
 void	moveToResH(const string& output, ConnSocket* connected);
 
 void	processOutputHeader(PollSet& pollset, ServerSocket* serv, ConnSocket* connected, Pipe* CGIpipe);
-void	CGIRoutines(
+void	readFromCGI(
 					PollSet& pollset,
 					ServerSocket* serv,
-					ConnSocket* connected,
 					Pipe* CGIpipe
 				);
 

@@ -54,7 +54,8 @@ int main(int argc, char** argv)
 	ConnSocket*			connected;
 	Pipe*				CGIpipe;
 	FileStream*			filestream;
-	IStream*			stream;
+	IStream*			inputStream;
+	IStream*			outputStream;
 
 	PollSet				pollset;
 	PollSet::iterator	it;
@@ -75,32 +76,54 @@ int main(int argc, char** argv)
 		connected	= CONVERT(*it.second, ConnSocket);
 		CGIpipe		= CONVERT(*it.second, Pipe);
 		filestream	= CONVERT(*it.second, FileStream);
-		if (CGIpipe)
+
+
+		if (it.first->revents & POLLOUT)
 		{
-			connected =  CGIpipe->linkConn;
-			if (CGIpipe == connected->linkOutputPipe)	// write to child process
+			it.first->events &= ~POLLOUT;
+			if (CGIpipe)
 			{
-				stream = CGIpipe;
+				outputStream = CGIpipe;
+				connected = CGIpipe->linkConn;
 				content = connected->ReqB.getContent();
 				goto _send;
 			}
-			goto _core;	// read from child process
-		}
-		else if (filestream)
-		{
-			connected =  filestream->linkConn;
-			if (filestream == connected->linkOutputFile)	// write to file
+
+			else if (filestream)
 			{
-				stream = filestream;
+				outputStream = filestream;
+				connected = filestream->linkConn;
 				content = connected->ReqB.getContent();
 				goto _send;
 			}
-			goto _core;	// read from file
+
+			else /* ConnSocket */
+				goto _set_stream_to_socket;
 		}
 
+		else	//POLLIN
+		{
+			if (CGIpipe)
+			{
+				connected =  CGIpipe->linkConn;
+				inputStream = CGIpipe;
+				goto _core;
+			}
 
-		if (it.first->revents & POLLOUT)	{ it.first->events &= ~POLLOUT;
-									  		  goto _send; }
+			else if (filestream)
+			{
+				connected =  filestream->linkConn;
+				inputStream = filestream;
+				goto _core;
+			}
+
+			else /* ConnSocket */
+			{
+				inputStream = connected;
+			}
+
+		}
+
 
 	try										{ connected->recvRequest(); }
 	catch	(exception& e)					{
@@ -128,7 +151,7 @@ int main(int argc, char** argv)
 //'-------------------------------- catch end--------------------------------'//
 _core:
 		serv = connected->linkServerSock;
-		try							{ core_wrapper(pollset, serv, connected, CGIpipe); }	//@ make response header, body//
+		try							{ core_wrapper(pollset, serv, inputStream); }	//@ make response header, body//
 		catch (httpError& e)		{
 									  redirectError* r = CONVERT(&e, redirectError);
 									  if (r) connected->ResH["Location"] = r->location;
@@ -138,25 +161,44 @@ _core:
 		catch (exception& e)		{ if (CONVERT(&e, readMore)) continue; }
 
 
-		if (connected->pending)
+		if (inputStream)	/* reach here : READ DONE */
+		{
+			if (inputStream == connected)
+			{
+				// if (!connected->linkInputPipe)		/*  <------ pipe is just created, do not send 0 byte */
+				pollset.getIterator(connected).first->events |= POLLOUT;
+				continue;
+			}
+			if (inputStream == CGIpipe)
+			{
+				if (connected->pending == false)
+					pollset.getIterator(connected).first->events |= POLLOUT;
+				continue;
+			}
+			pollset.drop(it);
+
+			connected->unlink(inputStream);
+			pollset.getIterator(connected).first->events |= POLLOUT;
 			continue;
-		if (!CGIpipe && connected->linkInputPipe)	/* pipe is just created, do not send 0 byte */
-			continue;
+		}
+
 
 _set_stream_to_socket:
-		stream	= connected;
+		outputStream	= connected;
 		content = connected->ResH.getContent() +
 				  connected->ResB.getContent();
 
 
+
+
+
 //.------------------------send response header, body------------------------.//
 _send:
-		try									{ stream->send(content, writeUndoneBuf); }
+		try									{ outputStream->send(content, writeUndoneBuf); }
 		catch (exception& e)				{
-											  if (CONVERT(&e, sendMore))
-												it.first->events |= POLLOUT; // not all data sended
-											  else
-												pollset.drop(it);
+											  if		(CONVERT(&e, sendMore))	it.first->events |= POLLOUT; // not all data sended
+											  else if	(CONVERT(&e, readMore)) ;	// not all data sended, and have to read from pipe
+											  else								pollset.drop(it);
 											}
 
 		connected->ReqH.clear(), connected->ResH.clear(), connected->ResB.clear();

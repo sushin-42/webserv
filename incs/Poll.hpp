@@ -28,13 +28,9 @@ class Timer;
 
 class Poll : public pollfd
 {
-public:
-	bool operator==(const Poll& p)
-	{
-		return (
-			this->fd == p.fd
-		);
-	}
+// public:
+// 	bool operator==(const Poll& p);
+// 	bool operator!=(const Poll& p);
 };
 
 class PollSet
@@ -88,21 +84,21 @@ public:
 	const_iterator	begin() const;
 	const_iterator	end() const;
 
-	iterator	enroll( IStream* stream );
-	// void		dropPipe(Pipe* link);
-	// void		dropFile(FileStream* link);
-	void		dropLink(IStream* link);
-	void		drop( iterator it );
+	iterator		enroll( IStream* stream );
+	void			dropLink(IStream* link);
+	void			drop( iterator it );
 
 	time_t		getMinimumRemaining();
 	void		dropTimeout();
 	iterator	examine();
 	void		createMonitor();
+	iterator	getIterator(IStream* s);
 private:
 	void	print();
 
 	iterator	readRoutine(iterator it);
 	iterator	writeRoutine(iterator it);
+
 
 };
 #endif

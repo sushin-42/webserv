@@ -1,4 +1,5 @@
 #include "checkFile.hpp"
+#include "Exceptions.hpp"
 #include "utils.hpp"
 #include "ConfigChecker.hpp"
 #include <iostream>
@@ -26,6 +27,7 @@
  */
 
 
+// void	_checkFile(const string& path)
 struct stat	_checkFile(const string& path)
 {
 	struct	stat s;
@@ -53,6 +55,17 @@ struct stat	_checkFile(const string& path)
 	}
 	else if (access(path.c_str(), R_OK) == -1)
 		throw forbidden();
+
+
+	// if (S_ISDIR(s.st_mode))
+	// {
+	// 	if (path.back() != '/')
+	// 	{
+	// 		cout << "PATH IS : " << path << endl;
+	// 		throw movedPermanently();
+	// 	}
+	// 		// throw movedPermanently("http://" + connected->ReqH["Host"] + reqTarget + '/');
+	// }
 	return s;
 }
 
@@ -106,6 +119,57 @@ string findIndexFile(Config* conf, const string& filename)
 	 * '	auto index on ? directory listing() : forbidden();
 	 *========================================================================**/
 }
+
+string	checkIndex(Config* conf, const string& filename)//, struct stat s )
+{
+	string			indexfile;
+
+	// if (S_ISDIR(s.st_mode))	//*! index MAYBE work with non-dir file *//
+	// {
+		try							{ indexfile = findIndexFile(conf, filename); }
+		catch (httpError& e)		{ throw; }
+
+		if (indexfile.back() == '/')
+		{
+			if (conf->auto_index)
+				throw autoIndex(indexfile);
+			else
+				throw forbidden();
+		}
+	// }
+	return indexfile;
+}
+
+
+
+
+	// if (S_ISDIR(s.st_mode))
+	// {
+	// 	try							{ indexfile = findIndexFile(connected->conf, filename); }
+	// 	catch (httpError& e)		{ throw; }
+
+	// 	if (indexfile.back() == '/')
+	// 	{
+	// 		if (connected->conf->auto_index)
+	// 		{
+	// 			connected->ResH.setStatusCode(200);
+	// 			connected->ResH.setDefaultHeaders();
+	// 			connected->ResB.setContent(directoryListing(indexfile, prefix));	/* alias case: need to append Loc URI || or req Target ? */
+	// 			connected->ResH["Content-Length"]	= toString(connected->ResB.getContent().length());
+	// 			connected->ResH["Content-Type"]		= "text/html";
+	// 			return indexfile;
+	// 		}
+	// 		else
+	// 			throw forbidden();
+	// 	}
+	// 	filename = indexfile;
+	// }
+	// return filename;
+
+
+
+
+
 
 static void	indexing(vector<string>& dirs, const string& path)
 {

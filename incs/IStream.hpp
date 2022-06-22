@@ -9,6 +9,7 @@
 #include "Undone.hpp"
 using namespace std;
 
+class Poll;
 class IStream
 {
 /**========================================================================
@@ -20,19 +21,22 @@ protected:
 	time_t	timeout;
 	time_t	lastActive;
 
+public:
+	Poll*	p;
+
 /**========================================================================
 * @                           Constructors
 *========================================================================**/
 
 public:
 	IStream()
-	: fd(-1), timeout(-1), lastActive(time(NULL))	{  }
+	: fd(-1), timeout(-1), lastActive(time(NULL)), p(NULL)	{  }
 	IStream( int _fd )
-	: fd(_fd), timeout(-1), lastActive(time(NULL))	{  }
+	: fd(_fd), timeout(-1), lastActive(time(NULL)), p(NULL)	{  }
 	IStream( int _fd, time_t _to)
-	: fd(_fd), timeout(_to), lastActive(time(NULL))	{  }
+	: fd(_fd), timeout(_to), lastActive(time(NULL)), p(NULL)	{  }
 	IStream( const IStream& src )
-	: fd(src.fd), timeout(src.timeout), lastActive(src.lastActive) { }
+	: fd(src.fd), timeout(src.timeout), lastActive(src.lastActive), p(NULL) { }
 	virtual ~IStream() {};
 
 /**========================================================================

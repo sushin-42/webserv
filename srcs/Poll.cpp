@@ -2,12 +2,13 @@
 #include "FileStream.hpp"
 #include "Pipe.hpp"
 #include "Timer.hpp"
+#include <ios>
 
 
 /**========================================================================
 * @                           Constructors
 *========================================================================**/
-PollSet::PollSet(): pollVec(), streamVec(), timer(NULL) {}
+PollSet::PollSet(): pollVec(), streamVec(), timer(NULL) { }
 PollSet::PollSet( const PollSet& src ): pollVec(src.pollVec), streamVec(src.streamVec), timer(NULL) {}
 PollSet::~PollSet() {}
 /**========================================================================
@@ -32,6 +33,20 @@ PollSet::iterator		PollSet::end()			{ return make_iterator_pair(pollVec.end(), s
 PollSet::const_iterator	PollSet::begin() const	{ return make_iterator_pair(pollVec.begin(), streamVec.begin()); }
 PollSet::const_iterator	PollSet::end() const		{ return make_iterator_pair(pollVec.end(), streamVec.end()); }
 
+
+PollSet::iterator	PollSet::getIterator(IStream* s)
+{
+	iterator_p				itPoll;
+	iterator_s				itStream;
+	_Vs::difference_type	distance;
+
+	itStream = find(streamVec.begin(), streamVec.end(), s);
+	distance = itStream - streamVec.begin();
+	itPoll = pollVec.begin() + distance;
+
+	return iterator(itPoll, itStream);
+}
+
 PollSet::iterator		PollSet::enroll( IStream* stream )
 {
 	Poll		p;
@@ -44,7 +59,6 @@ PollSet::iterator		PollSet::enroll( IStream* stream )
 
 	pollVec.push_back(p);
 	streamVec.push_back(stream);
-
 
 	ServerSocket*	serv		= CONVERT(stream, ServerSocket);
 	ConnSocket*		connected	= CONVERT(stream, ConnSocket);
@@ -65,20 +79,13 @@ void	PollSet::dropLink(IStream* link)
 {
 	Pipe*			linkPipe = CONVERT(link, Pipe);
 	FileStream*		linkFile = CONVERT(link, FileStream);
-	// cout << "lp = " << linkPipe << endl;
-	// cout << "lf = " << linkFile << endl;
 
-	Poll			p;
-	p.fd = link->getFD();
+	iterator		it = getIterator(link);
+	iterator_p		itPoll = it.first;
+	iterator_s		itLink = it.second;
 
-	iterator_p		itPoll;
-	iterator_s		itLink;
-
-	itLink = find(streamVec.begin(), streamVec.end(), link);
-	itPoll = find(pollVec.begin(), pollVec.end(), p);
-
-	if (linkFile)	{ TAG(PollSet, dropLink); cout << GRAY("Destroy linked File ") << (*itLink)->getFD() << endl;}
-	if (linkPipe)	{TAG(PollSet, dropLink); cout << GRAY("Destroy linked pipe ") << (*itLink)->getFD() << endl; kill(linkPipe->pid, SIGKILL); }	//NOTE: cannot waitpid() here due to delay. we will check every child process later, because we don't want looping or blocking operation.
+	if (linkFile)	{ TAG(PollSet, dropLink); cout << GRAY("Destroy linked File ") << (*itLink)->getFD() << endl; }
+	if (linkPipe)	{ TAG(PollSet, dropLink); cout << GRAY("Destroy linked pipe ") << (*itLink)->getFD() << endl; kill(linkPipe->pid, SIGKILL); }	//NOTE: cannot waitpid() here due to delay. we will check every child process later, because we don't want looping or blocking operation.
 
 	(*itLink)->close();
 	delete (*itLink);
@@ -112,6 +119,7 @@ void	PollSet::drop( PollSet::iterator it )
 	if (link2)	{/* cout << "drop link 2 " << endl; */dropLink(link2);}
 	if (link3)	{/* cout << "drop link 3 " << endl; */dropLink(link3);}
 	if (link4)	{/* cout << "drop link 4 " << endl; */dropLink(link4);}
+
 }
 
 PollSet::iterator	PollSet::examine()
@@ -181,10 +189,7 @@ PollSet::iterator	PollSet::readRoutine(PollSet::iterator it)
 			catch (exception& e)	// accept() not ready
 			{	continue;	}
 
-			return (make_iterator_pair(
-										find(pollVec.begin(), pollVec.end(), p),
-										find(streamVec.begin(), streamVec.end(), serv))
-									);
+			return (getIterator(serv));
 		}
 	}
 	else if (connected)
@@ -202,7 +207,7 @@ PollSet::iterator	PollSet::readRoutine(PollSet::iterator it)
 	else if (filestream)
 	{
 		TAG(PollSet, examine); cout << GREEN("New data to read ")
-		<< it.first->fd << YELLOW(" (FileSteam)") <<endl;
+		<< it.first->fd << YELLOW(" (FileStream)") <<endl;
 		return it;
 	}
 	else
@@ -234,20 +239,20 @@ void	PollSet::dropTimeout()
 	vector<_Ps>::iterator it	= timer->timeoutPool.begin();
 	vector<_Ps>::iterator ite	= timer->timeoutPool.end();
 
-	PollSet::iterator_p itPoll;
-	PollSet::iterator_s itStream;
-
+	iterator target;
 	for (; it < ite; it++)
 	{
-		itPoll = find(pollVec.begin(), pollVec.end(), it->first);
-		itStream = find(streamVec.begin(), streamVec.end(), it->second);
-
 		//IMPL: reset_timedout_connection
 		// struct linger l = {.l_onoff = 1, .l_linger = 0};
 		// setsockopt((*itStream)->getFD(), SOL_SOCKET, SO_LINGER, &l, sizeof(l));
-		drop(make_iterator_pair(itPoll, itStream));
+
+		target = getIterator(it->second);
+
+		if (target.second == streamVec.end())	// already removed by dropLink()
+			continue;
+		else
+			drop(target);
 	}
 	timer->timeoutPool.clear();
-	// print();
 }
 

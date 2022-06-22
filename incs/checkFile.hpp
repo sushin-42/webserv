@@ -7,7 +7,9 @@
 #include "Config.hpp"
 using namespace std;
 
+// void		_checkFile(const string& path);
 struct stat	_checkFile(const string& path);
+string		checkIndex(Config* conf, const string& filename);//, struct stat s );
 string		findFirstMatched(const string& filepath, const vector<string>& indices);
 string		directoryListing(const string& filename, const string& prefix);
 string		findIndexFile(Config* conf, const string& filename);
