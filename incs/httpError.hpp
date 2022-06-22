@@ -66,6 +66,30 @@ class lengthRequired: public httpError
 				virtual ~lengthRequired() throw();
 };
 
+class Created: public httpError
+{
+	public:		string	location;
+				explicit Created();
+				explicit Created(status_code_t s, const string& m);
+				virtual ~Created() throw();
+};
+
+class noContent: public httpError
+{
+	public:		string	location;
+				explicit noContent();
+				explicit noContent(const string& loc);
+				virtual ~noContent() throw();
+};
+
+class Conflict: public httpError
+{
+	public:		string	location;
+				explicit Conflict();
+				explicit Conflict(status_code_t s, const string& m);
+				virtual ~Conflict() throw();
+};
+
 class redirectError: public httpError
 {
 	public:		string	location;
@@ -80,6 +104,5 @@ class movedPermanently: public redirectError
 				explicit movedPermanently(const string& loc);
 				virtual ~movedPermanently() throw();
 };
-
 
 #endif

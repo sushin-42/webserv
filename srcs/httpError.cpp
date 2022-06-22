@@ -26,6 +26,16 @@ payloadTooLarge::~payloadTooLarge() throw() {};
 lengthRequired::lengthRequired(): httpError(411, "Length Required") {}
 lengthRequired::~lengthRequired() throw() {};
 
+Created::Created(): httpError(201, "Created"), location() {}
+Created::~Created() throw() {};
+
+noContent::noContent(): httpError(204, "No Content"), location() {}
+noContent::noContent(const string& loc): httpError(204, "No Content"), location(loc) {}
+noContent::~noContent() throw() {};
+
+Conflict::Conflict(): httpError(409, "Conflict") {}
+Conflict::~Conflict() throw() {};
+
 
 redirectError::redirectError(): httpError(300, "Error"), location() {}
 redirectError::redirectError(status_code_t s, const string& m, const string& loc): httpError(s, m), location(loc) {}
