@@ -53,8 +53,8 @@ void parentRoutine(
 void	createCGI(ServerSocket* serv, ConnSocket* connected);
 void	moveToResH(const string& output, ConnSocket* connected);
 
-void	processOutputHeader(ServerSocket* serv, ConnSocket* connected, Pipe* CGIpipe);
-void	readFromCGI(ServerSocket* serv, Pipe* CGIpipe);
+void	processOutputHeader(ConnSocket* connected, Pipe* CGIpipe);
+void	readFromCGI(Pipe* CGIpipe);
 
 
 //*--------------------------------------------------------------------------*//
@@ -72,7 +72,7 @@ void	readFromCGI(ServerSocket* serv, Pipe* CGIpipe);
 //*  scheme "://" server-name ":" server-port local-pathquery                *//
 //*--------------------------------------------------------------------------*//
 
-void	localRedir(ServerSocket* serv, ConnSocket* connected);
+void	localRedir(ConnSocket* connected);
 
 
 //'--------------------------------------------------------------------------'//

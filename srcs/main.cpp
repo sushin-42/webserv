@@ -48,7 +48,6 @@ int main(int argc, char** argv)
 	CONF->setAddrs(HttpConfig::getInstance()->serverMap);
 	CONF->loadMIME();
 
-	ServerSocket*		serv;
 	ConnSocket*			connected;
 	Pipe*				CGIpipe;
 	FileStream*			filestream;
@@ -148,8 +147,8 @@ int main(int argc, char** argv)
 											}
 //@---------------------------CORE: PROCESS INSTREAM-------------------------@//
 _core:
-		serv = connected->linkServerSock;
-		try							{ core_wrapper(serv, inputStream); }	//@ make response header, body//
+		// serv = connected->linkServerSock;
+		try							{ core_wrapper(inputStream); }	//@ make response header, body//
 		catch (httpError& e)		{
 									  redirectError* r = CONVERT(&e, redirectError);
 									  if (r) {

@@ -132,11 +132,10 @@ int childRoutine(
 
 //#-----------------------------argv, envp done-----------------------------#//
 
-	cout << path << endl;
+	// cout << path << endl;
 	dup2(CtoP[1], STDOUT_FILENO), close(CtoP[0]), close(CtoP[1]);
 	dup2(PtoC[0], STDIN_FILENO), close(PtoC[1]), close(PtoC[1]);
-	// sleep(1);
-
+	// sleep(1);	//NOTE: 자식프로세스가 왜  기다려주지 ㅎ;
 
 	if (execve(
 				(path).c_str(),
@@ -168,9 +167,7 @@ void parentRoutine(
 
 	pw->linkConn = connected;
 	connected->linkOutputPipe = pw;
-	// PollSet::iterator it =
-	POLLSET->enroll(pw, POLLOUT);	//POLLOUT?
-	// it.first->events |= POLLOUT;
+	POLLSET->enroll(pw, POLLOUT);
 }
 
 void	createCGI(ServerSocket* serv, ConnSocket* connected)
@@ -211,7 +208,7 @@ void	moveToResH(const string& output, ConnSocket* connected)
 	}
 }
 
-void	processOutputHeader(ServerSocket* serv, ConnSocket* connected, Pipe* CGIpipe)
+void	processOutputHeader(ConnSocket* connected, Pipe* CGIpipe)
 {
 	pair<status_code_t, string>		Status;
 
@@ -219,7 +216,7 @@ void	processOutputHeader(ServerSocket* serv, ConnSocket* connected, Pipe* CGIpip
 
 	if (connected->ResH.exist("Location"))
 	{
-		if (connected->ResH["Location"][0] == '/')	localRedir(serv, connected);
+		if (connected->ResH["Location"][0] == '/')	localRedir(connected);
 		else										clientRedir(connected);
 	}
 	else											documentResponse(connected);
@@ -247,8 +244,6 @@ void	processOutputHeader(ServerSocket* serv, ConnSocket* connected, Pipe* CGIpip
 
 
 void	readFromCGI(
-					ServerSocket* serv,
-					// ConnSocket* connected,
 					Pipe* CGIpipe
 				)
 {
@@ -290,7 +285,7 @@ void	readFromCGI(
 			if	(CGIpipe->output.rfind("\r\n\r\n") != string::npos ||
 					CGIpipe->output.rfind("\n\n") != string::npos)
 			{
-				processOutputHeader(serv, connected, CGIpipe);
+				processOutputHeader(connected, CGIpipe);
 				CGIpipe->headerDone = true;							// appended to conn->ResH
 				CGIpipe->output = extractBody(CGIpipe->output);		// store remained after header
 				connected->pending = false;
@@ -329,7 +324,7 @@ void	readFromCGI(
 //*  scheme "://" server-name ":" server-port local-pathquery                *//
 //*--------------------------------------------------------------------------*//
 
-void	localRedir(ServerSocket* serv, ConnSocket* connected)
+void	localRedir(ConnSocket* connected)
 {
 	if (connected->ResH.exist("Status") == false ||
 			(connected->ResH.exist("Status") == true &&
@@ -344,7 +339,7 @@ void	localRedir(ServerSocket* serv, ConnSocket* connected)
 		connected->ResH.removeKey("location");
 		connected->ResH.removeKey("transfer-encoding");
 		// connected->ResH.print();
-		core(serv, (Stream*)connected);
+		core((Stream*)connected);
 	}
 
 }

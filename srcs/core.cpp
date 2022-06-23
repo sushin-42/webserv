@@ -47,7 +47,7 @@ void			readInputFileStream(FileStream* inputFileStream)
 
 
 //! check if OK for CGI local redir...
-void			core(ServerSocket *serv, Stream* stream)
+void			core(/* ServerSocket *serv,  */Stream* stream)
 {
 	ConnSocket*	connected = CONVERT(stream, ConnSocket);
 	Pipe*		inputPipe = CONVERT(stream, Pipe);
@@ -59,6 +59,7 @@ void			core(ServerSocket *serv, Stream* stream)
 //*---------------------------------ConnSocket-------------------------------*//
 	if (connected)
 	{
+		ServerSocket*	serv = connected->linkServerSock;
 		string			reqTarget = connected->ReqH.getRequsetTarget();
 		string			filename;
 		string			ext;
@@ -129,13 +130,13 @@ void			core(ServerSocket *serv, Stream* stream)
 //,------------------------------Input CGI Pipe------------------------------,//
 	else if (inputPipe)
 	{
-		readFromCGI(serv, inputPipe);
+		readFromCGI(inputPipe);
 	}
 }
 
 
 
-void	core_wrapper(ServerSocket *serv, Stream* stream)
+void	core_wrapper(Stream* stream)
 {
 	FileStream*	inputFileStream = CONVERT(stream, FileStream);
 	Pipe*		inputPipe = CONVERT(stream, Pipe);
@@ -147,7 +148,7 @@ void	core_wrapper(ServerSocket *serv, Stream* stream)
 		else if (inputFileStream)	connected = inputFileStream->linkConn;
 	}
 
-	core(serv, stream);
+	core(stream);
 	if (connected->pending)
 		return;
 

@@ -255,7 +255,6 @@
 
 	void	ConnSocket::send(const string& content, map<int, undone>& writeUndoneBuf)
 	{
-		cout << content << endl;
 		if (FINsended) return;
 		try						{ writeUndoneBuf.at(this->fd); }
 		catch (exception& e)	{ writeUndoneBuf[this->fd] = (struct undone){"",0};
