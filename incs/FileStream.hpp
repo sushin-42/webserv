@@ -2,12 +2,12 @@
 # define FILESTREAM_HPP
 
 # include "utils.hpp"
-# include "IStream.hpp"
+# include "Stream.hpp"
 # include "Undone.hpp"
 
 class ConnSocket;
 
-class FileStream : public IStream
+class FileStream : public Stream
 {
 /**========================================================================
 * %                          member variables

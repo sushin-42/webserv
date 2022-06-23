@@ -348,7 +348,7 @@ void	localRedir(PollSet& pollset, ServerSocket* serv, ConnSocket* connected)
 		connected->ResH.removeKey("location");
 		connected->ResH.removeKey("transfer-encoding");
 		// connected->ResH.print();
-		core(pollset, serv, (IStream*)connected);
+		core(pollset, serv, (Stream*)connected);
 	}
 
 }

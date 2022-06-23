@@ -17,7 +17,7 @@ SRCS =  $(SRC_DIR)/checkFile.cpp \
 		$(SRC_DIR)/HttpConfig.cpp \
 		$(SRC_DIR)/IHeader.cpp \
 		$(SRC_DIR)/ISocket.cpp \
-		$(SRC_DIR)/IStream.cpp \
+		$(SRC_DIR)/Stream.cpp \
 		$(SRC_DIR)/IText.cpp \
 		$(SRC_DIR)/LocationConfig.cpp \
 		$(SRC_DIR)/Pipe.cpp \

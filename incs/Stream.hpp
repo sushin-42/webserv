@@ -1,5 +1,5 @@
-#ifndef ISTREAM_HPP
-# define ISTREAM_HPP
+#ifndef STREAM_HPP
+# define STREAM_HPP
 
 #include <ctime>
 #include <map>
@@ -10,7 +10,7 @@
 using namespace std;
 
 class Poll;
-class IStream
+class Stream
 {
 /**========================================================================
 * %                          member variables
@@ -29,30 +29,17 @@ public:
 *========================================================================**/
 
 public:
-	IStream()
-	: fd(-1), timeout(-1), lastActive(time(NULL)), p(NULL)	{  }
-	IStream( int _fd )
-	: fd(_fd), timeout(-1), lastActive(time(NULL)), p(NULL)	{  }
-	IStream( int _fd, time_t _to)
-	: fd(_fd), timeout(_to), lastActive(time(NULL)), p(NULL)	{  }
-	IStream( const IStream& src )
-	: fd(src.fd), timeout(src.timeout), lastActive(src.lastActive), p(NULL) { }
-	virtual ~IStream() {};
+	Stream();
+	Stream( int _fd );
+	Stream( int _fd, time_t _to);
+	Stream( const Stream& src );
+	virtual ~Stream();
 
 /**========================================================================
 * *                            operators
 *========================================================================**/
 
-	IStream&	operator=( const IStream& src )
-	{
-		if (this != &src)
-		{
-			this->fd = src.fd;
-			this->timeout = src.timeout;
-			this->lastActive = src.lastActive;
-		}
-		return *this;
-	}
+	Stream&	operator=( const Stream& src );
 
 /**========================================================================
 * #                          member functions
@@ -65,8 +52,6 @@ public:
 	void			setTimeOut(time_t to);
 	time_t			getTimeOut() const;
 	void			close();
-
-
 
 /**========================================================================
 * !                            Exceptions

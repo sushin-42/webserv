@@ -17,7 +17,7 @@
 #include "FileStream.hpp"
 # include "ISocket.hpp"
 # include "Config.hpp"
-#include "IStream.hpp"
+#include "Stream.hpp"
 #include "ReqBody.hpp"
 #include "ReqHeader.hpp"
 #include "ResBody.hpp"
@@ -101,7 +101,7 @@ public:
 
 	void	recvRequest();
 
-	void	unlink(IStream* link);
+	void	unlink(Stream* link);
 
 	void	send(const string& content, map<int, undone>& writeUndoneBuf);
 	void	setErrorPage(status_code_t status, const string& reason, const string& text);

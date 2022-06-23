@@ -34,7 +34,7 @@ PollSet::const_iterator	PollSet::begin() const	{ return make_iterator_pair(pollV
 PollSet::const_iterator	PollSet::end() const		{ return make_iterator_pair(pollVec.end(), streamVec.end()); }
 
 
-PollSet::iterator	PollSet::getIterator(IStream* s)
+PollSet::iterator	PollSet::getIterator(Stream* s)
 {
 	iterator_p				itPoll;
 	iterator_s				itStream;
@@ -47,7 +47,7 @@ PollSet::iterator	PollSet::getIterator(IStream* s)
 	return iterator(itPoll, itStream);
 }
 
-PollSet::iterator		PollSet::enroll( IStream* stream, short events )
+PollSet::iterator		PollSet::enroll( Stream* stream, short events )
 {
 	Poll		p;
 	p.fd		= stream->getFD();
@@ -75,7 +75,7 @@ PollSet::iterator		PollSet::enroll( IStream* stream, short events )
 }
 
 
-void	PollSet::dropLink(IStream* link)
+void	PollSet::dropLink(Stream* link)
 {
 	Pipe*			linkPipe = CONVERT(link, Pipe);
 	FileStream*		linkFile = CONVERT(link, FileStream);
@@ -96,10 +96,10 @@ void	PollSet::dropLink(IStream* link)
 void	PollSet::drop( PollSet::iterator it )
 {
 	ConnSocket* connSock = CONVERT(*(it.second), ConnSocket);
-	IStream*	link1 = NULL;
-	IStream*	link2 = NULL;
-	IStream*	link3 = NULL;
-	IStream*	link4 = NULL;
+	Stream*	link1 = NULL;
+	Stream*	link2 = NULL;
+	Stream*	link3 = NULL;
+	Stream*	link4 = NULL;
 
 	if (connSock && connSock->linkInputPipe)
 		link1 = connSock->linkInputPipe;

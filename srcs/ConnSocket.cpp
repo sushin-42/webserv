@@ -50,7 +50,7 @@
 /**========================================================================
 * #                          member functions
 *========================================================================**/
-	void	ConnSocket::unlink(IStream* link)
+	void	ConnSocket::unlink(Stream* link)
 	{
 		if (linkInputFile == link)
 			linkInputFile = NULL;

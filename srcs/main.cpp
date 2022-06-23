@@ -52,8 +52,8 @@ int main(int argc, char** argv)
 	ConnSocket*			connected;
 	Pipe*				CGIpipe;
 	FileStream*			filestream;
-	IStream*			inputStream;
-	IStream*			outputStream;
+	Stream*			inputStream;
+	Stream*			outputStream;
 
 	PollSet				pollset;
 	PollSet::iterator	it;

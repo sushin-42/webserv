@@ -15,7 +15,7 @@
 
 # include "ConnSocket.hpp"
 # include "ISocket.hpp"
-#include "IStream.hpp"
+#include "Stream.hpp"
 # include "Pipe.hpp"
 # include "FileStream.hpp"
 # include "iterator_pair.hpp"
@@ -42,8 +42,8 @@ class PollSet
 
 private:
 	typedef vector<Poll>			_Vp;
-	typedef vector<IStream*>		_Vs;
-	typedef pair<Poll, IStream*>	_Ps;
+	typedef vector<Stream*>		_Vs;
+	typedef pair<Poll, Stream*>	_Ps;
 	typedef _Vp::iterator			iterator_p;
 	typedef _Vs::iterator			iterator_s;
 	typedef _Vp::const_iterator		const_iterator_p;
@@ -58,7 +58,7 @@ public:
 
 private:
 	vector<Poll>		pollVec;
-	vector<IStream*>	streamVec;
+	vector<Stream*>	streamVec;
 	Timer*				timer;
 
 /**========================================================================
@@ -84,15 +84,15 @@ public:
 	const_iterator	begin() const;
 	const_iterator	end() const;
 
-	iterator		enroll( IStream* stream, short events );
-	void			dropLink(IStream* link);
+	iterator		enroll( Stream* stream, short events );
+	void			dropLink(Stream* link);
 	void			drop( iterator it );
 
 	time_t		getMinimumRemaining();
 	void		dropTimeout();
 	iterator	examine();
 	void		createMonitor();
-	iterator	getIterator(IStream* s);
+	iterator	getIterator(Stream* s);
 private:
 	void	print();
 

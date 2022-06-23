@@ -11,7 +11,7 @@ class Timer
 private:
 	typedef PollSet::iterator		iterator;
 	typedef PollSet::const_iterator	const_iterator;
-	typedef pair<Poll, IStream*>	_Ps;
+	typedef pair<Poll, Stream*>	_Ps;
 
 /**========================================================================
 * %                          member variables
@@ -27,8 +27,8 @@ public:
 * @                           Constructors
 *========================================================================**/
 
-	Timer()						: pollset(NULL), timeoutPool(), min(make_pair(Poll(), (IStream*)NULL), numeric_limits<time_t>::max())	{}
-	Timer(PollSet* p) 			: pollset(p), timeoutPool(), min(make_pair(Poll(), (IStream*)NULL), numeric_limits<time_t>::max())		{}
+	Timer()						: pollset(NULL), timeoutPool(), min(make_pair(Poll(), (Stream*)NULL), numeric_limits<time_t>::max())	{}
+	Timer(PollSet* p) 			: pollset(p), timeoutPool(), min(make_pair(Poll(), (Stream*)NULL), numeric_limits<time_t>::max())		{}
 	Timer( const Timer& src )	: pollset(src.pollset), timeoutPool(src.timeoutPool), min(src.min)	{}
 	~Timer() {};
 

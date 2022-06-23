@@ -7,14 +7,14 @@
 * @                           Constructors
 *========================================================================**/
 
-FileStream::FileStream() : IStream(-1), filename(), content(), linkConn(NULL) {}
-FileStream::FileStream( int fd ) : IStream(fd), filename(), content(), linkConn(NULL) {}
-FileStream::FileStream( const string& filename ) : IStream(-1), filename(filename), content(), linkConn(NULL)
+FileStream::FileStream() : Stream(-1), filename(), content(), linkConn(NULL) {}
+FileStream::FileStream( int fd ) : Stream(fd), filename(), content(), linkConn(NULL) {}
+FileStream::FileStream( const string& filename ) : Stream(-1), filename(filename), content(), linkConn(NULL)
 {
 	// open?
 }
 
-FileStream::FileStream( const FileStream& src ) : IStream(src.fd), filename(src.filename), content(src.content),linkConn(src.linkConn) {}
+FileStream::FileStream( const FileStream& src ) : Stream(src.fd), filename(src.filename), content(src.content),linkConn(src.linkConn) {}
 FileStream::~FileStream() {}
 
 /**========================================================================
@@ -25,7 +25,7 @@ FileStream&	FileStream::operator=( const FileStream& src )
 {
 	if (this != &src)
 	{
-		this->IStream::operator=(src);
+		this->Stream::operator=(src);
 		this->linkConn	= src.linkConn;
 	}
 	return *this;

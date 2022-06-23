@@ -1,13 +1,13 @@
 #ifndef PIPE_HPP
 # define PIPE_HPP
 # include "utils.hpp"
-# include "IStream.hpp"
+# include "Stream.hpp"
 # include "Undone.hpp"
 # include <sys/_types/_pid_t.h>
 
 class ConnSocket;
 
-class Pipe : public IStream
+class Pipe : public Stream
 {
 /**========================================================================
 * %                          member variables
@@ -27,13 +27,13 @@ public:
 
 public:
 	Pipe()
-	: IStream(-1), output(), pid(0), status(0), headerDone(false), linkConn(NULL) {};
+	: Stream(-1), output(), pid(0), status(0), headerDone(false), linkConn(NULL) {};
 
 	Pipe( int fd, pid_t p )
-	:IStream(fd), output(), pid(p), status(0), headerDone(false), linkConn(NULL) {};
+	:Stream(fd), output(), pid(p), status(0), headerDone(false), linkConn(NULL) {};
 
 	Pipe( const Pipe& src )
-	: IStream(src), output(src.output), pid(src.pid), status(src.status), headerDone(false), linkConn(src.linkConn) {}
+	: Stream(src), output(src.output), pid(src.pid), status(src.status), headerDone(false), linkConn(src.linkConn) {}
 
 	~Pipe() {};
 
@@ -45,7 +45,7 @@ public:
 	{
 		if (this != &src)
 		{
-			this->IStream::operator=(src);
+			this->Stream::operator=(src);
 			this->output 	= src.output;
 			this->pid	 	= src.pid;
 			this->status 	= src.status;

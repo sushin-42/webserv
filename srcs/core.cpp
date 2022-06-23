@@ -47,7 +47,7 @@ void			readInputFileStream(FileStream* inputFileStream)
 
 
 //! check if OK for CGI local redir...
-void			core(PollSet& pollset, ServerSocket *serv, IStream* stream)
+void			core(PollSet& pollset, ServerSocket *serv, Stream* stream)
 {
 	ConnSocket*	connected = CONVERT(stream, ConnSocket);
 	Pipe*		inputPipe = CONVERT(stream, Pipe);
@@ -135,7 +135,7 @@ void			core(PollSet& pollset, ServerSocket *serv, IStream* stream)
 
 
 
-void	core_wrapper(PollSet& pollset, ServerSocket *serv, IStream* stream)
+void	core_wrapper(PollSet& pollset, ServerSocket *serv, Stream* stream)
 {
 	FileStream*	inputFileStream = CONVERT(stream, FileStream);
 	Pipe*		inputPipe = CONVERT(stream, Pipe);
