@@ -105,17 +105,19 @@ int childRoutine(
 				int PtoC[2],
 				int CtoP[2],
 				ServerSocket* serv,
-				ConnSocket* connected
+				ConnSocket* connected,
+				const string& executable,
+				const string& path
 			)
 {
 	vector<char*> argv, envp;
 
-	pair<string, string> _path = CHECK->routeRequestTarget(connected->conf, connected->ReqH.getRequsetTarget());
-	string	path = _path.first + _path.second;
 
+	argv.push_back(const_cast<char*>(executable.c_str()));
 	argv.push_back(const_cast<char*>(path.c_str()));
 	argv.push_back(NULL);
 
+	// cerr << argv[0] << " | " << argv[1] << endl;
 	map<string,string>				envm = makeCGIEnv(serv, connected);
 	map<string,string>::iterator	it	= envm.begin();
 	map<string,string>::iterator	ite	= envm.end();
@@ -138,21 +140,21 @@ int childRoutine(
 	// sleep(1);	//NOTE: 자식프로세스가 왜  기다려주지 ㅎ;
 
 	if (execve(
-				(path).c_str(),
+				(executable).c_str(),
 				(char * const*)(argv.data()),
 				(char * const*)(envp.data())
 			) == -1) {
-				cerr << "exec error: " << strerror(errno) << errno <<endl;
+				cerr << "exec error: " << strerror(errno) << errno <<endl;		//NOTE: INTERNAL SERVER ERROR
 				exit(-1);
 			}
 	return -1;
 }
 
 void parentRoutine(
-					ConnSocket* connected,
-					pid_t pid,
 					int PtoC[2],
-					int CtoP[2]
+					int CtoP[2],
+					ConnSocket* connected,
+					pid_t pid
 				)
 {
 	close(PtoC[0]), close(CtoP[1]);
@@ -170,7 +172,7 @@ void parentRoutine(
 	POLLSET->enroll(pw, POLLOUT);
 }
 
-void	createCGI(ServerSocket* serv, ConnSocket* connected)
+void	createCGI(ServerSocket* serv, ConnSocket* connected, const string& exe, const string& scriptpath)
 {
 	int				PtoC[2], CtoP[2];
 	pid_t			pid;
@@ -179,8 +181,8 @@ void	createCGI(ServerSocket* serv, ConnSocket* connected)
 	fcntl(CtoP[0], F_SETFL, fcntl(CtoP[0], F_GETFL, 0) | O_NONBLOCK);
 
 	pid = fork();
-	if (pid == 0)	childRoutine(PtoC, CtoP, serv, connected);	//TODO: check return value -1
-	else			parentRoutine(connected, pid, PtoC, CtoP);	// produce non-blocking pipe and poll.enroll(pipe)
+	if (pid == 0)	childRoutine(PtoC, CtoP, serv, connected, exe, scriptpath);	//TODO: check return value -1
+	else			parentRoutine(PtoC, CtoP, connected, pid);	// produce non-blocking pipe and poll.enroll(pipe)
 
 	connected->pending = false;	//@ default == NO pending
 }

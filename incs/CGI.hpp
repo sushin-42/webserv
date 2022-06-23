@@ -40,17 +40,19 @@ int childRoutine(
 				int PtoC[2],
 				int CtoP[2],
 				ServerSocket* serv,
-				ConnSocket* connected
+				ConnSocket* connected,
+				const string& executable,
+				const string& scriptpath
 			);
 
 void parentRoutine(
-					ConnSocket* connected,
-					pid_t pid,
 					int PtoC[2],
-					int CtoP[2]
+					int CtoP[2],
+					ConnSocket* connected,
+					pid_t pid
 				);
 
-void	createCGI(ServerSocket* serv, ConnSocket* connected);
+void	createCGI(ServerSocket* serv, ConnSocket* connected, const string& executable, const string& scriptpath);
 void	moveToResH(const string& output, ConnSocket* connected);
 
 void	processOutputHeader(ConnSocket* connected, Pipe* CGIpipe);

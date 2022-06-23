@@ -104,12 +104,13 @@
 									  return ;
 									}
 
-		if ( CHECK->getCGIexcutable(this->conf, "." + getExt(filename)).empty() == false )		// if ".py" is directory, we don't run CGI
+		string executable = CHECK->getCGIexcutable(this->conf, "." + getExt(filename));
+		if ( executable.empty() == false )		// if ".py" is directory, we don't run CGI
 		{
 			this->ResB.clear();
 			this->ResH.removeKey("content-length");
 			if (this->linkInputPipe == NULL)
-				return createCGI(this->linkServerSock, this);
+				return createCGI(this->linkServerSock, this, executable, filename);
 		}
 		createInputFileStream(this, filename);	//readMore
 	}
