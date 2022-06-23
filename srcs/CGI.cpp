@@ -242,73 +242,6 @@ void	processOutputHeader(ConnSocket* connected, Pipe* CGIpipe)
 
 }
 
-
-void	readFromCGI(
-					Pipe* CGIpipe
-				)
-{
-	ConnSocket* connected = CGIpipe->linkConn;
-
-	ssize_t	byte = 0;
-
-	switch (byte = CGIpipe->read())
-	{
-
-	case -1:	/* internal server error */
-		TAG(CGI#, CGIroutines); cout << RED("Unexcpected error from pipe: ") << CGIpipe->getFD() << endl;
-		CGIpipe->close();
-		/* need to return 500! */
-		break;
-
-	case 0:		/* close pipe, process output */
-
-		TAG(CGI#, CGIroutines); cout << GRAY("Pipe closed: ") << CGIpipe->getFD() << endl;
-		CGIpipe->close();
-
-		if (connected->pending == false)
-		{
-			connected->ResB.setContent(
-										connected->chunk ?
-											makeChunk(CGIpipe->output) :
-											CGIpipe->output
-									);
-		}
-		connected->pending = false;
-		break;
-
-	default:	/* output appended */
-
-		/* wait full header */
-		if (CGIpipe->headerDone == false)
-		{
-			connected->pending = true;
-			if	(CGIpipe->output.rfind("\r\n\r\n") != string::npos ||
-					CGIpipe->output.rfind("\n\n") != string::npos)
-			{
-				processOutputHeader(connected, CGIpipe);
-				CGIpipe->headerDone = true;							// appended to conn->ResH
-				CGIpipe->output = extractBody(CGIpipe->output);		// store remained after header
-				connected->pending = false;
-			}
-			else
-				return;
-		}
-		if (connected->pending == false)
-		{
-			if (CGIpipe->output.empty())	return; // if extracted trailing Body == '', makeChunk will send '0\r\n\r\n'
-			connected->ResB.setContent(
-										connected->chunk ?
-											makeChunk(CGIpipe->output) :
-											CGIpipe->output
-									);
-			CGIpipe->output.clear();
-		}
-	}
-}
-
-
-
-
 //*--------------------------------------------------------------------------*//
 //* local-redir-response = local-Location NL                                 *//
 //*                                                                          *//
@@ -339,7 +272,7 @@ void	localRedir(ConnSocket* connected)
 		connected->ResH.removeKey("location");
 		connected->ResH.removeKey("transfer-encoding");
 		// connected->ResH.print();
-		core((Stream*)connected);
+		connected->core(); //! check if CORE() is OK for CGI local redir...
 	}
 
 }

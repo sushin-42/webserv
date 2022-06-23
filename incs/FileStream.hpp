@@ -44,8 +44,9 @@ public:
 	int				open(const string& filename, int mode);
 	void			setFilename( const string& filename);
 	const string&	getFilename() const;
-	ssize_t			read();
-	void			readInputFileStream();
+	// void			readInputFileStream();
+
+	void			recv();
 	void			send(const string& content, map<int, struct undone>& writeUndoneBuf);
 	void			core();
 

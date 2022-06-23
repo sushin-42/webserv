@@ -268,44 +268,38 @@
 			throw lengthRequired();
 	}
 
-	void	ConnSocket::recvRequest()
+	void	ConnSocket::recv()
 	{
 		ssize_t		byte	= 0;
-		bzero(buf, sizeof(buf));
-		byte = read(this->fd, this->buf, sizeof(buf));
-
-		switch (byte)
+		switch (byte = readFrom(this->fd, this->recvContent))
 		{
 		case 0:
+
+			TAG(ConnSocket, recvRequest); cout << GRAY("CLIENT EXIT ") << this->fd << endl;
+			if (ReqH.exist("Content-Length") &&
+				toNum<unsigned int>(ReqH["Content-Length"]) > recvContent.length())
 			{
-				TAG(ConnSocket, recvRequest); cout << GRAY("CLIENT EXIT ") << this->fd << endl;
-				if (ReqH.exist("Content-Length") &&
-					toNum<unsigned int>(ReqH["Content-Length"]) > recvContent.length())
-				{
-					/*
-						if connection closed before get all content-length,
-						send 400(Bad request), close connection.
-					*/
-					throw badRequest();
-				}
-				throw connClosed();
+				/*
+					if connection closed before get all content-length,
+					send 400(Bad request), close connection.
+				*/
+				throw badRequest();
 			}
+			throw connClosed();
+			break;
+
 		case -1:
-			{
-				if (errno != EAGAIN && errno != EWOULDBLOCK)
-					throw somethingWrong(strerror(errno));
-				else
-					TAG(ConnSocket, recvRequest) << YELLOW("No data to read") << endl;
-				break;
-			}
+			TAG(ConnSocket, recvRequest) << YELLOW("No data to read") << endl;
+			throw somethingWrong(strerror(errno));
+			break;
 		default:
-			recvContent.append(buf, byte);
+			;
 		}
 
 		if (ReqH.empty())
 		{
 			try						{ setHeaderOrReadMore(); }
-			catch (exception& e)	{ throw;}
+			catch (exception& e)	{ throw; }
 		}
 
 		if (!ReqH.empty())
@@ -313,7 +307,6 @@
 			try						{ setBodyOrReadMore(); }
 			catch (exception& e)	{ throw; }
 		}
-
 	}
 
 	void	ConnSocket::send(const string& content, map<int, undone>& writeUndoneBuf)

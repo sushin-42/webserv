@@ -69,6 +69,7 @@ private:
 	virtual void	dummy() = 0;
 public:
 	virtual void	send(const string& content, map<int, undone>& writeUndoneBuf) = 0;
+	virtual void	recv() = 0;
 	virtual void	core() = 0;
 };
 

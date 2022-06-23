@@ -56,17 +56,10 @@ int	FileStream::open(const string& filename, int mode)
 	return ret;
 }
 
-ssize_t			FileStream::read()
-{
-	ssize_t	byte = readFrom(this->fd, this->content);
-
-	return byte;
-}
-
-void			FileStream::readInputFileStream()
+void			FileStream::recv()
 {
 	ssize_t byte;
-	switch (byte = this->read())
+	switch (byte = readFrom(this->fd, this->content))
 	{
 	case -1:
 		TAG(core#, core); cout << RED("Unexcpected error from file: ") << this->getFilename() << endl;
@@ -134,7 +127,7 @@ void			FileStream::core()
 		connected = this->linkConn;
 		string ext		= getExt(connected->ReqH.getRequsetTarget());
 
-		try					{ this->readInputFileStream(); }
+		try					{ this->recv(); }
 		catch (exception& e){ throw; }	// ( readMore | 500 | processing Response)
 
 		connected->ResB.setContent(this->content);

@@ -55,7 +55,7 @@ friend class ServerSocket;
 
 private:
 	socklen_t			len;
-	char				buf[1024];
+	// char				buf[1024];
 	string				recvContent;	// cumulate received content
 
 public:
@@ -99,13 +99,14 @@ public:
 	void	setHeaderOrReadMore();
 	void	setBodyOrReadMore();
 
-	void	recvRequest();
+	// void	recvRequest();
 
 	void	unlink(Stream* link);
 
 	void	setErrorPage(status_code_t status, const string& reason, const string& text);
 	void	returnError(status_code_t status, const string& message);
 
+	void	recv();
 	void	send(const string& content, map<int, undone>& writeUndoneBuf);
 	void	core();
 

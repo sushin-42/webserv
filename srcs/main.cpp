@@ -27,6 +27,16 @@
 
 
 map<string, string> MIME;
+// void	setOutputStream(Stream* value, Stream** outputStream)
+// {
+// 	ConnSocket*	connected;
+// 	*outputStream = value;
+// 	if (CONVERT(value, Pipe))
+// 	// connected = Stream->linkConn;
+// 	// content = connected->ReqB.getContent();
+// }
+// void	setInputStream()
+// {}
 
 int main(int argc, char** argv)
  {
@@ -73,55 +83,31 @@ int main(int argc, char** argv)
 		CGIpipe		= CONVERT(*it.second, Pipe);
 		filestream	= CONVERT(*it.second, FileStream);
 
+		if (CGIpipe)	connected=CGIpipe->linkConn;
+		if (filestream)	connected=filestream->linkConn;
+
 //.---------------------------------POLL OUT---------------------------------.//
 		if (it.first->revents & POLLOUT)
 		{
 			it.first->events &= ~POLLOUT;
-			if (CGIpipe)
-			{
-				outputStream = CGIpipe;
-				connected = CGIpipe->linkConn;
+			outputStream = *it.second;
+			if (outputStream == connected)
+				content = connected->ResH.getContent() +
+						  connected->ResB.getContent();
+			else
 				content = connected->ReqB.getContent();
-				goto _send;
-			}
-
-			else if (filestream)
-			{
-				outputStream = filestream;
-				connected = filestream->linkConn;
-				content = connected->ReqB.getContent();
-				goto _send;
-			}
-
-			else /* ConnSocket */
-				goto _set_stream_to_socket;
+			goto _send;
 		}
 //#----------------------------------POLLIN----------------------------------#//
 		else
 		{
-			if (CGIpipe)
-			{
-				connected =  CGIpipe->linkConn;
-				inputStream = CGIpipe;
+			inputStream = *it.second;
+			if (inputStream != connected)
 				goto _core;
-			}
-
-			else if (filestream)
-			{
-				connected =  filestream->linkConn;
-				inputStream = filestream;
-				goto _core;
-			}
-
-			else /* ConnSocket */
-			{
-				inputStream = connected;
-			}
-
 		}
 
 //*-----------------------ConnSocket: parse request--------------------------*//
-	try										{ connected->recvRequest(); }
+	try										{ connected->recv(); }
 	catch	(exception& e)					{
 												if (CONVERT(&e, ConnSocket::connClosed) ||		//NOTE: what if client does not close after we send FIN? (cause we do graceful-close)
 													CONVERT(&e, ConnSocket::somethingWrong))
@@ -142,27 +128,23 @@ int main(int argc, char** argv)
 													connected->returnError(err->status, err->what());
 													it.first->events |= POLLOUT;
 													continue;
-													goto _set_stream_to_socket;
 												}
 											}
 //@---------------------------CORE: PROCESS INSTREAM-------------------------@//
 _core:
-		// serv = connected->linkServerSock;
 		try							{ core_wrapper(inputStream); }	//@ make response header, body//
 		catch (httpError& e)		{
 									  redirectError* r = CONVERT(&e, redirectError);
-									  if (r) {
-												connected->ResH["Location"] = r->location;
-											 }
-										connected->returnError(e.status, e.what());
-										it.first->events |= POLLOUT;
-										continue;
-								 	  goto _set_stream_to_socket;	}
+									  if (r) { connected->ResH["Location"] = r->location; }
+									  connected->returnError(e.status, e.what());
+									  it.first->events |= POLLOUT;
+									  continue;
+									}
 
 		catch (exception& e)		{ if (CONVERT(&e, readMore)) continue; }
 
 
-		if (inputStream)	/* reach here : READ DONE */
+		if (inputStream)		/* reach here : READ DONE */
 		{
 			if (inputStream == connected)
 			{
@@ -172,24 +154,20 @@ _core:
 				POLLSET->getIterator(connected).first->events |= POLLOUT;
 				continue;
 			}
-			if (inputStream == CGIpipe)
+			else if (inputStream == CGIpipe)
 			{
 				if (connected->pending == false)
 					POLLSET->getIterator(connected).first->events |= POLLOUT;
 				continue;
 			}
-			POLLSET->drop(it);
-
-			connected->unlink(inputStream);
-			POLLSET->getIterator(connected).first->events |= POLLOUT;
-			continue;
+			else
+			{
+				POLLSET->drop(it);
+				connected->unlink(inputStream);
+				POLLSET->getIterator(connected).first->events |= POLLOUT;
+				continue;
+			}
 		}
-
-
-_set_stream_to_socket:
-		outputStream	= connected;
-		content = connected->ResH.getContent() +
-				  connected->ResB.getContent();
 
 //.-----------------------------SEND TO OUTSTREAM----------------------------.//
 _send:
@@ -213,9 +191,3 @@ _send:
 		connected->ReqH.clear(), connected->ResH.clear(), connected->ResB.clear();
 	}
 }
-
-
-
-
-
-

@@ -41,7 +41,7 @@ public:
 * #                          member functions
 *========================================================================**/
 
-	ssize_t	read();
+	void	recv();
 	void	send(const string& content, map<int, struct undone>& writeUndoneBuf);
 	void	core();
 private:

@@ -9,13 +9,6 @@
 #include <string>
 # include <sys/stat.h>
 
-
-//! check if OK for CGI local redir...
-void			core(Stream* stream)
-{
-	stream->core();
-}
-
 void	core_wrapper(Stream* stream)
 {
 	FileStream*	inputFileStream = CONVERT(stream, FileStream);
@@ -28,11 +21,16 @@ void	core_wrapper(Stream* stream)
 		else if (inputFileStream)	connected = inputFileStream->linkConn;
 	}
 
-	core(stream);
+	stream->core();
 	if (connected->pending)
 		return;
 
-	if (!connected->ResH.getHeaderField().empty())	/* cannot enter if readMore() */
+	/*
+	   cannot enter if readMore(),
+	   if reach here after CGI local-redir(),   [ core_wrapper(CGIpipe) => CGIpipe->core() => processOutputHeader() => localRedir() => connected->core() ]
+	   maybe it has Response Header Fields.
+	*/
+	if (!connected->ResH.getHeaderField().empty())
 	{
 		writeResponseHeader(connected);
 		connected->ResH.makeStatusLine();
