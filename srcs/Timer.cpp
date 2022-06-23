@@ -1,18 +1,21 @@
 #include "Timer.hpp"
 
+
+/**========================================================================
+* @                           Constructors
+*========================================================================**/
+
+Timer::Timer()
+: timeoutPool(), min(make_pair(Poll(), (Stream*)NULL), numeric_limits<time_t>::max())	{}
+Timer::~Timer() {}
+
 /**========================================================================
 * #                          member functions
 *========================================================================**/
-
-	void	Timer::subscribe(PollSet* p)
-	{
-		this->pollset = p;
-	}
-
 	void	Timer::monitor()
 	{
-		iterator it = pollset->begin();
-		iterator ite = pollset->end();
+		iterator it = POLLSET->begin();
+		iterator ite = POLLSET->end();
 
 		pair<_Ps, time_t> min = make_pair(
 									make_pair(*it.first, *it.second),

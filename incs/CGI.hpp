@@ -44,22 +44,17 @@ int childRoutine(
 			);
 
 void parentRoutine(
-					PollSet& pollset,
 					ConnSocket* connected,
 					pid_t pid,
 					int PtoC[2],
 					int CtoP[2]
 				);
 
-void	createCGI(PollSet& pollset, ServerSocket* serv, ConnSocket* connected);
+void	createCGI(ServerSocket* serv, ConnSocket* connected);
 void	moveToResH(const string& output, ConnSocket* connected);
 
-void	processOutputHeader(PollSet& pollset, ServerSocket* serv, ConnSocket* connected, Pipe* CGIpipe);
-void	readFromCGI(
-					PollSet& pollset,
-					ServerSocket* serv,
-					Pipe* CGIpipe
-				);
+void	processOutputHeader(ServerSocket* serv, ConnSocket* connected, Pipe* CGIpipe);
+void	readFromCGI(ServerSocket* serv, Pipe* CGIpipe);
 
 
 //*--------------------------------------------------------------------------*//
@@ -77,7 +72,7 @@ void	readFromCGI(
 //*  scheme "://" server-name ":" server-port local-pathquery                *//
 //*--------------------------------------------------------------------------*//
 
-void	localRedir(PollSet& pollset, ServerSocket* serv, ConnSocket* connected);
+void	localRedir(ServerSocket* serv, ConnSocket* connected);
 
 
 //'--------------------------------------------------------------------------'//

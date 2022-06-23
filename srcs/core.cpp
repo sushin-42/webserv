@@ -9,18 +9,18 @@
 #include <string>
 # include <sys/stat.h>
 
-bool	createPUToutputFile(ConnSocket* connected, PollSet& pollset, const string filename);
+bool	createPUToutputFile(ConnSocket* connected, const string filename);
 void	writePUToutputFile(ConnSocket* c, const string& fn);
 
 
-string			createInputFileStream(ConnSocket* connected, const string& filename, PollSet& pollset)
+string			createInputFileStream(ConnSocket* connected, const string& filename)
 {
 	FileStream* f = new FileStream(filename);
 	f->open(O_RDONLY);
 
 	connected->linkInputFile = f;
 	f->linkConn = connected;
-	pollset.enroll(f, POLLIN);
+	POLLSET->enroll(f, POLLIN);
 
 	throw readMore();
 }
@@ -47,7 +47,7 @@ void			readInputFileStream(FileStream* inputFileStream)
 
 
 //! check if OK for CGI local redir...
-void			core(PollSet& pollset, ServerSocket *serv, Stream* stream)
+void			core(ServerSocket *serv, Stream* stream)
 {
 	ConnSocket*	connected = CONVERT(stream, ConnSocket);
 	Pipe*		inputPipe = CONVERT(stream, Pipe);
@@ -71,9 +71,9 @@ void			core(PollSet& pollset, ServerSocket *serv, Stream* stream)
 
 		if (connected->ReqH.getMethod() == "PUT")
 		{
-			try						{ alreadyExist = createPUToutputFile(connected, pollset, filename); (void)alreadyExist; }
+			try						{ alreadyExist = createPUToutputFile(connected, filename); (void)alreadyExist; }
 			catch (Conflict& e)		{ throw; }
-			// connected->pending = true;
+
 			connected->ResH.setStatusCode(alreadyExist ? 204 : 201);
 			connected->ResH.setReasonPhrase(alreadyExist ? "No Content" : "Created");
 			connected->ResH.setDefaultHeaders();
@@ -104,9 +104,9 @@ void			core(PollSet& pollset, ServerSocket *serv, Stream* stream)
 			connected->ResB.clear();
 			connected->ResH.removeKey("content-length");
 			if (connected->linkInputPipe == NULL)
-				return createCGI(pollset, serv, connected);
+				return createCGI(serv, connected);
 		}
-		createInputFileStream(connected, filename, pollset);	//readMore
+		createInputFileStream(connected, filename);	//readMore
 	}
 //%-----------------------------Input FileStream-----------------------------%//
 	else if (inputFileStream)
@@ -129,13 +129,13 @@ void			core(PollSet& pollset, ServerSocket *serv, Stream* stream)
 //,------------------------------Input CGI Pipe------------------------------,//
 	else if (inputPipe)
 	{
-		readFromCGI(pollset, serv, inputPipe);
+		readFromCGI(serv, inputPipe);
 	}
 }
 
 
 
-void	core_wrapper(PollSet& pollset, ServerSocket *serv, Stream* stream)
+void	core_wrapper(ServerSocket *serv, Stream* stream)
 {
 	FileStream*	inputFileStream = CONVERT(stream, FileStream);
 	Pipe*		inputPipe = CONVERT(stream, Pipe);
@@ -147,7 +147,7 @@ void	core_wrapper(PollSet& pollset, ServerSocket *serv, Stream* stream)
 		else if (inputFileStream)	connected = inputFileStream->linkConn;
 	}
 
-	core(pollset, serv, stream);
+	core(serv, stream);
 	if (connected->pending)
 		return;
 
@@ -216,7 +216,7 @@ status_code_t	deleteFile(pair<string, string> p)
 		return 404; // throw?
 	return 204; // throw?
 }
-bool	createPUToutputFile(ConnSocket* connected, PollSet& pollset, const string filename)
+bool	createPUToutputFile(ConnSocket* connected, const string filename)
 {
 
 	FileStream* f = new FileStream(filename);
@@ -230,7 +230,7 @@ bool	createPUToutputFile(ConnSocket* connected, PollSet& pollset, const string f
 	connected->linkOutputFile = f;
 	f->linkConn = connected;
 
-	pollset.enroll(f, POLLOUT);
+	POLLSET->enroll(f, POLLOUT);
 
 	return alreadyExist;
 

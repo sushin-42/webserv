@@ -4,13 +4,15 @@
 #include "Timer.hpp"
 #include <ios>
 
+PollSet*	PollSet::pollset;
 
 /**========================================================================
 * @                           Constructors
 *========================================================================**/
+
 PollSet::PollSet(): pollVec(), streamVec(), timer(NULL) { }
-PollSet::PollSet( const PollSet& src ): pollVec(src.pollVec), streamVec(src.streamVec), timer(NULL) {}
 PollSet::~PollSet() {}
+
 /**========================================================================
 * *                            operators
 *========================================================================**/
@@ -224,7 +226,7 @@ PollSet::iterator	PollSet::writeRoutine(iterator it)
 }
 
 
-void	PollSet::createMonitor() { this->timer = new Timer(this); }
+void	PollSet::createMonitor() { this->timer = new Timer(); }
 time_t	PollSet::getMinimumRemaining()
 {
 	timer->monitor();

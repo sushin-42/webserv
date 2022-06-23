@@ -150,7 +150,6 @@ int childRoutine(
 }
 
 void parentRoutine(
-					PollSet& pollset,
 					ConnSocket* connected,
 					pid_t pid,
 					int PtoC[2],
@@ -165,16 +164,16 @@ void parentRoutine(
 
 	pr->linkConn = connected;
 	connected->linkInputPipe = pr;
-	pollset.enroll(pr, POLLIN);
+	POLLSET->enroll(pr, POLLIN);
 
 	pw->linkConn = connected;
 	connected->linkOutputPipe = pw;
 	// PollSet::iterator it =
-	pollset.enroll(pw, POLLOUT);	//POLLOUT?
+	POLLSET->enroll(pw, POLLOUT);	//POLLOUT?
 	// it.first->events |= POLLOUT;
 }
 
-void	createCGI(PollSet& pollset, ServerSocket* serv, ConnSocket* connected)
+void	createCGI(ServerSocket* serv, ConnSocket* connected)
 {
 	int				PtoC[2], CtoP[2];
 	pid_t			pid;
@@ -184,7 +183,7 @@ void	createCGI(PollSet& pollset, ServerSocket* serv, ConnSocket* connected)
 
 	pid = fork();
 	if (pid == 0)	childRoutine(PtoC, CtoP, serv, connected);	//TODO: check return value -1
-	else			parentRoutine(pollset, connected, pid, PtoC, CtoP);	// produce non-blocking pipe and poll.enroll(pipe)
+	else			parentRoutine(connected, pid, PtoC, CtoP);	// produce non-blocking pipe and poll.enroll(pipe)
 
 	connected->pending = false;	//@ default == NO pending
 }
@@ -212,7 +211,7 @@ void	moveToResH(const string& output, ConnSocket* connected)
 	}
 }
 
-void	processOutputHeader(PollSet& pollset, ServerSocket* serv, ConnSocket* connected, Pipe* CGIpipe)
+void	processOutputHeader(ServerSocket* serv, ConnSocket* connected, Pipe* CGIpipe)
 {
 	pair<status_code_t, string>		Status;
 
@@ -220,7 +219,7 @@ void	processOutputHeader(PollSet& pollset, ServerSocket* serv, ConnSocket* conne
 
 	if (connected->ResH.exist("Location"))
 	{
-		if (connected->ResH["Location"][0] == '/')	localRedir(pollset, serv, connected);
+		if (connected->ResH["Location"][0] == '/')	localRedir(serv, connected);
 		else										clientRedir(connected);
 	}
 	else											documentResponse(connected);
@@ -248,7 +247,6 @@ void	processOutputHeader(PollSet& pollset, ServerSocket* serv, ConnSocket* conne
 
 
 void	readFromCGI(
-					PollSet& pollset,
 					ServerSocket* serv,
 					// ConnSocket* connected,
 					Pipe* CGIpipe
@@ -284,7 +282,6 @@ void	readFromCGI(
 		break;
 
 	default:	/* output appended */
-		cout << "OUTPUT APPENDED" << endl;
 
 		/* wait full header */
 		if (CGIpipe->headerDone == false)
@@ -293,7 +290,7 @@ void	readFromCGI(
 			if	(CGIpipe->output.rfind("\r\n\r\n") != string::npos ||
 					CGIpipe->output.rfind("\n\n") != string::npos)
 			{
-				processOutputHeader(pollset, serv, connected, CGIpipe);
+				processOutputHeader(serv, connected, CGIpipe);
 				CGIpipe->headerDone = true;							// appended to conn->ResH
 				CGIpipe->output = extractBody(CGIpipe->output);		// store remained after header
 				connected->pending = false;
@@ -303,7 +300,6 @@ void	readFromCGI(
 		}
 		if (connected->pending == false)
 		{
-			cout << "CURRENT CGI OUTPUT ->\n" << "'" << CGIpipe->output << "'" << endl;
 			if (CGIpipe->output.empty())	return; // if extracted trailing Body == '', makeChunk will send '0\r\n\r\n'
 			connected->ResB.setContent(
 										connected->chunk ?
@@ -333,7 +329,7 @@ void	readFromCGI(
 //*  scheme "://" server-name ":" server-port local-pathquery                *//
 //*--------------------------------------------------------------------------*//
 
-void	localRedir(PollSet& pollset, ServerSocket* serv, ConnSocket* connected)
+void	localRedir(ServerSocket* serv, ConnSocket* connected)
 {
 	if (connected->ResH.exist("Status") == false ||
 			(connected->ResH.exist("Status") == true &&
@@ -348,7 +344,7 @@ void	localRedir(PollSet& pollset, ServerSocket* serv, ConnSocket* connected)
 		connected->ResH.removeKey("location");
 		connected->ResH.removeKey("transfer-encoding");
 		// connected->ResH.print();
-		core(pollset, serv, (Stream*)connected);
+		core(serv, (Stream*)connected);
 	}
 
 }

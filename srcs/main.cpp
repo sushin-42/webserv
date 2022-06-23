@@ -52,22 +52,21 @@ int main(int argc, char** argv)
 	ConnSocket*			connected;
 	Pipe*				CGIpipe;
 	FileStream*			filestream;
-	Stream*			inputStream;
-	Stream*			outputStream;
+	Stream*				inputStream;
+	Stream*				outputStream;
 
-	PollSet				pollset;
 	PollSet::iterator	it;
 
 	string				content;
 	map<int, undone>	writeUndoneBuf;
-	createServerSockets(CONF->getAddrs(), pollset);
-	pollset.createMonitor();
+	createServerSockets(CONF->getAddrs());
+	POLLSET->createMonitor();
 
 	while (1)
 	{
 //'--------------------------------CATCH EVENT-------------------------------'//
 		try												{ whoDied();
-														  it = pollset.examine(); }
+														  it = POLLSET->examine(); }
 		catch	(exception& e)							{ continue; }
 		if		(CONVERT(*it.second, ServerSocket))		{ continue; }	// servSocket
 
@@ -129,7 +128,7 @@ int main(int argc, char** argv)
 													CONVERT(&e, ConnSocket::somethingWrong))
 												{
 													connected->close();
-													pollset.drop(it);
+													POLLSET->drop(it);
 													continue;
 												}
 
@@ -150,7 +149,7 @@ int main(int argc, char** argv)
 //@---------------------------CORE: PROCESS INSTREAM-------------------------@//
 _core:
 		serv = connected->linkServerSock;
-		try							{ core_wrapper(pollset, serv, inputStream); }	//@ make response header, body//
+		try							{ core_wrapper(serv, inputStream); }	//@ make response header, body//
 		catch (httpError& e)		{
 									  redirectError* r = CONVERT(&e, redirectError);
 									  if (r) {
@@ -171,19 +170,19 @@ _core:
 				if (connected->linkOutputFile)
 					continue;
 				// if (!connected->linkInputPipe)		/*  <------ pipe is just created, do not send 0 byte */
-				pollset.getIterator(connected).first->events |= POLLOUT;
+				POLLSET->getIterator(connected).first->events |= POLLOUT;
 				continue;
 			}
 			if (inputStream == CGIpipe)
 			{
 				if (connected->pending == false)
-					pollset.getIterator(connected).first->events |= POLLOUT;
+					POLLSET->getIterator(connected).first->events |= POLLOUT;
 				continue;
 			}
-			pollset.drop(it);
+			POLLSET->drop(it);
 
 			connected->unlink(inputStream);
-			pollset.getIterator(connected).first->events |= POLLOUT;
+			POLLSET->getIterator(connected).first->events |= POLLOUT;
 			continue;
 		}
 
@@ -199,15 +198,17 @@ _send:
 		catch (exception& e)				{
 											  if		(CONVERT(&e, sendMore))	it.first->events |= POLLOUT;	// not all data sended
 											  else if	(CONVERT(&e, readMore)) ;							 	// not all data sended, and have to read from pipe
-											  else								{
-											  									  if (outputStream == filestream)
-																				  {
-											  									  	pollset.getIterator(connected).first->events |= POLLOUT;
-																				  	connected->unlink(outputStream);
-																				  	pollset.drop(it);
-																					continue;
-																				  }
-																				}
+											  else		{
+															if (outputStream != connected)
+															{
+																if (outputStream == filestream)
+																	POLLSET->getIterator(connected).first->events |= POLLOUT;
+																connected->unlink(outputStream);
+																POLLSET->drop(it);
+																continue;
+															}
+															// POLLSET->drop(it);
+														}
 
 											}
 		connected->ReqH.clear(), connected->ResH.clear(), connected->ResB.clear();

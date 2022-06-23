@@ -280,7 +280,7 @@ int errMsg()
 void				createServerSockets(map<
 											pair<string, unsigned short>,
 											vector<Config*>
-										>& addrs, PollSet& pollset )
+										>& addrs )
 {
 	ServerSocket* serv;
 	map<
@@ -300,7 +300,7 @@ void				createServerSockets(map<
 		catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
 		serv->confs = mit->second;
 
-		pollset.enroll(serv, POLLIN);
+		POLLSET->enroll(serv, POLLIN);
 	}
 
 

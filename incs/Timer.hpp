@@ -17,40 +17,20 @@ private:
 * %                          member variables
 *========================================================================**/
 
-	PollSet* pollset;
-
 public:
-	vector<_Ps>		timeoutPool;
+	vector<_Ps>			timeoutPool;
 	pair<_Ps, time_t>	min;
 
 /**========================================================================
 * @                           Constructors
 *========================================================================**/
 
-	Timer()						: pollset(NULL), timeoutPool(), min(make_pair(Poll(), (Stream*)NULL), numeric_limits<time_t>::max())	{}
-	Timer(PollSet* p) 			: pollset(p), timeoutPool(), min(make_pair(Poll(), (Stream*)NULL), numeric_limits<time_t>::max())		{}
-	Timer( const Timer& src )	: pollset(src.pollset), timeoutPool(src.timeoutPool), min(src.min)	{}
-	~Timer() {};
-
-
-/**========================================================================
-* *                            operators
-*========================================================================**/
-
-	Timer&	operator=( const Timer& src )
-	{
-		if (this != &src)
-		{
-			this->pollset = src.pollset;
-		}
-		return *this;
-	}
+	Timer();
+	~Timer();
 
 /**========================================================================
 * #                          member functions
 *========================================================================**/
-
-	void	subscribe(PollSet* p);
 	void	monitor();
 };
 

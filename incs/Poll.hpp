@@ -24,13 +24,10 @@
 # include "color.hpp"
 # include "utils.hpp"
 
+# define POLLSET	PollSet::_()
 class Timer;
-
 class Poll : public pollfd
 {
-// public:
-// 	bool operator==(const Poll& p);
-// 	bool operator!=(const Poll& p);
 };
 
 class PollSet
@@ -42,8 +39,8 @@ class PollSet
 
 private:
 	typedef vector<Poll>			_Vp;
-	typedef vector<Stream*>		_Vs;
-	typedef pair<Poll, Stream*>	_Ps;
+	typedef vector<Stream*>			_Vs;
+	typedef pair<Poll, Stream*>		_Ps;
 	typedef _Vp::iterator			iterator_p;
 	typedef _Vs::iterator			iterator_s;
 	typedef _Vp::const_iterator		const_iterator_p;
@@ -57,27 +54,32 @@ public:
 *========================================================================**/
 
 private:
+	static PollSet*		pollset;
 	vector<Poll>		pollVec;
-	vector<Stream*>	streamVec;
+	vector<Stream*>		streamVec;
 	Timer*				timer;
 
 /**========================================================================
 * @                           Constructors
 *========================================================================**/
-public:
+
+private:
 	PollSet();
-	PollSet( const PollSet& src );
+public:
 	~PollSet();
-
-/**========================================================================
-* *                            operators
-*========================================================================**/
-
-	PollSet&	operator=( const PollSet& src );
 
 /**========================================================================
 * #                          member functions
 *========================================================================**/
+public:
+	static PollSet* _()
+	{
+		if (pollset == NULL)
+		{
+			pollset = new PollSet;
+		}
+		return pollset;
+	}
 
 	iterator		begin();
 	iterator		end();
