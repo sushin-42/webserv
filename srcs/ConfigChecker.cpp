@@ -87,3 +87,13 @@ pair<string, string>	ConfigChecker::routeRequestTarget(Config* conf, const strin
 	}
 	return make_pair(prefix, uri);
 }
+
+string				ConfigChecker::getCGIexcutable(Config* conf, const string& ext)
+{
+	map<string, string>::iterator it;
+
+	it = conf->cgi.find(ext);
+	if (it != conf->cgi.end())
+		return it->second;
+	return "";
+}

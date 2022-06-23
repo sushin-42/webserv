@@ -47,6 +47,7 @@ public:
 	string				trimLocationURI(const string& reqTarget, const string& locURI);
 	pair<string,string>	routeRequestTarget(Config* conf, const string& reqTarget);
 	string				getFileName(Config* conf, const string& reqTarget);
+	string				getCGIexcutable(Config* conf, const string& ext);
 };
 
 #endif

@@ -104,7 +104,7 @@
 									  return ;
 									}
 
-		if (getExt(filename) == "py")	//! check case (.py == DIRECTORY)
+		if ( CHECK->getCGIexcutable(this->conf, "." + getExt(filename)).empty() == false )		// if ".py" is directory, we don't run CGI
 		{
 			this->ResB.clear();
 			this->ResH.removeKey("content-length");
