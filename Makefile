@@ -1,3 +1,9 @@
+RED         = "\033[1;91m"
+GREEN       = "\033[1;92m"
+YELLOW      = "\033[1;93m"
+EOC         = "\033[0;0m"
+LINE_CLEAR  = "\x1b[1A\x1b[M"
+
 CC = c++
 CFLAGS = -Wall -Werror -Wextra -std=c++98 -g -fsanitize=address
 SRCS = main.cpp Config.cpp HttpConfig.cpp ServerConfig.cpp LocationConfig.cpp
@@ -35,23 +41,34 @@ SRCS =  $(SRC_DIR)/checkFile.cpp \
 
 
 NAME = webserv
+ifndef ECHO
+T := $(shell $(MAKE) $(MAKECMDGOALS) --no-print-directory \
+		-nrRf $(firstword $(MAKEFILE_LIST)) \
+		ECHO="COUNTTHIS" | grep -c "COUNTTHIS")
+N := x
+C = $(words $N)$(eval N := x $N)
+ECHO = ${GREEN} "[`expr $C '*' 100 / $T`%]"
+endif
 
 all : $(NAME)
-
 $(NAME) : $(OBJS)
-	$(CC) $(CFLAGS) $^ -o $@
+	@echo $(GREEN) "Source files are compiled!\n\n" $(EOC)
+	@echo $(YELLOW) "Building executable $(NAME)" $(EOC)
+	@$(CC) $(CFLAGS) $^ -o $@
+	@echo $(GREEN) "$(NAME) is created!\n" $(EOC)
 
 $(SRC_DIR)/%.o : $(SRC_DIR)/%.cpp
-	$(CC) $(CFLAGS) -c $< -o $@ -I $(INC_DIR)
+	@echo $(YELLOW) "Compiling..." ${ECHO}$(YELLOW) $< $(EOC) $(LINE_CLEAR)
+	@$(CC) $(CFLAGS) -c $< -o $@ -I $(INC_DIR)
 
 clean :
-	rm -rf $(OBJS)
+	@echo $(YELLOW) "Removing object files..." $(EOC)
+	@rm -rf $(OBJS)
+	@echo $(RED) "Object files are removed!\n" $(EOC)
 
-fclean :
-	rm -rf $(NAME) $(OBJS)
+fclean : clean
+	@echo $(YELLOW) "Removing $(NAME)..." $(EOC)
+	@rm -rf $(NAME)
+	@echo $(RED) "$(NAME) is removed!\n\n" $(EOC)
 
 re : fclean all
-
-
-
-

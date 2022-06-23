@@ -25,10 +25,11 @@ string convertStringToIpv4(unsigned int ip);
 string convertStringToIP(string ip);
 unsigned short convertStringToPort(string code);
 
-
 pair<ssize_t, string> splitStringToType(string val);
 time_t convertStringToTime(string val);
 ssize_t convertStringToByte(string val);
+
+bool exsitErrorpageEqual(string arg, int &equalstatus);
 //=====================================parse_util========================================
 //=====================================parse_arg========================================
 
@@ -51,6 +52,7 @@ void parse_send_timeout(vector<string> arg, Config *config);
 void parse_client_body_timeout(vector<string> arg, Config *config);
 void parse_limit_except_method(vector<string> arg, Config *config);
 void parse_alias(vector<string> arg, Config *config);
+void parse_cgi(vector<string> arg, Config *config);
 
 //=====================================parse_arg========================================
 

@@ -47,8 +47,8 @@ class Config
 	 *========================================================================**/
 
 public:
-typedef void (*PointerFunction)(vector<string> arg, Config *config);
-typedef map<string, PointerFunction> func_map;
+	typedef void (*PointerFunction)(vector<string> arg, Config *config);
+	typedef map<string, PointerFunction> func_map;
 	//파싱 변수
 	func_map m;
 	vector<string> conf;
@@ -60,7 +60,7 @@ typedef map<string, PointerFunction> func_map;
 	Duplicate dupeCheck;
 
 	//멤버 변수
-	map<int, string> error_page; // key= status code, value = 문서
+	map<int, pair<int, string> > error_page; // key= status code, value = 문서
 	vector<Config *> link;
 	vector<string> index;		// if (directory) 1. index file 2. (403 forbidden  || listing)
 	bool auto_index;			// if (directory && no index file) directory listing
@@ -77,6 +77,8 @@ typedef map<string, PointerFunction> func_map;
 	time_t keepalive_timeout; //간격 -> poll에서 갱신되는 lastActive
 	time_t send_timeout;
 	time_t client_body_timeout;
+
+	map<string, string> cgi;
 
 	// 	// bool				absolute_redirect;
 	// 	// bool				server_name_in_redirect;
@@ -213,7 +215,17 @@ public:
 		virtual ~parseErrorPageFail() throw(){};
 		virtual const char *what() const throw() { return msg.c_str(); }
 	};
+	class parseCgiFail : public exception
+	{
+	private:
+		string msg;
 
+	public:
+		explicit parseCgiFail() : msg(RED("parseCgiFail")) {}
+		explicit parseCgiFail(const string &m) : msg(m) {}
+		virtual ~parseCgiFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
 	class parseKeepRequestsFail : public exception
 	{
 	private:

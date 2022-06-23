@@ -81,7 +81,7 @@ void HttpConfig::defaultSet()
             }
         }
     }
-    error_page[404] = "404.html"; 
+    error_page[404] = make_pair(404, "404.html");
 }
 void HttpConfig::setConfig(string config)
 {
@@ -100,8 +100,6 @@ void HttpConfig::setConfig(string config)
 
 void HttpConfig::makeServerMap()
 {
-    cout << YELLOW("") << endl;
-
     for (size_t k = 0 ; k < link.size(); k++)
     {
         ServerConfig *serv = CONVERT(link[k], ServerConfig);

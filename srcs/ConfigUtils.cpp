@@ -316,13 +316,39 @@ void parse_auto_index(vector<string> arg, Config *config)
     config->dupeCheck.autoindex = true;
 }
 
+bool exsitErrorpageEqual(string arg, int &equalstatus)
+{
+    size_t arglen = arg.size();
+    
+    if (arglen == 1 && arg[0] == '=')
+    {
+        equalstatus = 200;
+        return true;
+    }
+    else if (arg[0] == '=')
+    {
+        arg = arg.substr(1);
+	
+        std::stringstream ssInt(arg);
+	
+        ssInt >> equalstatus;
+        if (ssInt.fail())
+		    return false;
+        return true;
+    }
+    else
+        return false;
+    
+}
+
 void parse_error_page(vector<string> arg, Config *config)
 {
     string path;
     int status;
+    int equalstatus;
 
     if (arg.size() < 2)
-        throw Config::parseErrorPageFail();
+        throw Config::parseErrorPageFail("ErrorPage : arg size fail");
     if (!config->handdownErrorPage)
     {
         config->error_page.clear();
@@ -330,12 +356,31 @@ void parse_error_page(vector<string> arg, Config *config)
     }
     isPath(arg[arg.size() - 1]);
     path = arg[arg.size() - 1];
-
-    for (vector<string>::size_type i = 0; i < (arg.size() - 1); i++)
+    if (exsitErrorpageEqual(arg[arg.size() - 2], equalstatus))
     {
-        status = convertStringToStateCode(arg[i]);
-        config->error_page[status] = path;
+        for (vector<string>::size_type i = 0; i < (arg.size() - 2); i++)
+        {
+            status = convertStringToStateCode(arg[i]);
+            config->error_page[status] = make_pair(equalstatus, path);
+        }
     }
+    else
+    {
+        for (vector<string>::size_type i = 0; i < (arg.size() - 1); i++)
+        {
+            status = convertStringToStateCode(arg[i]);
+            config->error_page[status] = make_pair(status, path);
+        }
+    }
+}
+
+void parse_cgi(vector<string> arg, Config *config)
+{
+    if (arg.size() != 2)
+        throw Config::parseCgiFail("parseCgiFail : size");
+    if (arg[0][0] != '.')
+        throw Config::parseCgiFail("parseCgiFail : dot");
+    config->cgi[arg[0]] = arg[1];
 }
 
 void parse_keepalive_requests(vector<string> arg, Config *config)
