@@ -42,7 +42,7 @@
 
 void	Pipe::core()
 {
-	recv();
+	// recv();
 }
 
 void	Pipe::recv()
@@ -106,6 +106,17 @@ void	Pipe::recv()
 	}
 }
 
+void	Pipe::coreDone()
+{
+	ConnSocket* connected = this->linkConn;
+
+	// if (headerDone)
+	if (connected->pending == false)
+		POLLSET->getIterator(connected).first->events |= POLLOUT;
+	return;
+}
+
+string	Pipe::getOutputContent() { return this->linkConn->ReqB.getContent();  }
 void	Pipe::send(const string& content, map<int, struct undone>& writeUndoneBuf)
 {
 	try						{ writeUndoneBuf.at(this->fd); }

@@ -103,12 +103,17 @@ public:
 
 	void	unlink(Stream* link);
 
+	void	makeResponseHeader();
+	void	makeResponseHeaderField();
 	void	setErrorPage(status_code_t status, const string& reason, const string& text);
-	void	returnError(status_code_t status, const string& message);
+	// void	returnError(status_code_t status, const string& message);
+	void	returnError(httpError& error);
 
 	void	recv();
+	void	coreDone();
 	void	send(const string& content, map<int, undone>& writeUndoneBuf);
 	void	core();
+	string	getOutputContent();
 
 /**========================================================================
 * !                            Exceptions

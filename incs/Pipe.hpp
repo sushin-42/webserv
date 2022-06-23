@@ -42,8 +42,10 @@ public:
 *========================================================================**/
 
 	void	recv();
+	void	coreDone();
 	void	send(const string& content, map<int, struct undone>& writeUndoneBuf);
 	void	core();
+	string	getOutputContent();
 private:
 	void dummy() {}
 };

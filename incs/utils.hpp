@@ -102,4 +102,23 @@ T	toNum(const string& s)
 	sstream >> num;
 	return num;
 }
+
+
+template <size_t>
+struct sfinaer {};
+
+
+
+
+template <class T>
+struct hasLocation
+{
+// private:
+    struct __two {char du; char mmy;};
+	// static T	t;
+    template <class U> static __two __test(...) {__two a; cout << "return TWO!" << endl; return a; };
+    template <class U> static char  __test( sfinaer<sizeof(&U::location)>* ) { cout << "RETURN one!" << endl;return 'c'; };
+public:
+    static const bool value = sizeof(__test<T>(0)) == 1;
+};
 #endif

@@ -47,8 +47,10 @@ public:
 	// void			readInputFileStream();
 
 	void			recv();
+	void			coreDone();
 	void			send(const string& content, map<int, struct undone>& writeUndoneBuf);
 	void			core();
+	string			getOutputContent();
 
 private:
 	void dummy();
@@ -58,7 +60,7 @@ private:
 * ,                               Others
 *========================================================================**/
 
-string	createInputFileStream(ConnSocket* connected, const string& filename);
+void	createInputFileStream(ConnSocket* connected, const string& filename);
 
 #endif
 

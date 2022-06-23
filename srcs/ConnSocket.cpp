@@ -6,6 +6,7 @@
 # include "ConfigLoader.hpp"
 # include "ConfigChecker.hpp"
 # include "checkFile.hpp"
+#include <exception>
 # include <string>
 # include "Poll.hpp"
 
@@ -65,6 +66,9 @@
 		string			ext;
 
 		bool			alreadyExist = false;
+
+		// try							{ this->recv(); }
+		// catch (exception& e)		{ throw; }
 
 		try 						{ filename = CHECK->getFileName(this->conf, reqTarget); }
 		catch (httpError& e)		{ throw; }
@@ -309,6 +313,13 @@
 		}
 	}
 
+	void	ConnSocket::coreDone()
+	{
+		if (this->linkOutputFile)	/*  <------ output file is just created, do not send, do not close. */
+			return ;
+		POLLSET->getIterator(this).first->events |= POLLOUT;
+	}
+
 	void	ConnSocket::send(const string& content, map<int, undone>& writeUndoneBuf)
 	{
 		if (FINsended) return;
@@ -369,7 +380,39 @@
 	}
 
 	void	ConnSocket::dummy() {}
+	void	ConnSocket::makeResponseHeaderField()
+	{
+		this->ResH.setHTTPversion("HTTP/1.1");
+		if (this->ResH.exist("status") == true)
+		{
+			pair<status_code_t, string>	sr = checkStatusField(this->ResH["Status"]);
+			this->ResH.setStatusCode(sr.first);
+			this->ResH.setReasonPhrase(sr.second);
+			this->ResH.removeKey("Status");
+		}
+		else
+		{
+			switch (this->ResH.getStatusCode())
+			{
+			case 200:	this->ResH.setReasonPhrase("OK");			break;
+			case 404:	this->ResH.setReasonPhrase("Not Found");	break;
+			/* and so on ... */
+			}
+		}
+		this->ResH.setDefaultHeaders();
+	}
 
+	void	ConnSocket::makeResponseHeader()
+	{
+		if (this->ResH.getHeaderField().empty() == false)
+		{
+			this->makeResponseHeaderField();
+			this->ResH.makeStatusLine();
+			this->ResH.integrate();
+		}
+	}
+
+	string		ConnSocket::getOutputContent() { return this->ResH.getContent() + this->ResB.getContent(); }
 
 char checkMethod(const string& content)
 {
@@ -382,9 +425,14 @@ char checkMethod(const string& content)
 	return 0;
 }
 
-void	ConnSocket::returnError(status_code_t status, const string& message)
+// void	ConnSocket::returnError(status_code_t status, const string& message)
+void	ConnSocket::returnError(httpError& error)
 {
-	this->setErrorPage(status, message, message);
+	redirectError* r =  CONVERT(&error, redirectError);
+
+	this->setErrorPage(error.status, error.what(), error.what());
+	if (r)
+		this->ResH["Location"] = r->location;
 	this->ResH.setDefaultHeaders();
 	this->ResH.makeStatusLine();
 	this->ResH.integrate();
@@ -421,3 +469,4 @@ bool	createPUToutputFile(ConnSocket* connected, const string filename)
 	return alreadyExist;
 
 }
+

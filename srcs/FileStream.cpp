@@ -62,18 +62,26 @@ void			FileStream::recv()
 	switch (byte = readFrom(this->fd, this->content))
 	{
 	case -1:
-		TAG(core#, core); cout << RED("Unexcpected error from file: ") << this->getFilename() << endl;
+		TAG(FileStream#, recv); cout << RED("Unexcpected error from file: ") << this->getFilename() << endl;
 		this->close();
 		throw internalServerError();
 
 	case 0:		/* close file, process output */
-		TAG(core#, core); cout << GRAY("file closed: ") << this->getFilename() << endl;
+		TAG(FileStream#, recv); cout << GRAY("file closed: ") << this->getFilename() << endl;
 		this->close();
 		break;
 
 	default:	/* content appended */
 		throw readMore();
 	}
+}
+
+void	FileStream::coreDone()
+{
+	ConnSocket* connected = this->linkConn;
+	// POLLSET->drop(it);
+	connected->unlink(this);
+	POLLSET->getIterator(connected).first->events |= POLLOUT;
 }
 
 
@@ -92,7 +100,6 @@ void	FileStream::send(const string& content, map<int, struct undone>& writeUndon
 
 	byte = ::write( this->fd,
 					rContent.data() + rWrited,
-				//   1);
 					rContentLen - rWrited );
 	if (byte > 0)
 		rWrited += byte;
@@ -127,8 +134,8 @@ void			FileStream::core()
 		connected = this->linkConn;
 		string ext		= getExt(connected->ReqH.getRequsetTarget());
 
-		try					{ this->recv(); }
-		catch (exception& e){ throw; }	// ( readMore | 500 | processing Response)
+		// try					{ this->recv(); }
+		// catch (exception& e){ throw; }	// ( readMore | 500 | processing Response)
 
 		connected->ResB.setContent(this->content);
 		connected->ResH.setStatusCode(200);
@@ -139,6 +146,7 @@ void			FileStream::core()
 			connected->ResH["Content-Length"]	= toString(connected->ResB.getContent().length());
 }
 
+string			FileStream::getOutputContent() { return this->linkConn->ReqB.getContent();  }
 void			FileStream::setFilename( const string& filename) { this->filename =filename;}
 const string&	FileStream::getFilename() const	{ return this->filename;}
 void			FileStream::dummy() {}
@@ -147,7 +155,7 @@ void			FileStream::dummy() {}
 * ,                               Others
 *========================================================================**/
 
-string			createInputFileStream(ConnSocket* connected, const string& filename)
+void			createInputFileStream(ConnSocket* connected, const string& filename)
 {
 	FileStream* f = new FileStream(filename);
 	f->open(O_RDONLY);

@@ -70,7 +70,10 @@ private:
 public:
 	virtual void	send(const string& content, map<int, undone>& writeUndoneBuf) = 0;
 	virtual void	recv() = 0;
+	virtual void	coreDone() = 0;
 	virtual void	core() = 0;
+	virtual string	getOutputContent() = 0;
+
 };
 
 

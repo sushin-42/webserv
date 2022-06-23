@@ -27,23 +27,12 @@
 
 
 map<string, string> MIME;
-// void	setOutputStream(Stream* value, Stream** outputStream)
-// {
-// 	ConnSocket*	connected;
-// 	*outputStream = value;
-// 	if (CONVERT(value, Pipe))
-// 	// connected = Stream->linkConn;
-// 	// content = connected->ReqB.getContent();
-// }
-// void	setInputStream()
-// {}
 
 int main(int argc, char** argv)
  {
 	if (argvError(argc))
 		return (errMsg());
 	signal(SIGPIPE, SIG_IGN);
-	// HttpConfig http;
 	try
 	{
 		HttpConfig::getInstance()->setConfig(ReadConfig(argv));
@@ -55,8 +44,6 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	CONF->setAddrs(HttpConfig::getInstance()->serverMap);
-	CONF->loadMIME();
 
 	ConnSocket*			connected;
 	Pipe*				CGIpipe;
@@ -66,10 +53,13 @@ int main(int argc, char** argv)
 
 	PollSet::iterator	it;
 
-	string				content;
+	string				outputContent;
 	map<int, undone>	writeUndoneBuf;
-	createServerSockets(CONF->getAddrs());
+
+	CONF->setAddrs(HttpConfig::getInstance()->serverMap);
+	CONF->loadMIME();
 	POLLSET->createMonitor();
+	createServerSockets(CONF->getAddrs());
 
 	while (1)
 	{
@@ -91,23 +81,22 @@ int main(int argc, char** argv)
 		{
 			it.first->events &= ~POLLOUT;
 			outputStream = *it.second;
-			if (outputStream == connected)
-				content = connected->ResH.getContent() +
-						  connected->ResB.getContent();
-			else
-				content = connected->ReqB.getContent();
+			outputContent = outputStream->getOutputContent();
 			goto _send;
 		}
 //#----------------------------------POLLIN----------------------------------#//
 		else
-		{
 			inputStream = *it.second;
-			if (inputStream != connected)
-				goto _core;
-		}
 
-//*-----------------------ConnSocket: parse request--------------------------*//
-	try										{ connected->recv(); }
+//@---------------------------RECV FROM INPUT STREAM-------------------------@//
+
+	try										{ inputStream->recv(); }
+	catch	(readMore& r)					{ continue; }
+	catch	(httpError& h)					{
+												connected->returnError(h);
+												it.first->events |= POLLOUT;
+												continue;
+											}
 	catch	(exception& e)					{
 												if (CONVERT(&e, ConnSocket::connClosed) ||		//NOTE: what if client does not close after we send FIN? (cause we do graceful-close)
 													CONVERT(&e, ConnSocket::somethingWrong))
@@ -116,62 +105,28 @@ int main(int argc, char** argv)
 													POLLSET->drop(it);
 													continue;
 												}
-
-												if (CONVERT(&e, readMore))
-												{
-													continue;
-												}
-
-												httpError* err = CONVERT(&e, httpError);
-												if (err)
-												{
-													connected->returnError(err->status, err->what());
-													it.first->events |= POLLOUT;
-													continue;
-												}
 											}
-//@---------------------------CORE: PROCESS INSTREAM-------------------------@//
-_core:
-		try							{ core_wrapper(inputStream); }	//@ make response header, body//
-		catch (httpError& e)		{
-									  redirectError* r = CONVERT(&e, redirectError);
-									  if (r) { connected->ResH["Location"] = r->location; }
-									  connected->returnError(e.status, e.what());
-									  it.first->events |= POLLOUT;
-									  continue;
+//@----------------------------------RECV DONE-------------------------------@//
+
+//%--------------------------CORE: process before send-----------------------%//
+		try							{	inputStream->core();	}
+		catch	(readMore& r)		{	continue;	 }
+		catch	(httpError& h)		{
+										connected->returnError(h);
+										it.first->events |= POLLOUT;
+										continue;
 									}
+		inputStream->coreDone();
+		connected->makeResponseHeader();
+		if (inputStream == filestream)
+			POLLSET->drop(it);
+		continue;
 
-		catch (exception& e)		{ if (CONVERT(&e, readMore)) continue; }
-
-
-		if (inputStream)		/* reach here : READ DONE */
-		{
-			if (inputStream == connected)
-			{
-				if (connected->linkOutputFile)
-					continue;
-				// if (!connected->linkInputPipe)		/*  <------ pipe is just created, do not send 0 byte */
-				POLLSET->getIterator(connected).first->events |= POLLOUT;
-				continue;
-			}
-			else if (inputStream == CGIpipe)
-			{
-				if (connected->pending == false)
-					POLLSET->getIterator(connected).first->events |= POLLOUT;
-				continue;
-			}
-			else
-			{
-				POLLSET->drop(it);
-				connected->unlink(inputStream);
-				POLLSET->getIterator(connected).first->events |= POLLOUT;
-				continue;
-			}
-		}
+//%--------------------------------READY TO SEND-----------------------------%//
 
 //.-----------------------------SEND TO OUTSTREAM----------------------------.//
 _send:
-		try									{ outputStream->send(content, writeUndoneBuf); }
+		try									{ outputStream->send(outputContent, writeUndoneBuf); }
 		catch (exception& e)				{
 											  if		(CONVERT(&e, sendMore))	it.first->events |= POLLOUT;	// not all data sended
 											  else if	(CONVERT(&e, readMore)) ;							 	// not all data sended, and have to read from pipe

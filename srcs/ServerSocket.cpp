@@ -40,4 +40,6 @@
 	void		ServerSocket::core() {}
 	void		ServerSocket::recv() {}
 	void		ServerSocket::dummy() {}
+	void		ServerSocket::coreDone() {}
+	string		ServerSocket::getOutputContent() { return ""; }
 

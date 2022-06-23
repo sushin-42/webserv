@@ -40,6 +40,8 @@ public:
 	void 			send(const string& s, map<int, struct undone>& u);
 	void 			core();
 	void 			recv();
+	void			coreDone();
+	string			getOutputContent();
 private:
 	void dummy();
 };
