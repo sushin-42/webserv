@@ -132,7 +132,6 @@
 				else
 					throw badRequest();
 
-
 				if (CHECK->isAllowed(this->conf, ReqH.getMethod()) == false)
 				{
 					// cout << "METHOD: "  << ReqH.getMethod() << endl;
@@ -164,10 +163,11 @@
 			ReqB.setChunk(recvContent);
 			try
 			{
+				// cout << recvContent << endl;
 				ReqB.decodingChunk(conf->client_max_body_size);
-				cout << "------------" << endl;
-				cout << ReqB.getContent() << endl;
-				cout << "------------" << endl;
+				// cout << "------------" << endl;
+				// cout << ReqB.getContent() << endl;
+				// cout << "------------" << endl;
 			}
 			catch (exception& e)
 			{
@@ -255,6 +255,7 @@
 
 	void	ConnSocket::send(const string& content, map<int, undone>& writeUndoneBuf)
 	{
+		cout << content << endl;
 		if (FINsended) return;
 		try						{ writeUndoneBuf.at(this->fd); }
 		catch (exception& e)	{ writeUndoneBuf[this->fd] = (struct undone){"",0};

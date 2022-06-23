@@ -300,7 +300,7 @@ void				createServerSockets(map<
 		catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
 		serv->confs = mit->second;
 
-		pollset.enroll(serv);
+		pollset.enroll(serv, POLLIN);
 	}
 
 

@@ -14,7 +14,7 @@ methodNotAllowed::~methodNotAllowed() throw() {};
 notFound::notFound(): httpError(404, "Not Found") {}
 notFound::~notFound() throw() {};
 
-forbidden::forbidden(): httpError(403, "Forbidden") {}
+forbidden::forbidden(): httpError(404, "Forbidden") {}
 forbidden::~forbidden() throw() {};
 
 internalServerError::internalServerError(): httpError(500, "Internal Server Error") {}

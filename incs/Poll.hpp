@@ -84,7 +84,7 @@ public:
 	const_iterator	begin() const;
 	const_iterator	end() const;
 
-	iterator		enroll( IStream* stream );
+	iterator		enroll( IStream* stream, short events );
 	void			dropLink(IStream* link);
 	void			drop( iterator it );
 

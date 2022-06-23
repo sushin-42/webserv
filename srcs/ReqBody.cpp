@@ -99,6 +99,8 @@
 
 			case SizeStart:
 			{
+				if (chunk.data.empty() )
+					goto _readmore;
 				if (ishexnumber(chunk.data[chunk.cur]))
 					goto _ReadingSize;
 				else

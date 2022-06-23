@@ -47,11 +47,11 @@ PollSet::iterator	PollSet::getIterator(IStream* s)
 	return iterator(itPoll, itStream);
 }
 
-PollSet::iterator		PollSet::enroll( IStream* stream )
+PollSet::iterator		PollSet::enroll( IStream* stream, short events )
 {
 	Poll		p;
 	p.fd		= stream->getFD();
-	p.events	= POLLIN;
+	p.events	= events;
 	p.revents	= 0;
 
 	stream->setTimeOut(20);
@@ -184,7 +184,7 @@ PollSet::iterator	PollSet::readRoutine(PollSet::iterator it)
 			{
 				connected = new ConnSocket(serv->accept());
 				TAG(PollSet, examine); cout << GREEN("Server ") << _UL "[" << serv->getIP() + ":" + toString(serv->getPort()) + _NC "]"<<  GREEN(" Got new connection, enroll ") << connected->getFD() << endl;
-				this->enroll(connected);
+				this->enroll(connected, POLLIN);
 			}
 			catch (exception& e)	// accept() not ready
 			{	continue;	}

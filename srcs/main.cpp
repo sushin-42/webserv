@@ -142,6 +142,8 @@ int main(int argc, char** argv)
 												if (err)
 												{
 													connected->returnError(err->status, err->what());
+													it.first->events |= POLLOUT;
+													continue;
 													goto _set_stream_to_socket;
 												}
 											}
@@ -151,8 +153,12 @@ _core:
 		try							{ core_wrapper(pollset, serv, inputStream); }	//@ make response header, body//
 		catch (httpError& e)		{
 									  redirectError* r = CONVERT(&e, redirectError);
-									  if (r) connected->ResH["Location"] = r->location;
-									  connected->returnError(e.status, e.what());
+									  if (r) {
+												connected->ResH["Location"] = r->location;
+											 }
+										connected->returnError(e.status, e.what());
+										it.first->events |= POLLOUT;
+										continue;
 								 	  goto _set_stream_to_socket;	}
 
 		catch (exception& e)		{ if (CONVERT(&e, readMore)) continue; }
@@ -162,6 +168,8 @@ _core:
 		{
 			if (inputStream == connected)
 			{
+				if (connected->linkOutputFile)
+					continue;
 				// if (!connected->linkInputPipe)		/*  <------ pipe is just created, do not send 0 byte */
 				pollset.getIterator(connected).first->events |= POLLOUT;
 				continue;
@@ -185,14 +193,22 @@ _set_stream_to_socket:
 		content = connected->ResH.getContent() +
 				  connected->ResB.getContent();
 
-
 //.-----------------------------SEND TO OUTSTREAM----------------------------.//
 _send:
 		try									{ outputStream->send(content, writeUndoneBuf); }
 		catch (exception& e)				{
 											  if		(CONVERT(&e, sendMore))	it.first->events |= POLLOUT;	// not all data sended
 											  else if	(CONVERT(&e, readMore)) ;							 	// not all data sended, and have to read from pipe
-											  else								pollset.drop(it);
+											  else								{
+											  									  if (outputStream == filestream)
+																				  {
+											  									  	pollset.getIterator(connected).first->events |= POLLOUT;
+																				  	connected->unlink(outputStream);
+																				  	pollset.drop(it);
+																					continue;
+																				  }
+																				}
+
 											}
 		connected->ReqH.clear(), connected->ResH.clear(), connected->ResB.clear();
 	}

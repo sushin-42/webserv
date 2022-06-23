@@ -9,6 +9,10 @@
 #include <string>
 # include <sys/stat.h>
 
+bool	createPUToutputFile(ConnSocket* connected, PollSet& pollset, const string filename);
+void	writePUToutputFile(ConnSocket* c, const string& fn);
+
+
 string			createInputFileStream(ConnSocket* connected, const string& filename, PollSet& pollset)
 {
 	FileStream* f = new FileStream(filename);
@@ -16,7 +20,7 @@ string			createInputFileStream(ConnSocket* connected, const string& filename, Po
 
 	connected->linkInputFile = f;
 	f->linkConn = connected;
-	pollset.enroll(f);
+	pollset.enroll(f, POLLIN);
 
 	throw readMore();
 }
@@ -59,8 +63,23 @@ void			core(PollSet& pollset, ServerSocket *serv, IStream* stream)
 		string			filename;
 		string			ext;
 
+		bool			alreadyExist = false;
+
 		try 						{ filename = getFileName(connected, reqTarget); }
 		catch (httpError& e)		{ throw; }
+
+
+		if (connected->ReqH.getMethod() == "PUT")
+		{
+			try						{ alreadyExist = createPUToutputFile(connected, pollset, filename); (void)alreadyExist; }
+			catch (Conflict& e)		{ throw; }
+			// connected->pending = true;
+			connected->ResH.setStatusCode(alreadyExist ? 204 : 201);
+			connected->ResH.setReasonPhrase(alreadyExist ? "No Content" : "Created");
+			connected->ResH.setDefaultHeaders();
+
+			return;
+		}
 
 		try							{ s =_checkFile(filename);
 									  if (S_ISDIR(s.st_mode) && filename.back() != '/')
@@ -177,3 +196,43 @@ void	writeResponseHeader(ConnSocket* connected)
 	}
 	connected->ResH.setDefaultHeaders();
 }
+
+
+
+status_code_t	deleteFile(pair<string, string> p)
+{
+	int		ret;
+	struct 	stat s;
+	string	filename = p.first + p.second;
+
+	try						{ s = _checkFile(filename); }
+	catch (httpError& e)	{ throw; }	// for 403
+
+	if (S_ISDIR(s.st_mode) && filename.back() != '/')
+		return 409; // throw?
+
+	ret = remove(filename.c_str());
+	if (ret == -1)
+		return 404; // throw?
+	return 204; // throw?
+}
+bool	createPUToutputFile(ConnSocket* connected, PollSet& pollset, const string filename)
+{
+
+	FileStream* f = new FileStream(filename);
+
+	bool alreadyExist = (access(filename.c_str(),F_OK) == 0);
+
+	f->open(O_WRONLY | O_CREAT | O_TRUNC | O_NONBLOCK);
+	if (f->getFD() == -1)
+		throw Conflict();
+
+	connected->linkOutputFile = f;
+	f->linkConn = connected;
+
+	pollset.enroll(f, POLLOUT);
+
+	return alreadyExist;
+
+}
+

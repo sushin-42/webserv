@@ -165,12 +165,13 @@ void parentRoutine(
 
 	pr->linkConn = connected;
 	connected->linkInputPipe = pr;
-	pollset.enroll(pr);
+	pollset.enroll(pr, POLLIN);
 
 	pw->linkConn = connected;
 	connected->linkOutputPipe = pw;
-	PollSet::iterator it =  pollset.enroll(pw);
-	it.first->events |= POLLOUT;
+	// PollSet::iterator it =
+	pollset.enroll(pw, POLLOUT);	//POLLOUT?
+	// it.first->events |= POLLOUT;
 }
 
 void	createCGI(PollSet& pollset, ServerSocket* serv, ConnSocket* connected)
