@@ -3,6 +3,7 @@
 
 # include "ServerConfig.hpp"
 # include "LocationConfig.hpp"
+#include <string>
 
 # define CHECK ConfigChecker::_()
 
@@ -45,6 +46,7 @@ public:
 	string				replaceURI(const string& reqTarget, const string& locURI, const string& alias);
 	string				trimLocationURI(const string& reqTarget, const string& locURI);
 	pair<string,string>	routeRequestTarget(Config* conf, const string& reqTarget);
+	string				getFileName(Config* conf, const string& reqTarget);
 };
 
 #endif

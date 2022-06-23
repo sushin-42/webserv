@@ -36,8 +36,9 @@ public:
 
 	void			bind();
 	void			listen(int backlog);
-	ConnSocket	accept() const;
-	void send(const string& s, map<int, struct undone>& u);
+	ConnSocket		accept() const;
+	void 			send(const string& s, map<int, struct undone>& u);
+	void 			core();
 private:
 	void dummy();
 };

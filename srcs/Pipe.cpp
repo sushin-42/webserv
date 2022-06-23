@@ -1,9 +1,49 @@
 #include "Pipe.hpp"
+#include "CGI.hpp"
 #include "ConnSocket.hpp"
 #include "Exceptions.hpp"
+
+/**========================================================================
+* @                           Constructors
+*========================================================================**/
+
+	Pipe::Pipe()
+	: Stream(-1), output(), pid(0), status(0), headerDone(false), linkConn(NULL) {}
+
+	Pipe::Pipe( int fd, pid_t p )
+	:Stream(fd), output(), pid(p), status(0), headerDone(false), linkConn(NULL) {}
+
+	Pipe::Pipe( const Pipe& src )
+	: Stream(src), output(src.output), pid(src.pid), status(src.status), headerDone(false), linkConn(src.linkConn) {}
+
+	Pipe::~Pipe() {}
+
+/**========================================================================
+* *                            operators
+*========================================================================**/
+
+	Pipe&	Pipe::operator=( const Pipe& src )
+	{
+		if (this != &src)
+		{
+			this->Stream::operator=(src);
+			this->output 	= src.output;
+			this->pid	 	= src.pid;
+			this->status 	= src.status;
+			this->headerDone= src.headerDone;
+			this->linkConn	= src.linkConn;
+		}
+		return *this;
+	}
+
 /**========================================================================
 * #                          member functions
 *========================================================================**/
+
+void	Pipe::core()
+{
+	readFromCGI(this);
+}
 
 ssize_t	Pipe::read()
 {

@@ -103,9 +103,11 @@ public:
 
 	void	unlink(Stream* link);
 
-	void	send(const string& content, map<int, undone>& writeUndoneBuf);
 	void	setErrorPage(status_code_t status, const string& reason, const string& text);
 	void	returnError(status_code_t status, const string& message);
+
+	void	send(const string& content, map<int, undone>& writeUndoneBuf);
+	void	core();
 
 /**========================================================================
 * !                            Exceptions
@@ -122,5 +124,8 @@ private:
 	void	dummy();
 
 };
+
+bool	createPUToutputFile(ConnSocket* connected, const string filename);
+void	writePUToutputFile(ConnSocket* c, const string& fn);
 
 #endif

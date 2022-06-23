@@ -42,14 +42,22 @@ public:
 
 	int				open(int mode);
 	int				open(const string& filename, int mode);
-	ssize_t			read();
-	void			send(const string& content, map<int, struct undone>& writeUndoneBuf);
 	void			setFilename( const string& filename);
 	const string&	getFilename() const;
+	ssize_t			read();
+	void			readInputFileStream();
+	void			send(const string& content, map<int, struct undone>& writeUndoneBuf);
+	void			core();
 
 private:
 	void dummy();
 };
+
+/**========================================================================
+* ,                               Others
+*========================================================================**/
+
+string	createInputFileStream(ConnSocket* connected, const string& filename);
 
 #endif
 

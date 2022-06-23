@@ -13,6 +13,21 @@ ConfigChecker::~ConfigChecker() {}
 * #                          member functions
 *========================================================================**/
 
+string	ConfigChecker::getFileName(Config* conf, const string& reqTarget)
+{
+	string			indexfile;
+	string			prefix;
+	string			uri;
+
+	pair <string, string> p = CHECK->routeRequestTarget(conf, reqTarget);
+	prefix = p.first;
+	uri = p.second;
+
+	string			filename = prefix + uri;
+
+	return filename;
+}
+
 bool	ConfigChecker::isAllowed(Config* conf, const string& method)
 {
 	_Loc* locConf = CONVERT(conf, _Loc);

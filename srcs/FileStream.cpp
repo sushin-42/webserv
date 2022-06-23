@@ -1,7 +1,8 @@
 #include "FileStream.hpp"
 #include "Exceptions.hpp"
+#include "ConfigLoader.hpp"
+#include "Poll.hpp"
 #include "fcntl.h"
-
 
 /**========================================================================
 * @                           Constructors
@@ -55,12 +56,33 @@ int	FileStream::open(const string& filename, int mode)
 	return ret;
 }
 
-ssize_t	FileStream::read()
+ssize_t			FileStream::read()
 {
 	ssize_t	byte = readFrom(this->fd, this->content);
 
 	return byte;
 }
+
+void			FileStream::readInputFileStream()
+{
+	ssize_t byte;
+	switch (byte = this->read())
+	{
+	case -1:
+		TAG(core#, core); cout << RED("Unexcpected error from file: ") << this->getFilename() << endl;
+		this->close();
+		throw internalServerError();
+
+	case 0:		/* close file, process output */
+		TAG(core#, core); cout << GRAY("file closed: ") << this->getFilename() << endl;
+		this->close();
+		break;
+
+	default:	/* content appended */
+		throw readMore();
+	}
+}
+
 
 void	FileStream::send(const string& content, map<int, struct undone>& writeUndoneBuf)
 {
@@ -106,6 +128,42 @@ void	FileStream::send(const string& content, map<int, struct undone>& writeUndon
 	}
 }
 
+void			FileStream::core()
+{
+		ConnSocket* connected;
+		connected = this->linkConn;
+		string ext		= getExt(connected->ReqH.getRequsetTarget());
+
+		try					{ this->readInputFileStream(); }
+		catch (exception& e){ throw; }	// ( readMore | 500 | processing Response)
+
+		connected->ResB.setContent(this->content);
+		connected->ResH.setStatusCode(200);
+		connected->ResH["Content-Type"]	= CONF->MIME.find(ext) != CONF->MIME.end() ?
+										  CONF->MIME[ext] : connected->conf->default_type;
+
+		if (!connected->ResB.getContent().empty())
+			connected->ResH["Content-Length"]	= toString(connected->ResB.getContent().length());
+}
+
 void			FileStream::setFilename( const string& filename) { this->filename =filename;}
 const string&	FileStream::getFilename() const	{ return this->filename;}
-void FileStream::dummy() {}
+void			FileStream::dummy() {}
+
+/**========================================================================
+* ,                               Others
+*========================================================================**/
+
+string			createInputFileStream(ConnSocket* connected, const string& filename)
+{
+	FileStream* f = new FileStream(filename);
+	f->open(O_RDONLY);
+
+	connected->linkInputFile = f;
+	f->linkConn = connected;
+	POLLSET->enroll(f, POLLIN);
+
+	throw readMore();
+}
+
+

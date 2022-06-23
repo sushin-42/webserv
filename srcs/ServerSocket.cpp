@@ -37,5 +37,6 @@
 		return c;
 	}
 	void		ServerSocket::send(const string& s, map<int, struct undone>& u) { (void)s, (void)u; }
+	void		ServerSocket::core() {}
 	void		ServerSocket::dummy() {}
 

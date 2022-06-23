@@ -1,11 +1,16 @@
 # include "ConnSocket.hpp"
-#include "Exceptions.hpp"
+# include "CGI.hpp"
+# include "Exceptions.hpp"
 # include "utils.hpp"
 # include "ServerConfig.hpp"
 # include "ConfigLoader.hpp"
 # include "ConfigChecker.hpp"
 # include "checkFile.hpp"
-#include <string>
+# include <string>
+# include "Poll.hpp"
+
+
+
 
 /**========================================================================
 * @                           Constructors
@@ -50,6 +55,64 @@
 /**========================================================================
 * #                          member functions
 *========================================================================**/
+
+	void	ConnSocket::core()
+	{
+		struct stat s;
+
+		string			reqTarget = this->ReqH.getRequsetTarget();
+		string			filename;
+		string			ext;
+
+		bool			alreadyExist = false;
+
+		try 						{ filename = CHECK->getFileName(this->conf, reqTarget); }
+		catch (httpError& e)		{ throw; }
+
+
+		if (this->ReqH.getMethod() == "PUT")
+		{
+			try						{ alreadyExist = createPUToutputFile(this, filename); (void)alreadyExist; }
+			catch (Conflict& e)		{ throw; }
+
+			this->ResH.setStatusCode(alreadyExist ? 204 : 201);
+			this->ResH.setReasonPhrase(alreadyExist ? "No Content" : "Created");
+			this->ResH.setDefaultHeaders();
+
+			return;
+		}
+
+		try							{ s =_checkFile(filename);
+									  if (S_ISDIR(s.st_mode) && filename.back() != '/')
+									  		throw movedPermanently("http://" + this->ReqH["Host"] + reqTarget + '/');
+									}
+		catch (httpError& e)		{
+									  throw;
+									}
+
+		try							{ filename = checkIndex(this->conf, filename); }
+		catch (httpError& e)		{ throw; }
+		catch (autoIndex& a)		{ this->ResH.setStatusCode(200);
+									  this->ResH.setDefaultHeaders();					//FIXIT: prefix
+									  this->ResB.setContent(directoryListing(a.path, "/"));	/* alias case: need to append Loc URI || or req Target ? */
+									  this->ResH["Content-Length"]	= toString(this->ResB.getContent().length());
+									  this->ResH["Content-Type"]		= "text/html";
+									  return ;
+									}
+
+		if (getExt(filename) == "py")	//! check case (.py == DIRECTORY)
+		{
+			this->ResB.clear();
+			this->ResH.removeKey("content-length");
+			if (this->linkInputPipe == NULL)
+				return createCGI(this->linkServerSock, this);
+		}
+		createInputFileStream(this, filename);	//readMore
+	}
+
+
+
+
 	void	ConnSocket::unlink(Stream* link)
 	{
 		if (linkInputFile == link)
@@ -341,3 +404,27 @@ ConnSocket::connClosed::connClosed(): msg("") {}
 ConnSocket::connClosed::connClosed(const string& m): msg(m) {}
 ConnSocket::connClosed::~connClosed() throw() {};
 const char *	ConnSocket::connClosed::what() const throw() { return msg.c_str(); }
+
+/**========================================================================
+* ,                               Others
+*========================================================================**/
+
+bool	createPUToutputFile(ConnSocket* connected, const string filename)
+{
+
+	FileStream* f = new FileStream(filename);
+
+	bool alreadyExist = (access(filename.c_str(),F_OK) == 0);
+
+	f->open(O_WRONLY | O_CREAT | O_TRUNC | O_NONBLOCK);
+	if (f->getFD() == -1)
+		throw Conflict();
+
+	connected->linkOutputFile = f;
+	f->linkConn = connected;
+
+	POLLSET->enroll(f, POLLOUT);
+
+	return alreadyExist;
+
+}
