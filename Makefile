@@ -5,8 +5,7 @@ EOC         = "\033[0;0m"
 LINE_CLEAR  = "\x1b[1A\x1b[M"
 
 CC = c++
-CFLAGS = -Wall -Werror -Wextra -std=c++98 -g -fsanitize=address
-SRCS = main.cpp Config.cpp HttpConfig.cpp ServerConfig.cpp LocationConfig.cpp
+CFLAGS = -Wall -Werror -Wextra -std=c++98
 INC_DIR = incs
 SRC_DIR = srcs
 OBJS =  ${SRCS:.cpp=.o}

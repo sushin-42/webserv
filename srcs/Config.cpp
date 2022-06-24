@@ -8,11 +8,11 @@
  * %                          member variables
  *========================================================================**/
 
-Config::Config() : link()
+Config::Config() : dupeCheck(), link()
 {
     MapSetting();
 }
-Config::Config(const Config &src) : link(src.link) {}
+Config::Config(const Config &src) : dupeCheck(), link(src.link) {}
 Config::~Config() {}
 
 /**========================================================================
@@ -64,6 +64,12 @@ void Config::SetupConfig()
         ss >> directive;
         while (ss >> tmp)
             arg.push_back(tmp);
+        cout << directive << ":";
+        for (size_t i = 0; i < arg.size(); i++)
+        {
+            cout << arg[i] << ", ";
+        }
+        cout << endl;
         call_function(directive, arg);
     }
 }

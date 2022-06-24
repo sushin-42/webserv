@@ -36,7 +36,6 @@ int main(int argc, char** argv)
 	try
 	{
 		HttpConfig::getInstance()->setConfig(ReadConfig(argv));
-		HttpConfig::getInstance()->defaultSet();
 	}
 	catch (const std::exception &e)
 	{
