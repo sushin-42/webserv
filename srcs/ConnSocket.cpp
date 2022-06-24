@@ -344,13 +344,9 @@
 		{
 			TAG(ConnSocket, send) << _GOOD(all data sended to) << this->fd << ": " << rWrited << " / " << rContentLen << " bytes" << endl;
 			writeUndoneBuf.erase(this->fd);
-			if (linkInputPipe)
-			{
-				if (isPipeAlive() || linkInputPipe->readDone == false)
-					throw readMore();
-			}
-			else
-				gracefulClose();
+			if (linkInputPipe && linkInputPipe->readDone == false)
+				throw readMore();
+			gracefulClose();
 		}
 		//' not all data sended. have to be buffered '//
 		else
