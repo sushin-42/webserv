@@ -56,16 +56,6 @@ struct stat	_checkFile(const string& path)
 	else if (access(path.c_str(), R_OK) == -1)
 		throw forbidden();
 
-
-	// if (S_ISDIR(s.st_mode))
-	// {
-	// 	if (path.back() != '/')
-	// 	{
-	// 		cout << "PATH IS : " << path << endl;
-	// 		throw movedPermanently();
-	// 	}
-	// 		// throw movedPermanently("http://" + connected->ReqH["Host"] + reqTarget + '/');
-	// }
 	return s;
 }
 

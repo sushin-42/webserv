@@ -54,7 +54,7 @@ void	ResHeader::print()
 	cout << "===========Header-Field===========" << endl;
 	for (; it != ite; it++)
 		cout << it->first << endl;
-	cout << "===========-------------==========" << endl;
+	cout << "==================================" << endl;
 }
 
 IHeader::status_code_t	checkFile(const string& path)

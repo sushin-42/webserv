@@ -134,7 +134,6 @@ int childRoutine(
 
 //#-----------------------------argv, envp done-----------------------------#//
 
-	// cout << path << endl;
 	dup2(CtoP[1], STDOUT_FILENO), close(CtoP[0]), close(CtoP[1]);
 	dup2(PtoC[0], STDIN_FILENO), close(PtoC[1]), close(PtoC[1]);
 	// sleep(1);	//NOTE: 자식프로세스가 왜  기다려주지 ㅎ;
