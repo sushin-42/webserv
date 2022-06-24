@@ -81,7 +81,7 @@ void	FileStream::coreDone()
 	ConnSocket* connected = this->linkConn;
 	// POLLSET->drop(it);
 	connected->unlink(this);
-	POLLSET->getIterator(connected).first->events |= POLLOUT;
+	POLLSET->pollMap[connected->getFD()].first.events |= POLLOUT;
 }
 
 

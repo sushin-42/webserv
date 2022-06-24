@@ -318,7 +318,7 @@
 	{
 		if (this->linkOutputFile)	/*  <------ output file is just created, do not send, do not close. */
 			return ;
-		POLLSET->getIterator(this).first->events |= POLLOUT;
+		POLLSET->pollMap[this->getFD()].first.events |= POLLOUT;
 	}
 
 	void	ConnSocket::send(const string& content, map<int, undone>& writeUndoneBuf)

@@ -13,6 +13,7 @@
 # include <vector>
 # include <pthread.h>
 
+#include "Config.hpp"
 # include "ConnSocket.hpp"
 # include "ISocket.hpp"
 #include "Stream.hpp"
@@ -37,17 +38,10 @@ class PollSet
 * '                              typedefs
 *========================================================================**/
 
-private:
-	typedef vector<Poll>			_Vp;
-	typedef vector<Stream*>			_Vs;
-	typedef pair<Poll, Stream*>		_Ps;
-	typedef _Vp::iterator			iterator_p;
-	typedef _Vs::iterator			iterator_s;
-	typedef _Vp::const_iterator		const_iterator_p;
-	typedef _Vs::const_iterator		const_iterator_s;
-public:
-	typedef iterator_pair<iterator_p, iterator_s>				iterator;
-	typedef iterator_pair<const_iterator_p,const_iterator_s>	const_iterator;
+typedef pair<Poll, Stream*> _PS;
+typedef vector<Poll>		_Vp;
+typedef map<int, _PS>		_Map;
+
 
 /**========================================================================
 * %                          member variables
@@ -55,10 +49,12 @@ public:
 
 private:
 	static PollSet*		pollset;
-	vector<Poll>		pollVec;
-	vector<Stream*>		streamVec;
-	Timer*				timer;
+	_Vp					pollVec;
 
+public:
+	_Map				pollMap;
+private:
+	Timer*				timer;
 /**========================================================================
 * @                           Constructors
 *========================================================================**/
@@ -81,25 +77,24 @@ public:
 		return pollset;
 	}
 
-	iterator		begin();
-	iterator		end();
-	const_iterator	begin() const;
-	const_iterator	end() const;
 
-	iterator		enroll( Stream* stream, short events );
+	void			enroll( Stream* stream, short events );
 	void			dropLink(Stream* link);
-	void			drop( iterator it );
+	void			drop( int fd );
+	void			drop( Stream* stream );
 
 	time_t		getMinimumRemaining();
 	void		dropTimeout();
-	iterator	examine();
+	vector<Stream*>	examine();
 	void		createMonitor();
-	iterator	getIterator(Stream* s);
+	// iterator	getIterator(Stream* s);
 private:
-	void	print();
+	void			print();
+	void			makePollVec();
+	void			_drop( int fd );
 
-	iterator	readRoutine(iterator it);
-	iterator	writeRoutine(iterator it);
+	Stream*	readRoutine(Stream* stream);
+	Stream*	writeRoutine(Stream* stream);
 
 
 };
