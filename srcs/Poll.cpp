@@ -2,7 +2,7 @@
 #include "FileStream.hpp"
 #include "Pipe.hpp"
 #include "Stream.hpp"
-// #include "Timer.hpp"
+#include "Timer.hpp"
 #include <ios>
 
 PollSet*	PollSet::pollset;
@@ -66,40 +66,54 @@ void		PollSet::enroll( Stream* stream, short events )
 
 void	PollSet::_drop( int fd )
 {
-	// ConnSocket* connSock = CONVERT(*(it.second), ConnSocket);
+
 	// Stream*	link1 = NULL;
 	// Stream*	link2 = NULL;
 	// Stream*	link3 = NULL;
 	// Stream*	link4 = NULL;
+
 	Poll	p;
 	Stream* s;
 
-	// if (connSock && connSock->linkInputPipe)
-	// 	link1 = connSock->linkInputPipe;
-	// if (connSock && connSock->linkOutputPipe)
-	// 	link2 = connSock->linkOutputPipe;
-	// if (connSock && connSock->linkInputFile)
-	// 	link3 = connSock->linkInputFile;
-	// if (connSock && connSock->linkOutputFile)
-	// 	link4 = connSock->linkOutputFile;
-
-	TAG(PollSet, drop); cout << GRAY("Drop ") << fd << endl;
-
 	p = this->pollMap[fd].first;
 	s = this->pollMap[fd].second;
+	TAG(PollSet, drop); cout << GRAY("Drop ") << fd << " ";
+	ConnSocket* connSock = CONVERT(s, ConnSocket);
+	if (connSock)
+	{
+		cout << BLUE("(ConnSocket)") << endl;
+		if (connSock->linkInputPipe)
+		{
+			// link1 = connSock->linkInputPipe;
+			connSock->linkInputPipe->linkConn = NULL;
+		}
+		if (connSock->linkOutputPipe)
+		{
+			// link2 = connSock->linkOutputPipe;
+			connSock->linkOutputPipe->linkConn = NULL;
+		}
+		if (connSock->linkInputFile)
+		{
+			// link3 = connSock->linkInputFile;
+			connSock->linkInputFile->linkConn = NULL;
+		}
+		if (connSock->linkOutputFile)
+		{
+			// link4 = connSock->linkOutputFile;
+			connSock->linkOutputFile->linkConn = NULL;
+		}
+	}
+
+	else if (CONVERT(s, Pipe))
+ 		cout << PURPLE("(Pipe)") << endl;
+
+	else if (CONVERT(s, FileStream))
+ 		cout << YELLOW("(FileStream)") << endl;
+
 
 	delete s;
 	pollMap.erase(fd);
 	close(fd);
-	_Map::iterator it, ite;
-	it=pollMap.begin(), ite=pollMap.end();
-	// cout << "[ ";
-	// for (;it!=ite;it++)
-	// {
-	// 	cout << it->first << ", ";
-	// }
-	// cout << "] " << endl;
-
 
 	// if (link1)	{/* cout << "drop link 1 " << endl; */dropLink(link1);}
 	// if (link2)	{/* cout << "drop link 2 " << endl; */dropLink(link2);}
@@ -136,12 +150,12 @@ vector<Stream*>	PollSet::examine()
 	int		numReady = 0;
 	time_t	minRemaining = 2000;;
 
-	// if (timer)
-	// {
-	// 	if ((minRemaining = getMinimumRemaining() * 1000) < 0)
-	// 		minRemaining = 2000;
-	// 	dropTimeout();
-	// }
+	if (timer)
+	{
+		if ((minRemaining = getMinimumRemaining() * 1000) < 0)
+			minRemaining = 2000;
+		dropTimeout();
+	}
 
 	makePollVec();
 	_Vp::iterator it, ite;
@@ -172,20 +186,6 @@ vector<Stream*>	PollSet::examine()
 		throw exception();
 	return ret;
 }
-
-// void	PollSet::print()
-// {
-// 	int i = 0;
-// 	for (iterator it = this->begin(); it<this->end(); it++, i++)
-// 	{
-// 		cout << "[" << i << "] ";
-// 		cout << stream->getFD() << " ( ";
-// 		if (it.first->events & POLLIN) cout << "IN ";
-// 		if (it.first->events & POLLOUT) cout << "OUT ";
-// 		cout << ") ";
-// 	}
-// 	cout << endl;
-// }
 
 Stream*				PollSet::readRoutine(Stream* stream)
 {
@@ -244,35 +244,28 @@ Stream*	PollSet::writeRoutine(Stream* stream)
 }
 
 
-// void	PollSet::createMonitor() { this->timer = new Timer(); }
-// time_t	PollSet::getMinimumRemaining()
-// {
-// 	timer->monitor();
-// 	if (timer->min.second == numeric_limits<time_t>::max())
-// 		return -1;
-// 	else
-// 	 	return timer->min.second;
-// }
+void	PollSet::createMonitor() { this->timer = new Timer(); }
+time_t	PollSet::getMinimumRemaining()
+{
+	timer->monitor();
+	if (timer->min.first == -1)
+		return -1;
+	else
+	 	return timer->min.second;
+}
 
-// void	PollSet::dropTimeout()
-// {
-// 	vector<_Ps>::iterator it	= timer->timeoutPool.begin();
-// 	vector<_Ps>::iterator ite	= timer->timeoutPool.end();
+void	PollSet::dropTimeout()
+{
+	vector<int>::iterator it	= timer->timeoutPool.begin();
+	vector<int>::iterator ite	= timer->timeoutPool.end();
 
-// 	iterator target;
-// 	for (; it < ite; it++)
-// 	{
-// 		//IMPL: reset_timedout_connection
-// 		// struct linger l = {.l_onoff = 1, .l_linger = 0};
-// 		// setsockopt((*itStream)->getFD(), SOL_SOCKET, SO_LINGER, &l, sizeof(l));
-
-// 		target = getIterator(it->second);
-
-// 		if (target.second == streamVec.end())	// already removed by dropLink()
-// 			continue;
-// 		else
-// 			drop(target);
-// 	}
-// 	timer->timeoutPool.clear();
-// }
+	for (; it < ite; it++)
+	{
+		//IMPL: reset_timedout_connection
+		// struct linger l = {.l_onoff = 1, .l_linger = 0};
+		// setsockopt((*itStream)->getFD(), SOL_SOCKET, SO_LINGER, &l, sizeof(l));
+		POLLSET->drop(*it);
+	}
+	timer->timeoutPool.clear();
+}
 

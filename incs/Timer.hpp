@@ -9,17 +9,17 @@ class Timer
 *========================================================================**/
 
 private:
-	typedef PollSet::iterator		iterator;
-	typedef PollSet::const_iterator	const_iterator;
-	typedef pair<Poll, Stream*>	_Ps;
+	// typedef PollSet::iterator		iterator;
+	// typedef PollSet::const_iterator	const_iterator;
+	// typedef pair<Poll, Stream*>	_Ps;
 
 /**========================================================================
 * %                          member variables
 *========================================================================**/
 
 public:
-	vector<_Ps>			timeoutPool;
-	pair<_Ps, time_t>	min;
+	vector<int>			timeoutPool;
+	pair<int, time_t>	min;
 
 /**========================================================================
 * @                           Constructors

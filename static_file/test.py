@@ -34,7 +34,7 @@ import time
 # print("Location:  /es.png")
 print("Status: 302 Found", flush=True)
 
-time.sleep(3)
+time.sleep(21)
 print("Content-type: text/htmlss", flush=True)
 # print("Content-length: 2022")
 time.sleep(3)

@@ -118,7 +118,7 @@
 
 
 
-	void	ConnSocket::unlink(Stream* link)
+	void	ConnSocket::unlink(Stream* link)	//NOTE: unlink each side?
 	{
 		if (linkInputFile == link)
 			linkInputFile = NULL;
