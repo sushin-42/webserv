@@ -323,6 +323,7 @@
 
 	void	ConnSocket::send(const string& content, map<int, undone>& writeUndoneBuf)
 	{
+		cout << "----------->" << content  << "<-----------";
 		if (FINsended) return;
 		try						{ writeUndoneBuf.at(this->fd); }
 		catch (exception& e)	{ writeUndoneBuf[this->fd] = (struct undone){"",0};
@@ -343,8 +344,11 @@
 		{
 			TAG(ConnSocket, send) << _GOOD(all data sended to) << this->fd << ": " << rWrited << " / " << rContentLen << " bytes" << endl;
 			writeUndoneBuf.erase(this->fd);
-			if (linkInputPipe && isPipeAlive())
-				throw readMore();
+			if (linkInputPipe)
+			{
+				if (isPipeAlive() || linkInputPipe->readDone == false)
+					throw readMore();
+			}
 			else
 				gracefulClose();
 		}

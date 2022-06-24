@@ -18,6 +18,7 @@ public:
 	pid_t	pid;
 	int		status;
 	bool	headerDone;
+	bool	readDone;
 	ConnSocket*	linkConn;
 
 
