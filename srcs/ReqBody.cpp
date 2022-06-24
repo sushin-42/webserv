@@ -162,7 +162,6 @@
 			{
 				state = SizeDone;
 				chunk.size = toHexNum<long long>(chunk.data.substr(chunk.newChunkStart,chunk.cur-1));
-				cout << "CHUNK SIZE: " << chunk.size << endl;
 			}
 			else
 				goto _invalid;
@@ -231,7 +230,6 @@
 
 	_appendData:
 			chunk.state=state;
-			printState(chunk.state);
 			this->append(chunk.data.substr(chunk.cur - chunk.size - 1,
 											chunk.size));
 		}

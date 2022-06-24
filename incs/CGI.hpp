@@ -55,7 +55,9 @@ void parentRoutine(
 void	createCGI(ServerSocket* serv, ConnSocket* connected, const string& executable, const string& scriptpath);
 void	moveToResH(const string& output, ConnSocket* connected);
 
+
 void	processOutputHeader(ConnSocket* connected, Pipe* CGIpipe);
+void	setChunkEncoding(ConnSocket* connected);
 void	readFromCGI(Pipe* CGIpipe);
 
 

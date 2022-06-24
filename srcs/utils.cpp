@@ -102,7 +102,7 @@ string extractBody(const string &content)
 ssize_t readFrom(int fd, string &content)
 {
 	ssize_t byte = 0;
-	char readbuf[1024];
+	char readbuf[32768];
 	bzero(readbuf, sizeof(readbuf));
 	byte = read(fd, readbuf, sizeof(readbuf));
 	switch (byte)
@@ -187,7 +187,7 @@ string errorpage(const string &title, const string &header, const string &messag
 
 string makeChunk(const string &s)
 {
-	return (toHex(s.length()) + "\n" + s + "\n");
+	return (toHex(s.length()) + "\r\n" + s + "\r\n");
 }
 
 /* we will check periodically all process forked. */

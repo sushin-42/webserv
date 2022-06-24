@@ -179,6 +179,7 @@ void	createCGI(ServerSocket* serv, ConnSocket* connected, const string& exe, con
 
 	pipe(CtoP), pipe(PtoC) ;
 	fcntl(CtoP[0], F_SETFL, fcntl(CtoP[0], F_GETFL, 0) | O_NONBLOCK);
+	fcntl(PtoC[1], F_SETFL, fcntl(CtoP[0], F_GETFL, 0) | O_NONBLOCK);
 
 	pid = fork();
 	if (pid == 0)	childRoutine(PtoC, CtoP, serv, connected, exe, scriptpath);	//TODO: check return value -1
@@ -210,20 +211,8 @@ void	moveToResH(const string& output, ConnSocket* connected)
 	}
 }
 
-void	processOutputHeader(ConnSocket* connected, Pipe* CGIpipe)
+void	setChunkEncoding(ConnSocket* connected)
 {
-	pair<status_code_t, string>		Status;
-
-	moveToResH(CGIpipe->output, connected);
-
-	if (connected->ResH.exist("Location"))
-	{
-		if (connected->ResH["Location"][0] == '/')	localRedir(connected);
-		else										clientRedir(connected);
-	}
-	else											documentResponse(connected);
-
-
 	if (!connected->ResH.exist("Content-Length") &&
 			(!connected->ResH.exist("Transfer-Encoding") ||
 			lowerize(connected->ResH["Transfer-encoding"]) != "chunked"
@@ -241,7 +230,22 @@ void	processOutputHeader(ConnSocket* connected, Pipe* CGIpipe)
 		 *
 		 *========================================================================**/
 	}
+}
 
+void	processOutputHeader(ConnSocket* connected, Pipe* CGIpipe)
+{
+	pair<status_code_t, string>		Status;
+
+	moveToResH(CGIpipe->output, connected);
+
+	if (connected->ResH.exist("Location"))
+	{
+		if (connected->ResH["Location"][0] == '/')	localRedir(connected);
+		else										clientRedir(connected);
+	}
+	else											documentResponse(connected);
+
+	setChunkEncoding(connected);
 }
 
 //*--------------------------------------------------------------------------*//
