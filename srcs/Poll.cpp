@@ -214,25 +214,25 @@ Stream*				PollSet::readRoutine(Stream* stream)
 	}
 	else if (connected)
 	{
-		TAG(PollSet, examine); cout << GREEN("New data to read ")
-		<< stream->getFD() << BLUE(" (ConnSocket)") <<endl;
+		// TAG(PollSet, examine); cout << GREEN("New data to read ")
+		// << stream->getFD() << BLUE(" (ConnSocket)") <<endl;
 		return connected;
 	}
 	else if (CGIpipe)
 	{
-		TAG(PollSet, examine); cout << GREEN("New data to read ")
-		<< stream->getFD() << PURPLE(" (Pipe)") <<endl;
+		// TAG(PollSet, examine); cout << GREEN("New data to read ")
+		// << stream->getFD() << PURPLE(" (Pipe)") <<endl;
 		return CGIpipe;
 	}
 	else if (filestream)
 	{
-		TAG(PollSet, examine); cout << GREEN("New data to read ")
-		<< stream->getFD() << YELLOW(" (FileStream)") <<endl;
+		// TAG(PollSet, examine); cout << GREEN("New data to read ")
+		// << stream->getFD() << YELLOW(" (FileStream)") <<endl;
 		return filestream;
 	}
 	else
 	{
-		TAG(PollSet, examine); cout << RED("Unknown type: ") << endl;
+		// TAG(PollSet, examine); cout << RED("Unknown type: ") << endl;
 		throw exception();
 	}
 }

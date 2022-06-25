@@ -101,7 +101,7 @@
 									  this->ResB.setContent(directoryListing(a.path, "/"));	/* alias case: need to append Loc URI || or req Target ? */
 									  this->ResH["Content-Length"]	= toString(this->ResB.getContent().length());
 									  this->ResH["Content-Type"]		= "text/html";
-									  return ;
+									  throw ;
 									}
 
 		string executable = CHECK->getCGIexcutable(this->conf, "." + getExt(filename));
@@ -186,6 +186,10 @@
 				ReqH.setRequsetTarget(recvContent);
 				ReqH.setContent(extractHeader(recvContent));
 				ReqH.setHeaderField(KVtoMap(recvContent, ':'));
+
+				cout << RED("<-----------------") << endl;
+				cout << this->ReqH.getContent();
+				cout << RED("<-----------------") << endl;
 
 				/* conf is still default_server conf */
 				if (ReqH.exist("Host"))
@@ -276,7 +280,7 @@
 
 			TAG(ConnSocket, recvRequest); cout << GRAY("CLIENT EXIT ") << this->fd << endl;
 			if (ReqH.exist("Content-Length") &&
-				toNum<unsigned int>(ReqH["Content-Length"]) > recvContent.length())
+				toNum<unsigned int>(ReqH["Content-Length"]) > ReqB.getContent().length())
 			{
 				/*
 					if connection closed before get all content-length,
@@ -292,6 +296,7 @@
 			throw somethingWrong(strerror(errno));
 			break;
 		default:
+
 			;
 		}
 
@@ -312,7 +317,7 @@
 	{
 		if (this->linkOutputFile)	/*  <------ output file is just created, do not send, do not close. */
 			return ;
-		POLLSET->pollMap[this->getFD()].first.events |= POLLOUT;
+		// POLLSET->pollMap[this->getFD()].first.events |= POLLOUT;	// set POLLOUT only if autodir ?
 	}
 
 	void	ConnSocket::send(const string& content, map<int, undone>& writeUndoneBuf)
@@ -403,6 +408,9 @@
 			this->makeResponseHeaderField();
 			this->ResH.makeStatusLine();
 			this->ResH.integrate();
+			cout << CYAN("----------------->") << endl;
+			cout << this->ResH.getContent();
+			cout << CYAN("----------------->") << endl;
 		}
 	}
 

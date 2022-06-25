@@ -133,6 +133,7 @@ int main(int argc, char** argv)
 //%--------------------------CORE: process before send-----------------------%//
 			try							{	inputStream->core();	}
 			catch	(readMore& r)		{	continue;	 }
+			catch	(autoIndex& a)		{	POLLSET->pollMap[stream->getFD()].first.events |= POLLOUT;	 }
 			catch	(httpError& h)		{
 											connected->returnError(h);
 											POLLSET->pollMap[stream->getFD()].first.events |= POLLOUT;	//NOTE: POLLOUT CONNSOCK ?
