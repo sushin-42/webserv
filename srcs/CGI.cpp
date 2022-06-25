@@ -135,7 +135,7 @@ int childRoutine(
 //#-----------------------------argv, envp done-----------------------------#//
 
 	dup2(CtoP[1], STDOUT_FILENO), close(CtoP[0]), close(CtoP[1]);
-	dup2(PtoC[0], STDIN_FILENO), close(PtoC[1]), close(PtoC[1]);
+	dup2(PtoC[0], STDIN_FILENO), close(PtoC[0]), close(PtoC[1]);
 	// sleep(1);	//NOTE: 자식프로세스가 왜  기다려주지 ㅎ;
 
 	if (execve(
@@ -177,8 +177,8 @@ void	createCGI(ServerSocket* serv, ConnSocket* connected, const string& exe, con
 	pid_t			pid;
 
 	pipe(CtoP), pipe(PtoC) ;
-	fcntl(CtoP[0], F_SETFL, fcntl(CtoP[0], F_GETFL, 0) | O_NONBLOCK);
-	fcntl(PtoC[1], F_SETFL, fcntl(CtoP[0], F_GETFL, 0) | O_NONBLOCK);
+	fcntl(CtoP[0], F_SETFL, O_NONBLOCK);
+	fcntl(PtoC[1], F_SETFL, O_NONBLOCK);
 
 	pid = fork();
 	if (pid == 0)	childRoutine(PtoC, CtoP, serv, connected, exe, scriptpath);	//TODO: check return value -1
