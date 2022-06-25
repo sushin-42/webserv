@@ -168,10 +168,10 @@ int main(int argc, char** argv)
 // 		connected->ReqH.clear(), connected->ResH.clear(), connected->ResB.clear();
 
 _send:
-			try							{ outputStream->send(outputContent, writeUndoneBuf);connected->ReqH.clear(), connected->ResH.clear(), connected->ResB.clear();}
+			try							{ outputStream->send(outputContent, writeUndoneBuf);}
 			catch (exception& e)		{
-											if		(CONVERT(&e, sendMore))	{POLLSET->pollMap[stream->getFD()].first.events |= POLLOUT; connected->ReqH.clear(), connected->ResH.clear(), connected->ResB.clear(); continue;}	// not all data sended
-											else if	(CONVERT(&e, readMore)) {connected->ReqH.clear(), connected->ResH.clear(), connected->ResB.clear(); continue;}							 	// not all data sended, and have to read from pipe
+											if		(CONVERT(&e, sendMore))	{POLLSET->pollMap[stream->getFD()].first.events |= POLLOUT; continue;}	// not all data sended
+											else if	(CONVERT(&e, readMore)) {continue;}							 	// not all data sended, and have to read from pipe
 											else	{
 														if (outputStream != connected)
 														{
@@ -181,7 +181,7 @@ _send:
 															POLLSET->drop(stream);
 															continue;
 														}
-														connected->ReqH.clear(), connected->ResH.clear(), connected->ResB.clear();
+														// connected->ReqH.clear(), connected->ResH.clear(), connected->ResB.clear();
 														continue;
 													}
 										}

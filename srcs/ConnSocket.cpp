@@ -337,6 +337,8 @@
 		if (byte > 0)
 			rWrited += byte;
 
+		ResH.clear(), ResB.clear();
+
 		//@ all data sended @//
 		if (rWrited == rContentLen)
 		{
