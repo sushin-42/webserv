@@ -50,9 +50,8 @@ typedef map<int, _PS>		_Map;
 private:
 	static PollSet*		pollset;
 	_Vp					pollVec;
-
-public:
 	_Map				pollMap;
+
 private:
 	Timer*				timer;
 /**========================================================================
@@ -78,20 +77,35 @@ public:
 	}
 
 
-	void			enroll( Stream* stream, short events );
+	void			enroll( Stream* stream, short event );
 	void			dropLink(Stream* link);
 	void			drop( int fd );
 	void			drop( Stream* stream );
 
-	time_t		getMinimumRemaining();
-	void		dropTimeout();
+	time_t			getMinimumRemaining();
+	void			dropTimeout();
 	vector<Stream*>	examine();
-	void		createMonitor();
-	// iterator	getIterator(Stream* s);
+	void			createMonitor();
+	void			prepareSend(const Stream* const stream);
+	void			prepareSend(int fd);
+	void			unsetSend(const Stream* const stream);
+	void			unsetSend(int fd);
+	const Poll&		getPoll(const Stream* const stream) const;
+	const Poll&		getPoll(int fd) const;
+	void			setEvent(const Stream* const stream, short event);
+	void			setEvent(int fd, short event);
+	void			unsetEvent(const Stream* const stream, short event);
+	void			unsetEvent(int fd, short event);
+	short			getCatchedEvent(const Stream* const stream) const;
+	short			getCatchedEvent(int fd) const;
+
 private:
 	void			print();
 	void			makePollVec();
 	void			_drop( int fd );
+	const Poll&		_getPoll( int fd ) const;
+	void			_setEvent( int fd, short event );
+	void			_unsetEvent( int fd, short event );
 
 	Stream*	readRoutine(Stream* stream);
 	Stream*	writeRoutine(Stream* stream);

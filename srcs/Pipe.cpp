@@ -113,7 +113,7 @@ void	Pipe::coreDone()
 
 	// if (headerDone)
 	if (connected->pending == false)
-		POLLSET->pollMap[connected->getFD()].first.events |= POLLOUT;
+		POLLSET->prepareSend( connected );
 	return;
 }
 

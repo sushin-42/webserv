@@ -95,9 +95,9 @@ int main(int argc, char** argv)
 																					//NOTE: what if Pipe | FileStream not in ret?
 //.---------------------------------POLL OUT---------------------------------.//
 
-			if (POLLSET->pollMap[stream->getFD()].first.revents & POLLOUT)
+			if (POLLSET->getCatchedEvent(stream->getFD()) & POLLOUT)
 			{
-				POLLSET->pollMap[stream->getFD()].first.events &= ~POLLOUT;
+				POLLSET->unsetSend(stream->getFD());
 				outputStream = stream;
 				outputContent = outputStream->getOutputContent();
 				goto _send;
@@ -114,7 +114,7 @@ int main(int argc, char** argv)
 			catch	(readMore& r)		{	continue; }
 			catch	(httpError& h)		{
 											connected->returnError(h);
-											POLLSET->pollMap[stream->getFD()].first.events |= POLLOUT;	//NOTE: POLLOUT CONNSOCK ?
+											POLLSET->prepareSend( stream->getFD() );	//NOTE: POLLOUT CONNSOCK ?
 											continue;
 										}
 			catch	(exception& e)		{
@@ -133,10 +133,10 @@ int main(int argc, char** argv)
 //%--------------------------CORE: process before send-----------------------%//
 			try							{	inputStream->core();	}
 			catch	(readMore& r)		{	continue;	 }
-			catch	(autoIndex& a)		{	POLLSET->pollMap[stream->getFD()].first.events |= POLLOUT;	 }
+			catch	(autoIndex& a)		{	POLLSET->prepareSend( stream->getFD() );	 }
 			catch	(httpError& h)		{
 											connected->returnError(h);
-											POLLSET->pollMap[stream->getFD()].first.events |= POLLOUT;	//NOTE: POLLOUT CONNSOCK ?
+											POLLSET->prepareSend( stream->getFD() );	//NOTE: POLLOUT CONNSOCK ?
 											continue;
 										}
 			inputStream->coreDone();
@@ -148,35 +148,17 @@ int main(int argc, char** argv)
 //%--------------------------------READY TO SEND-----------------------------%//
 
 //.-----------------------------SEND TO OUTSTREAM----------------------------.//
-// _send:
-// 		try							{ outputStream->send(outputContent, writeUndoneBuf); }
-// 		catch (exception& e)		{
-// 										if		(CONVERT(&e, sendMore))	POLLSET->pollMap[stream->getFD()].first.events |= POLLOUT;	// not all data sended
-// 										else if	(CONVERT(&e, readMore)) ;							 	// not all data sended, and have to read from pipe
-// 										else	{
-// 													if (outputStream != connected)
-// 													{
-// 														if (outputStream == filestream)
-// 															POLLSET->getIterator(connected).first->events |= POLLOUT;
-// 														connected->unlink(outputStream);
-// 														POLLSET->drop(stream);
-// 														continue;
-// 													}
-// 													// POLLSET->drop(stream);
-// 												}
-// 									}
-// 		connected->ReqH.clear(), connected->ResH.clear(), connected->ResB.clear();
 
 _send:
 			try							{ outputStream->send(outputContent, writeUndoneBuf);}
 			catch (exception& e)		{
-											if		(CONVERT(&e, sendMore))	{POLLSET->pollMap[stream->getFD()].first.events |= POLLOUT; continue;}	// not all data sended
+											if		(CONVERT(&e, sendMore))	{POLLSET->prepareSend( stream->getFD() ); continue;}	// not all data sended
 											else if	(CONVERT(&e, readMore)) {continue;}							 	// not all data sended, and have to read from pipe
 											else	{
 														if (outputStream != connected)
 														{
 															if (outputStream == filestream)
-																POLLSET->pollMap[connected->getFD()].first.events |= POLLOUT;
+																POLLSET->prepareSend( connected->getFD() );
 															connected->unlink(outputStream);
 															POLLSET->drop(stream);
 															continue;

@@ -64,6 +64,10 @@ void		PollSet::enroll( Stream* stream, short events )
 // 	streamVec.erase(itLink);
 // }
 
+
+
+
+
 void	PollSet::_drop( int fd )
 {
 
@@ -242,6 +246,33 @@ Stream*	PollSet::writeRoutine(Stream* stream)
 	TAG(PollSet, examine); cout << GREEN("Can write to ") << stream->getFD() << endl;
 	return stream;
 }
+
+
+
+
+
+
+
+const Poll&		PollSet::getPoll(const Stream* const stream) const				{ return _getPoll(stream->getFD()); }
+const Poll&		PollSet::getPoll(int fd) const									{ return _getPoll(fd); }
+const Poll&		PollSet::_getPoll(int fd) const									{ return pollMap.at(fd).first; }
+
+void			PollSet::setEvent(const Stream* const stream, short event)		{ _setEvent(stream->getFD(), event); }
+void			PollSet::setEvent(int fd, short event)							{ _setEvent(fd, event); }
+void			PollSet::_setEvent(int fd, short event)							{ pollMap[fd].first.events |= event; }
+
+void			PollSet::unsetEvent(const Stream* const stream, short event)	{ _unsetEvent(stream->getFD(), event); }
+void			PollSet::unsetEvent(int fd, short event)						{ _unsetEvent(fd, event); }
+void			PollSet::_unsetEvent(int fd, short event)						{ pollMap[fd].first.events &= ~event; }
+
+void			PollSet::prepareSend( int fd )									{ _setEvent(fd, POLLOUT); }
+void			PollSet::prepareSend( const Stream* const stream )				{ _setEvent(stream->getFD(), POLLOUT); }
+
+void			PollSet::unsetSend( int fd )									{ _unsetEvent(fd, POLLOUT); }
+void			PollSet::unsetSend( const Stream* const stream )				{ _unsetEvent(stream->getFD(), POLLOUT); }
+
+short			PollSet::getCatchedEvent(const Stream* const stream) const		{ return _getPoll(stream->getFD()).revents; }
+short			PollSet::getCatchedEvent(int fd) const							{ return _getPoll(fd).revents; }
 
 
 void	PollSet::createMonitor() { this->timer = new Timer(); }

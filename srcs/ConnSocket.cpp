@@ -317,7 +317,8 @@
 	{
 		if (this->linkOutputFile)	/*  <------ output file is just created, do not send, do not close. */
 			return ;
-		// POLLSET->pollMap[this->getFD()].first.events |= POLLOUT;	// set POLLOUT only if autodir ?
+
+		// POLLSET->prepareSend( this );	// set POLLOUT only if autodir ?
 	}
 
 	void	ConnSocket::send(const string& content, map<int, undone>& writeUndoneBuf)
