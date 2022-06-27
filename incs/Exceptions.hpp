@@ -19,6 +19,13 @@ class sendMore: public exception
 				virtual const char * what() const throw();
 };
 
+class internalRedirect: public exception
+{
+	public:		explicit internalRedirect();
+				virtual ~internalRedirect() throw();
+				virtual const char * what() const throw();
+};
+
 class sendMoreAfterRead: public exception
 {
 	public:		explicit sendMoreAfterRead();

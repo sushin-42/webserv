@@ -11,6 +11,10 @@ sendMore::sendMore() {}
 sendMore::~sendMore() throw() {}
 const char * sendMore::what() const throw() {return ""; }
 
+internalRedirect::internalRedirect() {}
+internalRedirect::~internalRedirect() throw() {}
+const char * internalRedirect::what() const throw() {return ""; }
+
 
 autoIndex::autoIndex() {}
 autoIndex::autoIndex(const string& p): path(p) {}
