@@ -21,9 +21,9 @@ private:
 
 public:
 	ResHeader()
-	: IHeader(), statusCode(), reasonPhrase() {}
+	: IHeader(), statusCode(200), reasonPhrase("OK") {}
 	ResHeader( const string& content )
-	: IHeader(content), statusCode(), reasonPhrase() {}
+	: IHeader(content), statusCode(200), reasonPhrase("OK") {}
 	ResHeader( const ResHeader& src )
 	: IHeader(src), statusCode(src.statusCode), reasonPhrase(src.reasonPhrase) {}
 	~ResHeader() {}
@@ -46,6 +46,7 @@ public:
 
 	void	makeStatusLine();
 	void	setDefaultHeaders();
+	void	fetchStatusField();
 
 	void	print();
 };

@@ -113,7 +113,7 @@ int main(int argc, char** argv)
 			catch	(readMore& r)		{	continue; }
 			catch	(httpError& h)		{
 											connected->returnError(h);
-											POLLSET->prepareSend( stream->getFD() );	//NOTE: POLLOUT CONNSOCK ?
+											POLLSET->prepareSend( connected->getFD() );	//NOTE: POLLOUT CONNSOCK ?
 											continue;
 										}
 			catch	(exception& e)		{
@@ -132,10 +132,10 @@ int main(int argc, char** argv)
 //%--------------------------CORE: process before send-----------------------%//
 			try							{	inputStream->core();	}
 			catch	(readMore& r)		{	continue;	 }
-			catch	(autoIndex& a)		{	POLLSET->prepareSend( stream->getFD() );	 }
+			catch	(autoIndex& a)		{	POLLSET->prepareSend( connected->getFD() );	 }
 			catch	(httpError& h)		{
 											connected->returnError(h);
-											POLLSET->prepareSend( stream->getFD() );	//NOTE: POLLOUT CONNSOCK ?
+											POLLSET->prepareSend( connected->getFD() );	//NOTE: POLLOUT CONNSOCK ?
 											continue;
 										}
 			inputStream->coreDone();
@@ -151,7 +151,7 @@ int main(int argc, char** argv)
 _send:
 			try							{ outputStream->send(outputContent, writeUndoneBuf);}
 			catch (exception& e)		{
-											if		(CONVERT(&e, sendMore))	{POLLSET->prepareSend( stream->getFD() ); continue;}	// not all data sended
+											if		(CONVERT(&e, sendMore))	{POLLSET->prepareSend( outputStream->getFD() ); continue;}	// not all data sended
 											else if	(CONVERT(&e, readMore)) {continue;}							 	// not all data sended, and have to read from pipe
 											else	{
 														if (outputStream != connected)

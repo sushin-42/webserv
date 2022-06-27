@@ -276,7 +276,7 @@ void	localRedir(ConnSocket* connected)
 		connected->ReqH.setRequsetTarget(connected->ResH["location"]);
 		connected->ResH.removeKey("location");
 		connected->ResH.removeKey("transfer-encoding");
-		// connected->ResH.print();
+
 		connected->core(); //! check if CORE() is OK for CGI local redir...
 	}
 

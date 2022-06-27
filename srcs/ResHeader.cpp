@@ -1,4 +1,5 @@
 #include "ResHeader.hpp"
+#include "CGI.hpp"
 
 /**========================================================================
 * *                            operators
@@ -66,4 +67,15 @@ IHeader::status_code_t	checkFile(const string& path)
 	}
 	close(requested);
 	return 200;
+}
+
+void	ResHeader::fetchStatusField()
+{
+	if (this->exist("status") == true)
+	{
+		pair<status_code_t, string>	sr = checkStatusField((*this)["Status"]);
+		this->setStatusCode(sr.first);
+		this->setReasonPhrase(sr.second);
+		this->removeKey("Status");
+	}
 }

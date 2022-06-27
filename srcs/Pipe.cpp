@@ -42,7 +42,39 @@
 
 void	Pipe::core()
 {
-	// recv();
+	ConnSocket* connected = this->linkConn;
+
+	if (this->headerDone == false)
+	{
+		connected->pending = true;
+		if	(this->output.rfind("\r\n\r\n") != string::npos ||
+				this->output.rfind("\n\n") != string::npos)
+		{
+			// cout << "GOT HEADER!" << endl;
+			processOutputHeader(connected, this);
+			connected->pending = false;
+			this->headerDone = true;
+			this->output = extractBody(this->output);	// store remained after header
+			if (this->output.empty())
+				return ;		 						// if extracted trailing Body == '', makeChunk will send '0\r\n\r\n'
+		}
+		else
+		{
+			// cout << "WAIT HEADER..." << endl;
+			throw readMore();
+		}
+	}
+	/* header done, body part exists */
+
+	if (connected->pending == false)
+	{
+		connected->ResB.setContent(
+									connected->chunk ?
+										makeChunk(this->output) :
+										this->output
+								);
+		this->output.clear();
+	}
 }
 
 void	Pipe::recv()
@@ -57,53 +89,18 @@ void	Pipe::recv()
 	case -1:	/* internal server error */
 		TAG(CGI#, CGIroutines); cout << RED("Unexcpected error from pipe: ") << this->getFD() << endl;
 		this->close();
-		/* need to return 500! */
-		break;
+		throw internalServerError();
 
 	case 0:		/* close pipe, process output */
 
 		TAG(CGI#, CGIroutines); cout << GRAY("Pipe closed: ") << this->getFD() << endl;
 		this->close();
 		this->readDone = true;
-
-		if (connected->pending == false)
-		{
-			connected->ResB.setContent(
-										connected->chunk ?
-											makeChunk(this->output) :
-											this->output
-									);
-		}
 		connected->pending = false;
 		break;
 
-	default:	/* output appended */
-
-		/* wait full header */
-		if (this->headerDone == false)
-		{
-			connected->pending = true;
-			if	(this->output.rfind("\r\n\r\n") != string::npos ||
-					this->output.rfind("\n\n") != string::npos)
-			{
-				processOutputHeader(connected, this);
-				this->headerDone = true;							// appended to conn->ResH
-				this->output = extractBody(this->output);		// store remained after header
-				connected->pending = false;
-			}
-			else
-				return;
-		}
-		if (connected->pending == false)
-		{
-			if (this->output.empty())	return; // if extracted trailing Body == '', makeChunk will send '0\r\n\r\n'
-			connected->ResB.setContent(
-										connected->chunk ?
-											makeChunk(this->output) :
-											this->output
-									);
-			this->output.clear();
-		}
+	default:
+		break;
 	}
 }
 

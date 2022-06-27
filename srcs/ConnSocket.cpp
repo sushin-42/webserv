@@ -382,33 +382,14 @@
 	}
 
 	void	ConnSocket::dummy() {}
-	void	ConnSocket::makeResponseHeaderField()
-	{
-		this->ResH.setHTTPversion("HTTP/1.1");
-		if (this->ResH.exist("status") == true)
-		{
-			pair<status_code_t, string>	sr = checkStatusField(this->ResH["Status"]);
-			this->ResH.setStatusCode(sr.first);
-			this->ResH.setReasonPhrase(sr.second);
-			this->ResH.removeKey("Status");
-		}
-		else
-		{
-			switch (this->ResH.getStatusCode())
-			{
-			case 200:	this->ResH.setReasonPhrase("OK");			break;
-			case 404:	this->ResH.setReasonPhrase("Not Found");	break;
-			/* and so on ... */
-			}
-		}
-		this->ResH.setDefaultHeaders();
-	}
 
 	void	ConnSocket::makeResponseHeader()
 	{
 		if (this->ResH.getHeaderField().empty() == false)
 		{
-			this->makeResponseHeaderField();
+			this->ResH.setHTTPversion("HTTP/1.1");
+			this->ResH.fetchStatusField();
+			this->ResH.setDefaultHeaders();
 			this->ResH.makeStatusLine();
 			this->ResH.integrate();
 			cout << CYAN("----------------->") << endl;

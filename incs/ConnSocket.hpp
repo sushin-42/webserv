@@ -104,7 +104,6 @@ public:
 	void	unlink(Stream* link);
 
 	void	makeResponseHeader();
-	void	makeResponseHeaderField();
 	void	setErrorPage(status_code_t status, const string& reason, const string& text);
 	// void	returnError(status_code_t status, const string& message);
 	void	returnError(httpError& error);
