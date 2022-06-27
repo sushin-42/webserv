@@ -161,7 +161,7 @@ _send:
 															if (outputStream == filestream)
 																POLLSET->prepareSend( connected->getFD() );
 															connected->unlink(outputStream);
-															POLLSET->drop(stream);
+															POLLSET->drop(outputStream);
 															continue;
 														}
 														// connected->ReqH.clear(), connected->ResH.clear(), connected->ResB.clear();
