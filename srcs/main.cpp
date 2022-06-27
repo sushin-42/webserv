@@ -138,6 +138,8 @@ int main(int argc, char** argv)
 											POLLSET->prepareSend( connected->getFD() );	//NOTE: POLLOUT CONNSOCK ?
 											continue;
 										}
+
+			/* connSocket makes Resposnse Header content here. */
 			inputStream->coreDone();
 			connected->makeResponseHeader();
 			if (inputStream == filestream)
