@@ -8,13 +8,13 @@
 *========================================================================**/
 
 	Pipe::Pipe()
-	: Stream(-1), output(), pid(0), status(0), headerDone(false), readDone(false), internalRedirectCount(10), linkConn(NULL) {}
+	: Stream(-1), output(), pid(0), status(0), headerDone(false), readDone(false), linkConn(NULL) {}
 
 	Pipe::Pipe( int fd, pid_t p )
-	:Stream(fd), output(), pid(p), status(0), headerDone(false), readDone(false), internalRedirectCount(10), linkConn(NULL) {}
+	:Stream(fd), output(), pid(p), status(0), headerDone(false), readDone(false), linkConn(NULL) {}
 
 	Pipe::Pipe( const Pipe& src )
-	: Stream(src), output(src.output), pid(src.pid), status(src.status), headerDone(false), readDone(false), internalRedirectCount(10), linkConn(src.linkConn) {}
+	: Stream(src), output(src.output), pid(src.pid), status(src.status), headerDone(false), readDone(false), linkConn(src.linkConn) {}
 
 	Pipe::~Pipe() {}
 
@@ -248,6 +248,7 @@ void	Pipe::localRedir()
 	ConnSocket* connected = this->linkConn;
 	if (!connected)	return ;
 
+	cout << "LOC REDIR" << endl;
 	if (checkStatusField(connected->ResH["Status"]).first == 200)
 	{
 		//@ regard as request to Location, but some header-fields from CGI remain @//
@@ -257,15 +258,17 @@ void	Pipe::localRedir()
 		connected->ResH.removeKey("location");
 		connected->ResH.removeKey("transfer-encoding");
 
-		if (this->internalRedirectCount == 0)
+		this->close();
+		POLLSET->drop(this);
+		connected->unlink(this);
+
+		if (connected->internalRedirectCount == 0)
 			throw internalServerError();
 		else
-		{
-			this->internalRedirectCount--;
 			throw internalRedirect();	/* goto connected->core phase, deligate makeResponseHeader to FileStream. */
-		}
-
 	}
+	else
+		connected->makeResponseHeader();	/* NOTE: if not 200? apache */
 
 }
 
@@ -320,6 +323,10 @@ void	Pipe::clientRedir()		//check 303
 		connected->makeResponseHeader();
 	}
 
+	else
+		connected->makeResponseHeader();	/* NOTE: if not 200? apache */
+		/*NOTE: if Not 200? APACHE*/
+
 	// if (ResH.getStatusCode() != 206 || ResH.getStatusCode() != 416)
 		// erase Content-Range
 }
@@ -341,6 +348,7 @@ void	Pipe::documentResponse()
 	ConnSocket* connected = this->linkConn;
 	if (!connected)	return ;
 
+	cout  << "DOC" << endl;
 	if (!connected->ResH.exist("Content-Length") &&
 			(!connected->ResH.exist("Transfer-Encoding") ||
 			lowerize(connected->ResH["Transfer-encoding"]) != "chunked"

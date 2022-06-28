@@ -97,8 +97,13 @@ int main(int argc, char** argv)
 			if (POLLSET->getCatchedEvent(stream->getFD()) & POLLOUT)
 			{
 				POLLSET->unsetSend(stream->getFD());
-				if (connected->internalRedirect == true)
+				if (stream == connected && connected->internalRedirect)
+				{
+					connected->internalRedirect = false;
+					connected->internalRedirectCount--;
+					inputStream = connected;
 					goto _core;
+				}
 				outputStream = stream;
 				outputContent = outputStream->getOutputContent();
 				goto _send;
@@ -136,7 +141,7 @@ _core:
 			try								{	inputStream->core();	}
 			catch	(readMore& r)			{	continue;	 }
 			catch	(internalRedirect& r)	{	connected->internalRedirect=true;
-												POLLSET->prepareSend(connected);	/* make ConnSocket to be catched in PollSet#examine() */
+												POLLSET->prepareSend( connected->getFD() );	/* make ConnSocket to be catched in PollSet#examine() */
 												continue;
 											}
 			catch	(httpError& h)			{

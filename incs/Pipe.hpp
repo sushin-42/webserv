@@ -19,7 +19,7 @@ public:
 	int		status;
 	bool	headerDone;
 	bool	readDone;
-	int		internalRedirectCount;
+
 	ConnSocket*	linkConn;
 
 

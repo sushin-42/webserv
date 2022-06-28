@@ -16,7 +16,6 @@ private:
 	string		filename;
 public:
 	string		content;
-	int			internalRedirectCount;
 	ConnSocket*	linkConn;
 
 

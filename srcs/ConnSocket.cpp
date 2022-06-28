@@ -21,6 +21,7 @@
 	: ISocket(), len(sizeof(info)),
 	  recvContent(), ReqH(), ReqB(), ResH(), ResB(),
 	  pending(false), chunk(false), FINsended(false), internalRedirect(false),
+	  internalRedirectCount(10),
 	  linkInputPipe(NULL), linkOutputPipe(NULL),
 	  linkInputFile(NULL), linkOutputFile(NULL),
 	  linkServerSock(NULL), conf(NULL) {}
@@ -417,7 +418,7 @@ char checkMethod(const string& content)
 void	ConnSocket::returnError(httpError& error)
 {
 	redirectError* r =  CONVERT(&error, redirectError);
-
+	this->ResH.clear();
 	this->setErrorPage(error.status, error.what(), error.what());
 	if (r)
 		this->ResH["Location"] = r->location;

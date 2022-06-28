@@ -67,6 +67,7 @@ public:
 	bool		chunk;				/* to distinguish script output chunk with server chunk */
 	bool		FINsended;			/* we already sended FIN, DO NOT send more data. */
 	bool		internalRedirect;
+	int			internalRedirectCount;
 
 	Pipe*			linkInputPipe;
 	Pipe*			linkOutputPipe;
