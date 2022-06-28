@@ -115,7 +115,7 @@ int main(int argc, char** argv)
 			catch	(readMore& r)		{	continue; }
 			catch	(httpError& h)		{
 											connected->returnError(h);
-											POLLSET->prepareSend( connected->getFD() );	//NOTE: POLLOUT CONNSOCK ?
+											POLLSET->prepareSend( connected->getFD() );
 											continue;
 										}
 			catch	(exception& e)		{
@@ -141,10 +141,10 @@ _core:
 											}
 			catch	(httpError& h)			{
 												connected->returnError(h);
-												POLLSET->prepareSend( connected->getFD() );	//NOTE: POLLOUT CONNSOCK ?
+												POLLSET->prepareSend( connected->getFD() );
 												continue;
 											}
-			catch	(autoIndex& a)			{	POLLSET->prepareSend( connected->getFD() );	 }
+			catch	(autoIndex& a)			{	POLLSET->prepareSend( connected->getFD() ); /* go down ? */	 }
 
 			inputStream->coreDone();
 			if (inputStream == filestream)

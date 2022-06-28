@@ -29,12 +29,16 @@ const string&	ResHeader::getReasonPhrase() const				{ return this->reasonPhrase;
 
 void	ResHeader::makeStatusLine()
 {
-	content.clear();
 	content.append(
 					HTTPversion + " " +
 					toString(statusCode) + " " +
 					reasonPhrase + "\r\n"
 				);
+}
+
+void	ResHeader::clearContent()
+{
+	content.clear();
 }
 
 

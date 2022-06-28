@@ -385,8 +385,10 @@
 
 	void	ConnSocket::makeResponseHeader()
 	{
-		if (this->ResH.getHeaderField().empty() == false)
-		{
+		// if (this->ResH.getHeaderField().empty() == false)
+		// {
+			this->ResH.clearContent();	/* keep headerfield, remove content only */
+
 			this->ResH.setHTTPversion("HTTP/1.1");
 			this->ResH.fetchStatusField();
 			this->ResH.setDefaultHeaders();
@@ -395,7 +397,7 @@
 			cout << CYAN("----------------->") << endl;
 			cout << this->ResH.getContent();
 			cout << CYAN("----------------->") << endl;
-		}
+		// }
 	}
 
 	string		ConnSocket::getOutputContent() { return this->ResH.getContent() + this->ResB.getContent(); }

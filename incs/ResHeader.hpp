@@ -42,6 +42,7 @@ public:
 	status_code_t	getStatusCode() const;
 	void			setReasonPhrase(const string& r);
 	const string&	getReasonPhrase() const;
+	void			clearContent();
 
 
 	void	makeStatusLine();

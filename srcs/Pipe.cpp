@@ -257,7 +257,14 @@ void	Pipe::localRedir()
 		connected->ResH.removeKey("location");
 		connected->ResH.removeKey("transfer-encoding");
 
-		throw internalRedirect();	/* goto connected->core phase, deligate makeResponseHeader to FileStream. */
+		if (this->internalRedirectCount == 0)
+			throw internalServerError();
+		else
+		{
+			this->internalRedirectCount--;
+			throw internalRedirect();	/* goto connected->core phase, deligate makeResponseHeader to FileStream. */
+		}
+
 	}
 
 }
@@ -334,7 +341,6 @@ void	Pipe::documentResponse()
 	ConnSocket* connected = this->linkConn;
 	if (!connected)	return ;
 
-	cout << "HERE" << endl;
 	if (!connected->ResH.exist("Content-Length") &&
 			(!connected->ResH.exist("Transfer-Encoding") ||
 			lowerize(connected->ResH["Transfer-encoding"]) != "chunked"
