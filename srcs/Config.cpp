@@ -64,12 +64,12 @@ void Config::SetupConfig()
         ss >> directive;
         while (ss >> tmp)
             arg.push_back(tmp);
-        cout << directive << ":";
-        for (size_t i = 0; i < arg.size(); i++)
-        {
-            cout << arg[i] << ", ";
-        }
-        cout << endl;
+        // cout << directive << ":";
+        // for (size_t i = 0; i < arg.size(); i++)
+        // {
+        //     cout << arg[i] << ", ";
+        // }
+        // cout << endl;
         call_function(directive, arg);
     }
 }
