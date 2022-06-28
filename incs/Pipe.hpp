@@ -58,6 +58,30 @@ private:
 	void dummy() {}
 };
 
+class	ErrorPipe : public Pipe
+{
+/**========================================================================
+* @                           Constructors
+*========================================================================**/
+
+public:
+	ErrorPipe();
+	ErrorPipe( int fd, pid_t p );
+	ErrorPipe( const ErrorPipe& src );
+	~ErrorPipe();
+
+/**========================================================================
+* #                          member functions
+*========================================================================**/
+
+	void	recv();
+	void	core();
+	void	coreDone();
+
+private:
+	void dummy() {}
+};
+
 #endif
 
 

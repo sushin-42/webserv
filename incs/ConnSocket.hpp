@@ -71,6 +71,7 @@ public:
 
 	Pipe*			linkInputPipe;
 	Pipe*			linkOutputPipe;
+	Pipe*			linkErrorPipe;
 	FileStream*		linkInputFile;
 	FileStream*		linkOutputFile;
 	ServerSocket*	linkServerSock;
