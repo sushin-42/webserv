@@ -51,7 +51,7 @@ void	Pipe::core()
 				this->output.rfind("\n\n") != string::npos)
 		{
 			// cout << "GOT HEADER!" << endl;
-			processOutputHeader(connected, this);
+			this->processOutputHeader();
 			connected->pending = false;
 			this->headerDone = true;
 			this->output = extractBody(this->output);	// store remained after header
@@ -68,6 +68,7 @@ void	Pipe::core()
 
 	if (connected->pending == false)
 	{
+		// cout << "OUTPUT IS..." << endl;
 		connected->ResB.setContent(
 									connected->chunk ?
 										makeChunk(this->output) :
@@ -157,3 +158,189 @@ void	Pipe::send(const string& content, map<int, struct undone>& writeUndoneBuf)
 		throw sendMore();
 	}
 }
+
+
+void	Pipe::moveToResH(const string& output)
+{
+	ConnSocket* connected = this->linkConn;
+	if (!connected)	return ;
+
+	map<string,string>				tmp(KVtoMap(output, ':'));
+	map<string,string>::iterator	it, ite;
+
+	it = tmp.begin(), ite = tmp.end();
+	for (; it != ite; it++)
+	{
+		if (it->first == lowerize("Content-type")||
+			it->first == lowerize("Status")||
+			it->first == lowerize("Location")||
+			it->first == lowerize("Content-Length")||
+			it->first == lowerize("Content-Range")||
+			// it->first == lowerize("Transfer-Encoding")||
+			it->first == lowerize("ETag")||
+			connected->ResH.exist(it->first) == false	)
+
+				connected->ResH[it->first] = it->second;
+		else
+				connected->ResH.append(it->first, it->second);
+	}
+}
+
+void	Pipe::setChunkEncoding()
+{
+	ConnSocket* connected = this->linkConn;
+	if (!connected)	return ;
+
+
+	{
+		connected->ResH.append("Transfer-encoding",  "chunked");
+		connected->chunk = true;
+		/**========================================================================
+		 *'  			Server chunk. NOT same with script chunk
+		 *	we encode(chunk) if and only if we set "Transfer-Encoding: chunked".
+		 *	we DO NOT encode even if "Transfer-Encoding: chunked" exists in script output.
+		 *	if we get output with it, body of the output will be send raw.
+		 *	if script wants to be chunked, it MUST be chunked format by itself.
+		 *
+		 *========================================================================**/
+	}
+}
+
+void	Pipe::processOutputHeader()
+{
+	ConnSocket* connected = this->linkConn;
+	if (!connected)	return ;
+
+	pair<status_code_t, string>		Status;
+
+	moveToResH(this->output);
+
+	if (connected->ResH.exist("Status") == false)
+		connected->ResH["Status"] = "200 OK";
+
+	if (connected->ResH.exist("Location"))
+	{
+		if (connected->ResH["Location"][0] == '/')	localRedir();
+		else										clientRedir();
+	}
+	else											documentResponse();
+
+
+}
+
+//*--------------------------------------------------------------------------*//
+//* local-redir-response = local-Location NL                                 *//
+//*                                                                          *//
+//*  The CGI script can return a URI path and query-string                   *//
+//*	 ('local-pathquery') for a local resource in a Location header field.    *//
+//*  This indicates to the server that it should reprocess the request       *//
+//*  using the path specified.                                               *//
+//*                                                                          *//
+//*  The script MUST NOT return any other header fields or a message-body,   *//
+//*  and the server MUST generate the response that it would have produced   *//
+//*  in response to a request containing the URL                             *//
+//*                                                                          *//
+//*  scheme "://" server-name ":" server-port local-pathquery                *//
+//*--------------------------------------------------------------------------*//
+
+void	Pipe::localRedir()
+{
+	ConnSocket* connected = this->linkConn;
+	if (!connected)	return ;
+
+	if (checkStatusField(connected->ResH["Status"]).first == 200)
+	{
+		//@ regard as request to Location, but some header-fields from CGI remain @//
+		//@ Content-Length, Content-Type, Transfer-Encoding will be replaced @//
+		connected->pending = true;
+		connected->ReqH.setRequsetTarget(connected->ResH["location"]);
+		connected->ResH.removeKey("location");
+		connected->ResH.removeKey("transfer-encoding");
+
+		throw internalRedirect();	/* goto connected->core phase, deligate makeResponseHeader to FileStream. */
+	}
+
+}
+
+
+//'--------------------------------------------------------------------------'//
+//' client-redir-response = client-Location *extension-field NL              '//
+//'                                                                          '//
+//'   The CGI script can return an absolute URI path in a Location header    '//
+//'	 field, to indicate to the client that it should reprocess the request   '//
+//'  using the URI specified.                                                '//
+//'                                                                          '//
+//'   The script MUST not provide any other header fields, except for        '//
+//'  server-defined CGI extension fields.  For an HTTP client request, the   '//
+//'  server MUST generate a 302 'Found' HTTP response message.               '//
+//'--------------------------------------------------------------------------'//
+
+//%--------------------------------------------------------------------------%//
+//% client-redirdoc-response = client-Location Status Content-Type           %//
+//%                            *other-field NL response-body                 %//
+//%                                                                          %//
+//%   The CGI script can return an absolute URI path in a Location header    %//
+//%	 field together with an attached document, to indicate to the client     %//
+//%  that it should reprocess the request using the URI specified.           %//
+//%                                                                          %//
+//%   The Status header field MUST be supplied and MUST contain a status     %//
+//%  value of 302 'Found', or it MAY contain an extension-code, that is,     %//
+//%  another valid status code that means client redirection.  The server    %//
+//%  MUST make any appropriate modifications to the script's output to       %//
+//%  ensure that the response to the client complies with the response       %//
+//%  protocol version.                                                       %//
+//%--------------------------------------------------------------------------%//
+
+void	Pipe::clientRedir()		//check 303
+{
+	ConnSocket* connected = this->linkConn;
+	if (!connected)	return ;
+
+	if (checkStatusField(connected->ResH["Status"]).first == 200)
+	{
+		connected->ResH["Status"] = "302 Found";
+		connected->pending = true;
+		connected->ResB.setContent(
+						errorpage(
+								"302 Found",
+								"Found",
+								"<p>The document has moved <a href=\"" + connected->ResH["location"] + "\">here</a>.</p>"
+							)
+						);
+		connected->ResH["Content-type"] = "text/html; charset=iso-8859-1";
+		connected->ResH["Content-Length"] = toString(connected->ResB.getContent().length());
+		connected->ResH.removeKey("Transfer-Encoding");
+		connected->makeResponseHeader();
+	}
+
+	// if (ResH.getStatusCode() != 206 || ResH.getStatusCode() != 416)
+		// erase Content-Range
+}
+
+
+//.--------------------------------------------------------------------------.//
+//. document-response = Content-Type [ Status ] *other-field NL              .//
+//.                          response-body                                   .//
+//.                                                                          .//
+//.  The script MUST return a Content-Type header field.                     .//
+//.	 A Status header field is optional, and status 200 'OK' if omitted.      .//
+//.  The server MUST make any appropriate modifications to the script output .//
+//.  to ensure that the response to the client                               .//
+//.  complies with the response protocol version.                            .//
+//.--------------------------------------------------------------------------.//
+
+void	Pipe::documentResponse()
+{
+	ConnSocket* connected = this->linkConn;
+	if (!connected)	return ;
+
+	cout << "HERE" << endl;
+	if (!connected->ResH.exist("Content-Length") &&
+			(!connected->ResH.exist("Transfer-Encoding") ||
+			lowerize(connected->ResH["Transfer-encoding"]) != "chunked"
+		)
+	)
+		setChunkEncoding();
+	connected->makeResponseHeader();
+}
+

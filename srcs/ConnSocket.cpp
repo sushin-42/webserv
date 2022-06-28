@@ -60,8 +60,8 @@
 	void	ConnSocket::core()
 	{
 		struct stat s;
+		string			reqTarget;
 
-		string			reqTarget = this->ReqH.getRequsetTarget();
 		string			filename;
 		string			ext;
 
@@ -78,6 +78,9 @@
 			try						{ setBodyOrReadMore(); }
 			catch (exception& e)	{ throw; }
 		}
+
+
+		reqTarget = this->ReqH.getRequsetTarget();
 
 		try 						{ filename = CHECK->getFileName(this->conf, reqTarget); }
 		catch (httpError& e)		{ throw; }
