@@ -237,6 +237,9 @@ void	processOutputHeader(ConnSocket* connected, Pipe* CGIpipe)
 
 	moveToResH(CGIpipe->output, connected);
 
+	if (connected->ResH.exist("Status") == false)
+		connected->ResH["Status"] = "200 OK";
+
 	if (connected->ResH.exist("Location"))
 	{
 		if (connected->ResH["Location"][0] == '/')	localRedir(connected);
@@ -264,11 +267,7 @@ void	processOutputHeader(ConnSocket* connected, Pipe* CGIpipe)
 
 void	localRedir(ConnSocket* connected)
 {
-	if (connected->ResH.exist("Status") == false ||
-			(connected->ResH.exist("Status") == true &&
-			checkStatusField(connected->ResH["Status"]).first == 200
-		)
-	)
+	if (checkStatusField(connected->ResH["Status"]).first == 200)
 	{
 		//@ regard as request to Location, but some header-fields from CGI remain @//
 		//@ Content-Length, Content-Type, Transfer-Encoding will be replaced @//
@@ -277,7 +276,7 @@ void	localRedir(ConnSocket* connected)
 		connected->ResH.removeKey("location");
 		connected->ResH.removeKey("transfer-encoding");
 
-		connected->core(); //! check if CORE() is OK for CGI local redir...
+		// connected->core(); //! check if CORE() is OK for CGI local redir...
 	}
 
 }
@@ -313,15 +312,10 @@ void	localRedir(ConnSocket* connected)
 
 void	clientRedir(ConnSocket* connected)		//check 303
 {
-	if (connected->ResH.exist("Status") == false ||
-			(connected->ResH.exist("Status") == true &&
-			checkStatusField(connected->ResH["Status"]).first == 200
-		)
-	)
-
+	if (checkStatusField(connected->ResH["Status"]).first == 200)
 	{
-		connected->pending = true;
 		connected->ResH["Status"] = "302 Found";
+		connected->pending = true;
 		connected->ResB.setContent(
 						errorpage(
 								"302 Found",
@@ -332,7 +326,7 @@ void	clientRedir(ConnSocket* connected)		//check 303
 		connected->ResH["Content-type"] = "text/html; charset=iso-8859-1";
 		connected->ResH["Content-Length"] = toString(connected->ResB.getContent().length());
 		connected->ResH.removeKey("Transfer-Encoding");
-
+		connected->makeResponseHeader();
 	}
 
 	// if (ResH.getStatusCode() != 206 || ResH.getStatusCode() != 416)
@@ -353,7 +347,8 @@ void	clientRedir(ConnSocket* connected)		//check 303
 
 void	documentResponse(ConnSocket* connected)
 {
-	if (!connected->ResH.exist("Status"))
-		connected->ResH["Status"] = "200 OK";
+	connected->makeResponseHeader();
+	// if (!connected->ResH.exist("Status"))
+	// 	connected->ResH["Status"] = "200 OK";
 }
 

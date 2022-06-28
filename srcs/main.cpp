@@ -141,7 +141,6 @@ int main(int argc, char** argv)
 
 			/* connSocket makes Resposnse Header content here. */
 			inputStream->coreDone();
-			connected->makeResponseHeader();
 			if (inputStream == filestream)
 				POLLSET->drop(stream);
 			continue;

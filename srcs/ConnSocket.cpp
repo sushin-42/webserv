@@ -67,8 +67,17 @@
 
 		bool			alreadyExist = false;
 
-		// try							{ this->recv(); }
-		// catch (exception& e)		{ throw; }
+		if (ReqH.empty())
+		{
+			try						{ setHeaderOrReadMore(); }
+			catch (exception& e)	{ throw; }
+		}
+
+		if (!ReqH.empty())
+		{
+			try						{ setBodyOrReadMore(); }
+			catch (exception& e)	{ throw; }
+		}
 
 		try 						{ filename = CHECK->getFileName(this->conf, reqTarget); }
 		catch (httpError& e)		{ throw; }
@@ -298,18 +307,6 @@
 		default:
 
 			;
-		}
-
-		if (ReqH.empty())
-		{
-			try						{ setHeaderOrReadMore(); }
-			catch (exception& e)	{ throw; }
-		}
-
-		if (!ReqH.empty())
-		{
-			try						{ setBodyOrReadMore(); }
-			catch (exception& e)	{ throw; }
 		}
 	}
 
