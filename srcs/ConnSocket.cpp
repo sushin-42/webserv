@@ -20,7 +20,7 @@
 	ConnSocket::ConnSocket()
 	: ISocket(), len(sizeof(info)),
 	  recvContent(), ReqH(), ReqB(), ResH(), ResB(),
-	  pending(false), chunk(false), FINsended(false),
+	  pending(false), chunk(false), FINsended(false), internalRedirect(false),
 	  linkInputPipe(NULL), linkOutputPipe(NULL),
 	  linkInputFile(NULL), linkOutputFile(NULL),
 	  linkServerSock(NULL), conf(NULL) {}

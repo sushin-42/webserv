@@ -8,6 +8,7 @@
 //@                client-redir-response | client-redirdoc-response          @//
 //@--------------------------------------------------------------------------@//
 # include "CGI.hpp"
+#include "Exceptions.hpp"
 # include "core.hpp"
 # include "ConfigChecker.hpp"
 
@@ -276,7 +277,7 @@ void	localRedir(ConnSocket* connected)
 		connected->ResH.removeKey("location");
 		connected->ResH.removeKey("transfer-encoding");
 
-		// connected->core(); //! check if CORE() is OK for CGI local redir...
+		throw internalRedirect();	/* goto connected->core phase, deligate makeResponseHeader to FileStream. */
 	}
 
 }

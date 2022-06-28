@@ -8,13 +8,13 @@
 *========================================================================**/
 
 	Pipe::Pipe()
-	: Stream(-1), output(), pid(0), status(0), headerDone(false), readDone(false), linkConn(NULL) {}
+	: Stream(-1), output(), pid(0), status(0), headerDone(false), readDone(false), internalRedirectCount(10), linkConn(NULL) {}
 
 	Pipe::Pipe( int fd, pid_t p )
-	:Stream(fd), output(), pid(p), status(0), headerDone(false), readDone(false), linkConn(NULL) {}
+	:Stream(fd), output(), pid(p), status(0), headerDone(false), readDone(false), internalRedirectCount(10), linkConn(NULL) {}
 
 	Pipe::Pipe( const Pipe& src )
-	: Stream(src), output(src.output), pid(src.pid), status(src.status), headerDone(false), readDone(false), linkConn(src.linkConn) {}
+	: Stream(src), output(src.output), pid(src.pid), status(src.status), headerDone(false), readDone(false), internalRedirectCount(10), linkConn(src.linkConn) {}
 
 	Pipe::~Pipe() {}
 

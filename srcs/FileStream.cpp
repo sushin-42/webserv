@@ -8,9 +8,9 @@
 * @                           Constructors
 *========================================================================**/
 
-FileStream::FileStream() : Stream(-1), filename(), content(), linkConn(NULL) {}
-FileStream::FileStream( int fd ) : Stream(fd), filename(), content(), linkConn(NULL) {}
-FileStream::FileStream( const string& filename ) : Stream(-1), filename(filename), content(), linkConn(NULL)
+FileStream::FileStream() : Stream(-1), filename(), content(), internalRedirectCount(10), linkConn(NULL) {}
+FileStream::FileStream( int fd ) : Stream(fd), filename(), content(), internalRedirectCount(10), linkConn(NULL) {}
+FileStream::FileStream( const string& filename ) : Stream(-1), filename(filename), content(), internalRedirectCount(10), linkConn(NULL)
 {
 	// open?
 }

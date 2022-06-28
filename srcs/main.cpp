@@ -97,6 +97,8 @@ int main(int argc, char** argv)
 			if (POLLSET->getCatchedEvent(stream->getFD()) & POLLOUT)
 			{
 				POLLSET->unsetSend(stream->getFD());
+				if (connected->internalRedirect == true)
+					goto _core;
 				outputStream = stream;
 				outputContent = outputStream->getOutputContent();
 				goto _send;
@@ -130,16 +132,20 @@ int main(int argc, char** argv)
 //@----------------------------------RECV DONE-------------------------------@//
 
 //%--------------------------CORE: process before send-----------------------%//
-			try							{	inputStream->core();	}
-			catch	(readMore& r)		{	continue;	 }
-			catch	(autoIndex& a)		{	POLLSET->prepareSend( connected->getFD() );	 }
-			catch	(httpError& h)		{
-											connected->returnError(h);
-											POLLSET->prepareSend( connected->getFD() );	//NOTE: POLLOUT CONNSOCK ?
-											continue;
-										}
+_core:
+			try								{	inputStream->core();	}
+			catch	(readMore& r)			{	continue;	 }
+			catch	(internalRedirect& r)	{	connected->internalRedirect=true;
+												POLLSET->prepareSend(connected);	/* make ConnSocket to be catched in PollSet#examine() */
+												continue;
+											}
+			catch	(httpError& h)			{
+												connected->returnError(h);
+												POLLSET->prepareSend( connected->getFD() );	//NOTE: POLLOUT CONNSOCK ?
+												continue;
+											}
+			catch	(autoIndex& a)			{	POLLSET->prepareSend( connected->getFD() );	 }
 
-			/* connSocket makes Resposnse Header content here. */
 			inputStream->coreDone();
 			if (inputStream == filestream)
 				POLLSET->drop(stream);

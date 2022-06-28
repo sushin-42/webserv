@@ -64,8 +64,9 @@ public:
 	ResHeader	ResH;
 	ResBody		ResB;
 	bool		pending;
-	bool		chunk;		/* to distinguish script output chunk with server chunk */
-	bool		FINsended;	/* we already sended FIN, DO NOT send more data. */
+	bool		chunk;				/* to distinguish script output chunk with server chunk */
+	bool		FINsended;			/* we already sended FIN, DO NOT send more data. */
+	bool		internalRedirect;
 
 	Pipe*			linkInputPipe;
 	Pipe*			linkOutputPipe;
