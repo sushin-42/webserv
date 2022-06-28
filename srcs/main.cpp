@@ -159,8 +159,17 @@ _core:
 //%--------------------------------READY TO SEND-----------------------------%//
 
 //.-----------------------------SEND TO OUTSTREAM----------------------------.//
-
 _send:
+		if (outputStream == connected)
+		{
+			try								{ connected->checkErrorPage(); }
+			catch (internalServerError& e) 	{ connected->returnError(e); outputContent = connected->getOutputContent();}
+			catch (internalRedirect& e) 	{ connected->internalRedirect=true;
+											  POLLSET->prepareSend( connected->getFD() );	/* make ConnSocket to be catched in PollSet#examine() */
+											  continue;
+											}
+		}
+
 			try							{ outputStream->send(outputContent, writeUndoneBuf);}
 			catch (exception& e)		{
 											if		(CONVERT(&e, sendMore))	{POLLSET->prepareSend( outputStream->getFD() ); continue;}	// not all data sended

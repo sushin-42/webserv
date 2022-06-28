@@ -1,5 +1,6 @@
 #include "Pipe.hpp"
 #include "CGI.hpp"
+#include "ConfigLoader.hpp"
 #include "ConnSocket.hpp"
 #include "Exceptions.hpp"
 
@@ -248,15 +249,21 @@ void	Pipe::localRedir()
 	ConnSocket* connected = this->linkConn;
 	if (!connected)	return ;
 
-	cout << "LOC REDIR" << endl;
 	if (checkStatusField(connected->ResH["Status"]).first == 200)
 	{
+
 		//@ regard as request to Location, but some header-fields from CGI remain @//
 		//@ Content-Length, Content-Type, Transfer-Encoding will be replaced @//
 		connected->pending = true;
 		connected->ReqH.setRequsetTarget(connected->ResH["location"]);
 		connected->ResH.removeKey("location");
 		connected->ResH.removeKey("transfer-encoding");
+
+		connected->conf = CONF->getMatchedServer(connected->linkServerSock, connected->ReqH["Host"]);
+		connected->conf = CONF->getMatchedLocation(connected->ReqH.getRequsetTarget(),
+													CONVERT(connected->conf, ServerConfig));
+
+		cout << RED("LOCAL REDIR TO: ")  << connected->ReqH.getRequsetTarget() << endl;
 
 		this->close();
 		POLLSET->drop(this);

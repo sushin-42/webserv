@@ -20,7 +20,7 @@
 	ConnSocket::ConnSocket()
 	: ISocket(), len(sizeof(info)),
 	  recvContent(), ReqH(), ReqB(), ResH(), ResB(),
-	  pending(false), chunk(false), FINsended(false), internalRedirect(false),
+	  pending(true), chunk(false), FINsended(false), internalRedirect(false),
 	  internalRedirectCount(10),
 	  linkInputPipe(NULL), linkOutputPipe(NULL),
 	  linkInputFile(NULL), linkOutputFile(NULL),
@@ -419,6 +419,7 @@ void	ConnSocket::returnError(httpError& error)
 {
 	redirectError* r =  CONVERT(&error, redirectError);
 	this->ResH.clear();
+	this->ResB.clear();
 	this->setErrorPage(error.status, error.what(), error.what());
 	if (r)
 		this->ResH["Location"] = r->location;
@@ -426,6 +427,37 @@ void	ConnSocket::returnError(httpError& error)
 	this->ResH.makeStatusLine();
 	this->ResH.integrate();
 }
+
+void ConnSocket::checkErrorPage()
+{
+	typedef pair<int, string> 		_ERRORPAIR;
+	typedef map<int, _ERRORPAIR>	_ERRORMAP;
+
+	/* error_page not supported for CGI-documentResponse, CGI-clientRedir */
+
+	if (this->pending == false)	return;
+
+	status_code_t 	status = this->ResH.getStatusCode();
+	_ERRORMAP 	error_page = this->conf->error_page;
+	_ERRORMAP::iterator	it = error_page.find(status);
+
+	if (it == error_page.end())				return;
+	if (this->internalRedirectCount == 0)	{cout <<"ISE" <<endl;throw internalServerError(); }
+
+	_ERRORPAIR	status_URI = (it->second);
+
+	this->ResH.setStatusCode(status_URI.first);
+	this->ReqH.setRequsetTarget(status_URI.second);
+
+	cout << CYAN("ERROR REDIR TO: ")  << ReqH.getRequsetTarget() << endl;
+	this->ReqH.setMethod("GET");
+	this->conf = CONF->getMatchedServer(this->linkServerSock, this->ReqH["Host"]);
+	this->conf = CONF->getMatchedLocation(this->ReqH.getRequsetTarget(),
+										CONVERT(this->conf, ServerConfig));
+	// this->unlinkAll();
+	throw ::internalRedirect();
+}
+
 /**========================================================================
 * !                            Exceptions
 *========================================================================**/
@@ -458,4 +490,3 @@ bool	createPUToutputFile(ConnSocket* connected, const string filename)
 	return alreadyExist;
 
 }
-

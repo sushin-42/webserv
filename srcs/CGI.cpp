@@ -184,6 +184,4 @@ void	createCGI(ServerSocket* serv, ConnSocket* connected, const string& exe, con
 	pid = fork();
 	if (pid == 0)	childRoutine(PtoC, CtoP, serv, connected, exe, scriptpath);	//TODO: check return value -1
 	else			parentRoutine(PtoC, CtoP, connected, pid);	// produce non-blocking pipe and poll.enroll(pipe)
-
-	connected->pending = false;	//@ default == NO pending
 }

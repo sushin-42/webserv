@@ -81,7 +81,6 @@ void HttpConfig::defaultSet()
             }
         }
     }
-    error_page[404] = make_pair(404, "404.html");
 }
 void HttpConfig::setConfig(string config)
 {
@@ -95,7 +94,7 @@ void HttpConfig::setConfig(string config)
     makeServerMap();
     cout << RED(" http block ") << endl;
 }
-   
+
 
 
 void HttpConfig::makeServerMap()
@@ -103,7 +102,7 @@ void HttpConfig::makeServerMap()
     for (size_t k = 0 ; k < link.size(); k++)
     {
         ServerConfig *serv = CONVERT(link[k], ServerConfig);
-        
+
         for (size_t i = 0 ; i < serv->ipPort.size(); i++)
             serverMap[serv->ipPort[i]].push_back(link[k]);
     }
