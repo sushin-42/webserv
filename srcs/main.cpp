@@ -151,7 +151,8 @@ _core:
 												POLLSET->prepareSend( connected->getFD() );
 												continue;
 											}
-			catch	(autoIndex& a)			{	POLLSET->prepareSend( connected->getFD() ); /* go down ? */	 }
+			catch	(autoIndex& a)			{	connected->makeResponseHeader();
+												POLLSET->prepareSend( connected->getFD() ); /* go down ? */	 }
 
 			inputStream->coreDone();
 			continue;
