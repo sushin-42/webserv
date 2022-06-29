@@ -297,7 +297,7 @@ void				createServerSockets(map<
 		serv = new ServerSocket(mit->first.first, mit->first.second);
 		try						{ serv->bind(); }
 		catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
-		try						{ serv->listen(10 /*backlog*/); }
+		try						{ serv->listen(SOMAXCONN /*backlog*/); }
 		catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
 		serv->confs = mit->second;
 
