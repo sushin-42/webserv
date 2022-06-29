@@ -46,24 +46,6 @@ void		PollSet::enroll( Stream* stream, short events )
 }
 
 
-// void	PollSet::dropLink(Stream* link)
-// {
-// 	Pipe*			linkPipe = CONVERT(link, Pipe);
-// 	FileStream*		linkFile = CONVERT(link, FileStream);
-
-// 	iterator		it = getIterator(link);
-// 	iterator_p		itPoll = it.first;
-// 	iterator_s		itLink = it.second;
-
-// 	if (linkFile)	{ TAG(PollSet, dropLink); cout << GRAY("Destroy linked File ") << (*itLink)->getFD() << endl; }
-// 	if (linkPipe)	{ TAG(PollSet, dropLink); cout << GRAY("Destroy linked pipe ") << (*itLink)->getFD() << endl; kill(linkPipe->pid, SIGKILL); }	//NOTE: cannot waitpid() here due to delay. we will check every child process later, because we don't want looping or blocking operation.
-
-// 	(*itLink)->close();
-// 	delete (*itLink);
-// 	pollVec.erase(itPoll);
-// 	streamVec.erase(itLink);
-// }
-
 
 
 
