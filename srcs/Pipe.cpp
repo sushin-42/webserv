@@ -89,17 +89,16 @@ void	Pipe::recv()
 	{
 
 	case -1:	/* internal server error */
-		TAG(Pipe#, recv); cout << RED("Unexcpected error from pipe: ") << this->getFD() << endl;
+		TAG(CGI#, CGIroutines); cout << RED("Unexcpected error from pipe: ") << this->getFD() << endl;
 		this->close();
 		throw internalServerError();
 
 	case 0:		/* close pipe, process output */
 
-		TAG(Pipe#, recv); cout << GRAY("Pipe closed: ") << this->getFD() << endl;
+		TAG(CGI#, CGIroutines); cout << GRAY("Pipe closed: ") << this->getFD() << endl;
 		this->close();
 		this->readDone = true;
 		connected->pending = false;
-		/*TODO: UNLINK, DROP PROPERLY */
 		break;
 
 	default:
@@ -268,9 +267,7 @@ void	Pipe::localRedir()
 
 		this->close();
 		POLLSET->drop(this);
-		// POLLSET->drop(connected->linkErrorPipe);
 		connected->unlink(this);
-		// connected->unlink(connected->linkErrorPipe);
 
 		if (connected->internalRedirectCount == 0)
 			throw internalServerError();
@@ -368,52 +365,3 @@ void	Pipe::documentResponse()
 	connected->makeResponseHeader();
 }
 
-//!--------------------------------------------------------------------------!//
-
-
-/**========================================================================
-* @                           Constructors
-*========================================================================**/
-
-	ErrorPipe::ErrorPipe()
-	: Pipe() {}
-	ErrorPipe::ErrorPipe( int fd, pid_t p )
-	: Pipe(fd, p) {}
-	ErrorPipe::ErrorPipe( const ErrorPipe& src )
-	: Pipe(src) {}
-	ErrorPipe::~ErrorPipe() {}
-
-/**========================================================================
-* #                          member functions
-*========================================================================**/
-
-	void	ErrorPipe::recv()
-	{
-		ssize_t	byte = 0;
-
-		switch (byte = readFrom(this->fd, this->output))
-		{
-
-		case -1:	/* internal server error */
-			TAG(ErrorPipe#, recv); cout << RED("Unexcpected error from ErrorPipe: ") << this->getFD() << endl;
-			this->close();
-			throw internalServerError();
-
-		case 0:		/* close pipe, process output */
-
-			TAG(ErrorPipe#, recv); cout << GRAY("ErrorPipe closed: ") << this->getFD() << endl;
-			this->close();
-			POLLSET->drop(this);
-			/*TODO: UNLINK, DROP PROPERLY */
-			break;
-
-		default:
-			// cout << "READ FROM ERROR PIPE: " << _RED << this->getFD() << _NC  << output << endl;
-			throw readMore();
-		}
-
-	}
-	void	ErrorPipe::core()		{ cout << YELLOW("FROM ERROR PIPE: ") << endl; cout << _RED << output << _NC << endl;}
-	void	ErrorPipe::coreDone() 	{ cout << YELLOW("ERROR PIPE CORE DONE") << endl; POLLSET->drop(this); }
-
-//!--------------------------------------------------------------------------!//

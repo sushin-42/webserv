@@ -31,9 +31,9 @@ map<string, string> MIME;
 //                                  TODO                                   .
 //*
 //*		1. drop link
-//*		2. error_page		@
+//*		2. error_page
 //*		3. CGI stderr
-//*		4. CGI local-redir	@
+//*		4. CGI local-redir
 //*
 //*------------------------------------------------------------------------**/
 

@@ -22,7 +22,7 @@
 	  recvContent(), ReqH(), ReqB(), ResH(), ResB(),
 	  pending(true), chunk(false), FINsended(false), internalRedirect(false),
 	  internalRedirectCount(10),
-	  linkInputPipe(NULL), linkOutputPipe(NULL), linkErrorPipe(NULL),
+	  linkInputPipe(NULL), linkOutputPipe(NULL),
 	  linkInputFile(NULL), linkOutputFile(NULL),
 	  linkServerSock(NULL), conf(NULL) {}
 
@@ -141,8 +141,6 @@
 			linkInputPipe = NULL;
 		else if (linkOutputPipe == link)
 			linkOutputPipe = NULL;
-		else if (linkErrorPipe == link)
-			linkErrorPipe = NULL;
 	}
 
 	bool	ConnSocket::isPipeAlive()

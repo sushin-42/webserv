@@ -75,7 +75,6 @@ void	PollSet::_drop( int fd )
 	// Stream*	link2 = NULL;
 	// Stream*	link3 = NULL;
 	// Stream*	link4 = NULL;
-	// Stream*	link5 = NULL;
 
 	Poll	p;
 	Stream* s;
@@ -97,19 +96,14 @@ void	PollSet::_drop( int fd )
 			// link2 = connSock->linkOutputPipe;
 			connSock->linkOutputPipe->linkConn = NULL;
 		}
-		if (connSock->linkErrorPipe)
-		{
-			// link3 = connSock->linkOutputPipe;
-			connSock->linkErrorPipe->linkConn = NULL;
-		}
 		if (connSock->linkInputFile)
 		{
-			// link4 = connSock->linkInputFile;
+			// link3 = connSock->linkInputFile;
 			connSock->linkInputFile->linkConn = NULL;
 		}
 		if (connSock->linkOutputFile)
 		{
-			// link5 = connSock->linkOutputFile;
+			// link4 = connSock->linkOutputFile;
 			connSock->linkOutputFile->linkConn = NULL;
 		}
 	}
@@ -124,6 +118,11 @@ void	PollSet::_drop( int fd )
 	delete s;
 	pollMap.erase(fd);
 	close(fd);
+
+	// if (link1)	{/* cout << "drop link 1 " << endl; */dropLink(link1);}
+	// if (link2)	{/* cout << "drop link 2 " << endl; */dropLink(link2);}
+	// if (link3)	{/* cout << "drop link 3 " << endl; */dropLink(link3);}
+	// if (link4)	{/* cout << "drop link 4 " << endl; */dropLink(link4);}
 }
 
 void	PollSet::drop( Stream* stream )

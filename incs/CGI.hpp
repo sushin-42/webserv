@@ -39,7 +39,6 @@ map<string, string>	makeCGIEnv(ServerSocket* serv, ConnSocket* connected);
 int childRoutine(
 				int PtoC[2],
 				int CtoP[2],
-				int CtoP_ERR[2],
 				ServerSocket* serv,
 				ConnSocket* connected,
 				const string& executable,
@@ -49,7 +48,6 @@ int childRoutine(
 void parentRoutine(
 					int PtoC[2],
 					int CtoP[2],
-					int CtoP_ERR[2],
 					ConnSocket* connected,
 					pid_t pid
 				);

@@ -105,7 +105,6 @@ map<string, string>	makeCGIEnv(ServerSocket* serv, ConnSocket* connected)
 int childRoutine(
 				int PtoC[2],
 				int CtoP[2],
-				int CtoP_ERR[2],
 				ServerSocket* serv,
 				ConnSocket* connected,
 				const string& executable,
@@ -138,7 +137,7 @@ int childRoutine(
 
 	dup2(CtoP[1], STDOUT_FILENO), close(CtoP[0]), close(CtoP[1]);
 	dup2(PtoC[0], STDIN_FILENO), close(PtoC[0]), close(PtoC[1]);
-	dup2(CtoP_ERR[1], STDERR_FILENO), close(CtoP_ERR[0]), close(CtoP_ERR[1]);
+	// sleep(1);	//NOTE: 자식프로세스가 왜  기다려주지 ㅎ;
 
 	if (execve(
 				(executable).c_str(),
@@ -154,7 +153,6 @@ int childRoutine(
 void parentRoutine(
 					int PtoC[2],
 					int CtoP[2],
-					int CtoP_ERR[2],
 					ConnSocket* connected,
 					pid_t pid
 				)
@@ -164,7 +162,6 @@ void parentRoutine(
 	string	ReqB = connected->ReqB.getContent();
 	Pipe*	pr = new Pipe(CtoP[0], pid);
 	Pipe*	pw = new Pipe(PtoC[1], pid);
-	ErrorPipe*	pe = new ErrorPipe(CtoP_ERR[0], pid);
 
 	pr->linkConn = connected;
 	connected->linkInputPipe = pr;
@@ -173,23 +170,18 @@ void parentRoutine(
 	pw->linkConn = connected;
 	connected->linkOutputPipe = pw;
 	POLLSET->enroll(pw, POLLOUT);
-
-	pe->linkConn = connected;
-	connected->linkErrorPipe = pe;
-	POLLSET->enroll(pe, POLLIN);
 }
 
 void	createCGI(ServerSocket* serv, ConnSocket* connected, const string& exe, const string& scriptpath)
 {
-	int				PtoC[2], CtoP[2], CtoP_ERR[2];
+	int				PtoC[2], CtoP[2];
 	pid_t			pid;
 
-	pipe(CtoP), pipe(PtoC), pipe(CtoP_ERR) ;
+	pipe(CtoP), pipe(PtoC) ;
 	fcntl(CtoP[0], F_SETFL, O_NONBLOCK);
 	fcntl(PtoC[1], F_SETFL, O_NONBLOCK);
-	fcntl(CtoP_ERR[0], F_SETFL, O_NONBLOCK);
 
 	pid = fork();
-	if (pid == 0)	childRoutine(PtoC, CtoP, CtoP_ERR, serv, connected, exe, scriptpath);	//TODO: check return value -1
-	else			parentRoutine(PtoC, CtoP, CtoP_ERR, connected, pid);	// produce non-blocking pipe and poll.enroll(pipe)
+	if (pid == 0)	childRoutine(PtoC, CtoP, serv, connected, exe, scriptpath);	//TODO: check return value -1
+	else			parentRoutine(PtoC, CtoP, connected, pid);	// produce non-blocking pipe and poll.enroll(pipe)
 }
