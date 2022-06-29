@@ -89,7 +89,7 @@ void	Pipe::recv()
 	{
 
 	case -1:	/* internal server error */
-		TAG(Pipe); cout << RED("Unexcpected error from pipe: ") << this->getFD() << endl;
+		LOGGING(Pipe,  RED("Unexcpected error from file: ") UL("%d"), this->getFD());
 
 		linkConn->unlink(this);
 		POLLSET->drop(this);
@@ -97,8 +97,8 @@ void	Pipe::recv()
 		throw internalServerError();
 
 	case 0:		/* close pipe, process output */
+		LOGGING(Pipe,  GRAY("file closed: ") UL("%d"), this->getFD());
 
-		TAG(Pipe); cout << GRAY("Pipe closed: ") << this->getFD() << endl;
 		this->readDone = true;
 		connected->pending = false;
 		break;
@@ -143,7 +143,7 @@ void	Pipe::send(const string& content, map<int, struct undone>& writeUndoneBuf)
 		rWrited += byte;
 	else
 	{
-		TAG(Pipe) << _FAIL(unexpected error: ) << errno << endl;
+		LOGGING(Pipe, _FAIL(unexpected error: ) "%d", errno);
 		writeUndoneBuf.erase(this->fd);
 
 		linkConn->unlink(this);
@@ -157,7 +157,7 @@ void	Pipe::send(const string& content, map<int, struct undone>& writeUndoneBuf)
 	//@ all data sended @//
 	if (rWrited == rContentLen)
 	{
-		TAG(Pipe) << _GOOD(all data sended to child process) << this->fd << ": " << rWrited << " / " << rContentLen << " bytes" << endl;
+		LOGGING(Pipe, _GOOD(all data writed to File )  UL("%d") ": %zu / %zu bytes", this->getFD(), rWrited, rContentLen);
 		writeUndoneBuf.erase(this->fd);
 
 		linkConn->unlink(this);
@@ -166,7 +166,8 @@ void	Pipe::send(const string& content, map<int, struct undone>& writeUndoneBuf)
 	//' not all data sended. have to be buffered '//
 	else
 	{
-		TAG(Pipe) << _NOTE(Not all data sended to) << this->fd << ": " << rWrited << " / " << rContentLen  << " bytes" << endl;
+		LOGGING(FileStream, _NOTE(Not all data sended to )  UL("%d") ": %zu / %zu bytes", this->fd, rWrited, rContentLen);
+
 		throw sendMore();
 	}
 }

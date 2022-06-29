@@ -108,14 +108,14 @@ ssize_t readFrom(int fd, string &content)
 	switch (byte)
 	{
 	case 0:
-		TAG(utils); cout << GRAY ("read ") << _UL << byte << _NC << GRAY(" bytes from ") << _UL << fd  << _NC << endl;
+		LOGGING(utils, GRAY ("read ") UL("%zu") "bytes from " UL("%d"), byte, fd);
 		break;
 	case -1:
-		TAG(utils); cout << GRAY ("read ") << _UL << byte << _NC << GRAY(" bytes from ") << _UL << fd  << _NC << endl;
-		cerr << strerror(errno) <<" " << errno << endl;
+		LOGGING(utils, GRAY ("read ") UL("%zu") "bytes from " UL("%d"), byte, fd);
+		LOGGING(utils, RED("Error : ") "%s", strerror(errno));
 		break;
 	default:
-		TAG(utils); cout << GRAY ("read ") << _UL << byte << _NC << GRAY(" bytes from ") << _UL << fd  << _NC << endl;
+		LOGGING(utils, GRAY ("read ") UL("%zu") "bytes from " UL("%d"), byte, fd);
 		content.append(readbuf, byte);
 	}
 	return byte;

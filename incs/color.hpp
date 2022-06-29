@@ -22,11 +22,15 @@
 # define YELLOW(s)			_YELLOW s _NC
 # define PURPLE(s)			_PURPLE s _NC
 
-# define TAG(CLASS)				cout << "[ " << PURPLE(#CLASS) << "#"  << _UL << __func__ << _NC <<"() ] "
-# define _NOTE(s)				"\033[0;33m" << "NOTE: " #s << " \033[0m"
-# define _FAIL(s)				"\033[1;31m" << "FAIL: " #s << " \033[0m"
-# define _GOOD(s)				"\033[0;36m" << "GOOD: " #s << " \033[0m"
+# define TAG(CLASS)				cerr << "[ " << PURPLE(#CLASS) << "#"  << _UL << __func__ << _NC <<"() ] "
+# define _NOTE(s)				"\033[0;33m"  "NOTE: " #s " \033[0m"
+# define _FAIL(s)				"\033[1;31m"  "FAIL: " #s " \033[0m"
+# define _GOOD(s)				"\033[0;36m"  "GOOD: " #s " \033[0m"
 
+# ifdef DEBUG
+# define LOGGING(CLASS, ...)		TAG(CLASS); fprintf(stderr, __VA_ARGS__), fprintf(stderr, "\n")
+# else
+# define LOGGING(CLASS, ...)	(void)0
+# endif
 
 #endif
-

@@ -62,7 +62,7 @@ void			FileStream::recv()
 	switch (byte = readFrom(this->fd, this->content))
 	{
 	case -1:
-		TAG(FileStream); cout << RED("Unexcpected error from file: ") << this->getFilename() << endl;
+		LOGGING(FileStream,  RED("Unexcpected error from file: ") UL("%s"), this->getFilename().c_str());
 
 		linkConn->unlink(this);
 		POLLSET->drop(this);
@@ -70,7 +70,7 @@ void			FileStream::recv()
 		throw internalServerError();
 
 	case 0:		/* close file, process output */
-		TAG(FileStream); cout << GRAY("file closed: ") << this->getFilename() << endl;
+		LOGGING(FileStream,  GRAY("file closed: ") UL("%s"), this->getFilename().c_str());
 
 		break;	/* it will go to core, be dropped at coreDone */
 
@@ -109,7 +109,7 @@ void	FileStream::send(const string& content, map<int, struct undone>& writeUndon
 		rWrited += byte;
 	else
 	{
-		TAG(FileStream) << _FAIL(unexpected error: ) << errno << endl;
+		LOGGING(FileStream, _FAIL(unexpected error: ) "%d", errno);
 		writeUndoneBuf.erase(this->fd);
 
 		linkConn->unlink(this);
@@ -121,7 +121,7 @@ void	FileStream::send(const string& content, map<int, struct undone>& writeUndon
 	//@ all data sended @//
 	if (rWrited == rContentLen)
 	{
-		TAG(FileStream) << _GOOD(all data writed to File ) _UL << this->filename << _NC << " : " << rWrited << " / " << rContentLen << " bytes" << endl;
+		LOGGING(FileStream, _GOOD(all data writed to File )  UL("%s") ": %zu / %zu bytes", this->filename.c_str(), rWrited, rContentLen);
 		writeUndoneBuf.erase(this->fd);
 
 
@@ -135,7 +135,9 @@ void	FileStream::send(const string& content, map<int, struct undone>& writeUndon
 	//' not all data sended. have to be buffered '//
 	else
 	{
-		TAG(FileStream) << _NOTE(Not all data sended to) _UL << this->filename << _NC << " : " << rWrited << " / " << rContentLen  << " bytes" << endl;
+
+		LOGGING(FileStream, _NOTE(Not all data sended to)  UL("%s") ": %zu / %zu bytes", this->filename.c_str(), rWrited, rContentLen);
+
 		throw sendMore();
 	}
 }

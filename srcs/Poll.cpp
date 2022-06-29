@@ -32,18 +32,18 @@ void		PollSet::enroll( Stream* stream, short events )
 
 	pollMap[p.fd] = make_pair(p, stream);
 
+#	ifdef DEBUG
 	ServerSocket*	serv		= CONVERT(stream, ServerSocket);
 	ConnSocket*		connected	= CONVERT(stream, ConnSocket);
 	FileStream*		filestream	= CONVERT(stream, FileStream);
 	Pipe*			P			= CONVERT(stream, Pipe);
 
-	TAG(PollSet);
-	cout << GRAY("Enroll ") << stream->getFD()
-	<< (serv		? CYAN( " (ServerSocket) ") "[" _UL + serv->getIP() + ":" + toString(serv->getPort()) + _NC "]" :
+	LOGGING(PollSet, GRAY("Enroll ") "%d" " %s" ,stream->getFD(),
+		(serv		? CYAN( " (ServerSocket) ") :
 		connected	? BLUE( " (ConnSocket)") :
 		filestream	? YELLOW( " (FileStream) ") :
-		P			? PURPLE( " (Pipe)") : "") << endl;
-
+		P			? PURPLE( " (Pipe)") : ""));
+#endif
 }
 
 
@@ -58,19 +58,22 @@ void	PollSet::_drop( int fd )
 
 	p = this->pollMap[fd].first;
 	s = this->pollMap[fd].second;
-	TAG(PollSet); cout << GRAY("Drop ") << fd << " ";
 	ConnSocket* connSock = CONVERT(s, ConnSocket);
 	if (connSock)
 	{
-		cout << BLUE("(ConnSocket)") << endl;
+		LOGGING(PollSet, GRAY("Drop ") "%d " BLUE("(ConnSocket)"),  fd);
 		connSock->unlinkAll();
 	}
 
 	else if (CONVERT(s, Pipe))
- 		cout << PURPLE("(Pipe)") << endl;
+	{
+		LOGGING(PollSet, GRAY("Drop ") "%d " PURPLE("(Pipe)"),  fd);
+	}
 
 	else if (CONVERT(s, FileStream))
- 		cout << YELLOW("(FileStream)") << endl;
+	{
+		LOGGING(PollSet, GRAY("Drop ") "%d " PURPLE("(Pipe)"),  fd);
+	}
 
 
 	delete s;
@@ -128,9 +131,9 @@ vector<Stream*>	PollSet::examine()
 
 	switch (numReady = ::poll(pollVec.data(), pollVec.size(), minRemaining/*time-out*/))
 	{
-	case -1: TAG(PollSet); cerr << RED("poll() ERROR: ")	<< strerror(errno) << endl;
+	case -1: LOGGING(PollSet, RED("poll() ERROR: ") "%s", strerror(errno));
 			 break;
-	case  0: TAG(PollSet); cerr << GRAY("No event within ") << minRemaining << "ms" << endl;
+	case  0: LOGGING(PollSet, GRAY("No event within ") "%lu ms",  minRemaining);
 			 break;
 	default:;
 	}
@@ -169,7 +172,7 @@ Stream*				PollSet::readRoutine(Stream* stream)
 			try
 			{
 				connected = new ConnSocket(serv->accept());
-				TAG(PollSet); cout << GREEN("Server ") << _UL "[" << serv->getIP() + ":" + toString(serv->getPort()) + _NC "]"<<  GREEN(" Got new connection, enroll ") << connected->getFD() << endl;
+				LOGGING(PollSet, GREEN("Server Got new connection, enroll ") "%d" , connected->getFD());
 				this->enroll(connected, POLLIN);
 			}
 			catch (exception& e)	// accept() not ready
@@ -180,29 +183,29 @@ Stream*				PollSet::readRoutine(Stream* stream)
 	}
 	else if (connected)
 	{
-		TAG(PollSet);	cout << GREEN("New data to read ")	<< stream->getFD() << BLUE(" (ConnSocket)") <<endl;
+		LOGGING(PollSet, GREEN("New data to read ") "%d %s"	, stream->getFD(), BLUE(" (ConnSocket)"));
 		return connected;
 	}
 	else if (CGIpipe)
 	{
-		TAG(PollSet); cout << GREEN("New data to read ")	<< stream->getFD() << PURPLE(" (Pipe)") <<endl;
+		LOGGING(PollSet, GREEN("New data to read ") "%d %s"	, stream->getFD(), PURPLE(" (Pipe)"));
 		return CGIpipe;
 	}
 	else if (filestream)
 	{
-		TAG(PollSet); cout << GREEN("New data to read ")	<< stream->getFD() << YELLOW(" (FileStream)") <<endl;
+		LOGGING(PollSet, GREEN("New data to read ") "%d %s"	, stream->getFD(), YELLOW(" (FileStream)"));
 		return filestream;
 	}
 	else
 	{
-		TAG(PollSet); cout << RED("Unknown type: ") << endl;
+		LOGGING(PollSet, RED("Unknown type "));
 		throw exception();
 	}
 }
 
 Stream*	PollSet::writeRoutine(Stream* stream)
 {
-	TAG(PollSet); cout << GREEN("Can write to ") << stream->getFD() << endl;
+	LOGGING(PollSet, GREEN("Can write to ") "%d", stream->getFD());
 	return stream;
 }
 
