@@ -101,13 +101,12 @@ public:
 	void	setHeaderOrReadMore();
 	void	setBodyOrReadMore();
 
-	// void	recvRequest();
-
 	void	unlink(Stream* link);
+	void	unlinkAll();
+
 
 	void	makeResponseHeader();
 	void	setErrorPage(status_code_t status, const string& reason, const string& text);
-	// void	returnError(status_code_t status, const string& message);
 	void	returnError(httpError& error);
 	void	checkErrorPage();
 

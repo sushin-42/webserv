@@ -127,11 +127,13 @@ int main(int argc, char** argv)
 											if (CONVERT(&e, ConnSocket::connClosed) ||
 												CONVERT(&e, ConnSocket::somethingWrong))
 											{
-												connected->close();
+												connected->unlinkAll();
 												POLLSET->drop(stream);
 
 												continue;
 											}
+											// linkConn->unlink(this);
+											// POLLSET->drop(this);
 										}
 
 //@----------------------------------RECV DONE-------------------------------@//
@@ -152,8 +154,6 @@ _core:
 			catch	(autoIndex& a)			{	POLLSET->prepareSend( connected->getFD() ); /* go down ? */	 }
 
 			inputStream->coreDone();
-			if (inputStream == filestream)
-				POLLSET->drop(stream);
 			continue;
 
 //%--------------------------------READY TO SEND-----------------------------%//
@@ -173,21 +173,9 @@ _send:
 			try							{ outputStream->send(outputContent, writeUndoneBuf);}
 			catch (exception& e)		{
 											if		(CONVERT(&e, sendMore))	{POLLSET->prepareSend( outputStream->getFD() ); continue;}	// not all data sended
-											else if	(CONVERT(&e, readMore)) {continue;}							 	// not all data sended, and have to read from pipe
-											else	{
-														if (outputStream != connected)
-														{
-															if (outputStream == filestream)
-																POLLSET->prepareSend( connected->getFD() );
-															connected->unlink(outputStream);
-															POLLSET->drop(outputStream);
-															continue;
-														}
-														// connected->ReqH.clear(), connected->ResH.clear(), connected->ResB.clear();
-														continue;
-													}
+											else if	(CONVERT(&e, readMore)) {continue;}	// not all data sended, and have to read from pipe
+											else							{}
 										}
-			POLLSET->drop(stream);
 		}
 	}
 }

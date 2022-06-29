@@ -89,14 +89,16 @@ void	Pipe::recv()
 	{
 
 	case -1:	/* internal server error */
-		TAG(CGI#, CGIroutines); cout << RED("Unexcpected error from pipe: ") << this->getFD() << endl;
-		this->close();
+		TAG(Pipe#, recv); cout << RED("Unexcpected error from pipe: ") << this->getFD() << endl;
+
+		linkConn->unlink(this);
+		POLLSET->drop(this);
+
 		throw internalServerError();
 
 	case 0:		/* close pipe, process output */
 
-		TAG(CGI#, CGIroutines); cout << GRAY("Pipe closed: ") << this->getFD() << endl;
-		this->close();
+		TAG(Pipe#, recv); cout << GRAY("Pipe closed: ") << this->getFD() << endl;
 		this->readDone = true;
 		connected->pending = false;
 		break;
@@ -110,7 +112,11 @@ void	Pipe::coreDone()
 {
 	ConnSocket* connected = this->linkConn;
 
-	// if (headerDone)
+	if (readDone)
+	{
+		connected->unlink(this);
+		POLLSET->drop(this);
+	}
 	if (connected->pending == false)
 		POLLSET->prepareSend( connected );
 	return;
@@ -128,34 +134,39 @@ void	Pipe::send(const string& content, map<int, struct undone>& writeUndoneBuf)
 	ssize_t		rContentLen	= rContent.length();
 	ssize_t		byte		= 0;
 
+	errno = 0;
 	byte = ::write( this->fd,
 					rContent.data() + rWrited,
-				//   1);
 					rContentLen - rWrited );
-	if (byte > 0)
+
+	if (byte >= 0)
 		rWrited += byte;
+	else
+	{
+		TAG(Pipe, send) << _FAIL(unexpected error: ) << errno << endl;
+		writeUndoneBuf.erase(this->fd);
+
+		linkConn->unlink(this);
+		POLLSET->drop(this);
+
+		throw exception();	// close and Drop now!
+							// NOTE: need to drop linkConn?
+	}
+
 
 	//@ all data sended @//
 	if (rWrited == rContentLen)
 	{
 		TAG(Pipe, send) << _GOOD(all data sended to child process) << this->fd << ": " << rWrited << " / " << rContentLen << " bytes" << endl;
 		writeUndoneBuf.erase(this->fd);
-		this->linkConn->linkOutputPipe = NULL;
-		close();
-		throw exception();
+
+		linkConn->unlink(this);
+		POLLSET->drop(this);
 	}
 	//' not all data sended. have to be buffered '//
 	else
 	{
 		TAG(Pipe, send) << _NOTE(Not all data sended to) << this->fd << ": " << rWrited << " / " << rContentLen  << " bytes" << endl;
-		if (byte == -1)
-		{
-			TAG(Pipe, send) << _FAIL(unexpected error: ) << errno << endl;
-			writeUndoneBuf.erase(this->fd);
-			close();
-			throw exception();	// close and Drop now!
-								// NOTE: need to drop linkConn?
-		}
 		throw sendMore();
 	}
 }
@@ -265,9 +276,8 @@ void	Pipe::localRedir()
 
 		cout << RED("LOCAL REDIR TO: ")  << connected->ReqH.getRequsetTarget() << endl;
 
-		this->close();
-		POLLSET->drop(this);
 		connected->unlink(this);
+		POLLSET->drop(this);
 
 		if (connected->internalRedirectCount == 0)
 			throw internalServerError();
@@ -355,7 +365,6 @@ void	Pipe::documentResponse()
 	ConnSocket* connected = this->linkConn;
 	if (!connected)	return ;
 
-	cout  << "DOC" << endl;
 	if (!connected->ResH.exist("Content-Length") &&
 			(!connected->ResH.exist("Transfer-Encoding") ||
 			lowerize(connected->ResH["Transfer-encoding"]) != "chunked"

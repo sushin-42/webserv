@@ -63,13 +63,16 @@ void			FileStream::recv()
 	{
 	case -1:
 		TAG(FileStream#, recv); cout << RED("Unexcpected error from file: ") << this->getFilename() << endl;
-		this->close();
+
+		linkConn->unlink(this);
+		POLLSET->drop(this);
+
 		throw internalServerError();
 
 	case 0:		/* close file, process output */
 		TAG(FileStream#, recv); cout << GRAY("file closed: ") << this->getFilename() << endl;
-		this->close();
-		break;
+
+		break;	/* it will go to core, be dropped at coreDone */
 
 	default:	/* content appended */
 		throw readMore();
@@ -81,6 +84,7 @@ void	FileStream::coreDone()
 	ConnSocket* connected = this->linkConn;
 	// POLLSET->drop(it);
 	connected->unlink(this);
+	POLLSET->drop(this);
 	POLLSET->prepareSend( connected );
 }
 
@@ -101,29 +105,37 @@ void	FileStream::send(const string& content, map<int, struct undone>& writeUndon
 	byte = ::write( this->fd,
 					rContent.data() + rWrited,
 					rContentLen - rWrited );
-	if (byte > 0)
+	if (byte >= 0)
 		rWrited += byte;
+	else
+	{
+		TAG(FileStream, send) << _FAIL(unexpected error: ) << errno << endl;
+		writeUndoneBuf.erase(this->fd);
+
+		linkConn->unlink(this);
+		POLLSET->drop(this);
+
+		throw exception();	// close and Drop now!// NOTE: need to drop linkConn?
+	}
 
 	//@ all data sended @//
 	if (rWrited == rContentLen)
 	{
 		TAG(FileStream, send) << _GOOD(all data writed to File ) _UL << this->filename << _NC << " : " << rWrited << " / " << rContentLen << " bytes" << endl;
 		writeUndoneBuf.erase(this->fd);
-		close();
-		throw exception();
+
+
+		POLLSET->prepareSend( linkConn->getFD() );
+
+		linkConn->unlink(this);
+		POLLSET->drop(this);
+
+		// throw exception();
 	}
 	//' not all data sended. have to be buffered '//
 	else
 	{
 		TAG(FileStream, send) << _NOTE(Not all data sended to) _UL << this->filename << _NC << " : " << rWrited << " / " << rContentLen  << " bytes" << endl;
-		if (byte == -1)
-		{
-			TAG(FileStream, send) << _FAIL(unexpected error: ) << errno << endl;
-			writeUndoneBuf.erase(this->fd);
-			close();
-			throw exception();	// close and Drop now!
-								// NOTE: need to drop linkConn?
-		}
 		throw sendMore();
 	}
 }

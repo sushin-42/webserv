@@ -92,9 +92,11 @@
 			try						{ alreadyExist = createPUToutputFile(this, filename); (void)alreadyExist; }
 			catch (Conflict& e)		{ throw; }
 
+			// alreadyExist ? throw noContent() : throw Created();
 			this->ResH.setStatusCode(alreadyExist ? 204 : 201);
 			this->ResH.setReasonPhrase(alreadyExist ? "No Content" : "Created");
 			this->ResH.setDefaultHeaders();
+			this->makeResponseHeader();
 
 			return;
 		}
@@ -134,13 +136,49 @@
 	void	ConnSocket::unlink(Stream* link)	//NOTE: unlink each side?
 	{
 		if (linkInputFile == link)
+		{
+			linkInputFile->linkConn = NULL;
 			linkInputFile = NULL;
+		}
 		else if (linkOutputFile == link)
+		{
+			linkOutputFile->linkConn = NULL;
 			linkOutputFile = NULL;
+		}
 		else if (linkInputPipe == link)
+		{
+			linkInputPipe->linkConn = NULL;
 			linkInputPipe = NULL;
+		}
 		else if (linkOutputPipe == link)
+		{
+			linkOutputPipe->linkConn = NULL;
 			linkOutputPipe = NULL;
+		}
+	}
+
+	void	ConnSocket::unlinkAll()	//NOTE: unlink each side?
+	{
+		if (linkInputFile)
+		{
+			linkInputFile->linkConn = NULL;
+			linkInputFile = NULL;
+		}
+		if (linkOutputFile)
+		{
+			linkOutputFile->linkConn = NULL;
+			linkOutputFile = NULL;
+		}
+		if (linkInputPipe)
+		{
+			linkInputPipe->linkConn = NULL;
+			linkInputPipe = NULL;
+		}
+		if (linkOutputPipe)
+		{
+			linkOutputPipe->linkConn = NULL;
+			linkOutputPipe = NULL;
+		}
 	}
 
 	bool	ConnSocket::isPipeAlive()
@@ -234,8 +272,9 @@
 	void	ConnSocket::setBodyOrReadMore()
 	{
 		string method = ReqH.getMethod();
-		if (method == "GET" || method == "HEAD")
-			return;
+		// if (method == "GET" || method == "HEAD")
+			// return;
+
 		if (ReqH.exist("Transfer-Encoding"))	// it will override Content-Length
 		{
 			/*
@@ -281,7 +320,10 @@
 			*/
 		}
 		else
-			throw lengthRequired();
+		{
+			if (recvContent.empty() == false)
+				throw lengthRequired();
+		}
 	}
 
 	void	ConnSocket::recv()
@@ -336,10 +378,20 @@
 		byte = write( this->fd,
 					  rContent.data() + rWrited,
 					  rContentLen - rWrited );
-		if (byte > 0)
-			rWrited += byte;
 
 		ResH.clear(), ResB.clear();
+		if (byte >= 0)
+			rWrited += byte;
+		else
+		{
+			TAG(ConnSocket, send) << _FAIL(unexpected error: ) << errno << endl;
+			writeUndoneBuf.erase(this->fd);
+
+			this->unlinkAll();
+			gracefulClose();	/* maybe drop after get FIN from client */
+
+			throw exception();	// close and Drop now!
+		}
 
 		//@ all data sended @//
 		if (rWrited == rContentLen)
@@ -348,19 +400,15 @@
 			writeUndoneBuf.erase(this->fd);
 			if (linkInputPipe && linkInputPipe->readDone == false)
 				throw readMore();
-			gracefulClose();
+
+			this->unlinkAll();
+			gracefulClose();	/* maybe drop after get FIN from client */
 		}
+
 		//' not all data sended. have to be buffered '//
 		else
 		{
 			TAG(ConnSocket, send) << _NOTE(Not all data sended to) << this->fd << ": " << rWrited << " / " << rContentLen  << " bytes" << endl;
-			if (byte == -1)
-			{
-				TAG(ConnSocket, send) << _FAIL(unexpected error: ) << errno << endl;
-				writeUndoneBuf.erase(this->fd);
-				gracefulClose();
-				throw exception();	// close and Drop now!
-			}
 			throw sendMore();
 		}
 	}

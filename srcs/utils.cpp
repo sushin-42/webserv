@@ -115,7 +115,7 @@ ssize_t readFrom(int fd, string &content)
 		cerr << strerror(errno) <<" " << errno << endl;
 		break;
 	default:
-		// TAG(utils, readFrom); cout << GRAY ("read ") << _UL << byte << _NC << GRAY(" bytes from ") << _UL << fd  << _NC << endl;
+		TAG(utils, readFrom); cout << GRAY ("read ") << _UL << byte << _NC << GRAY(" bytes from ") << _UL << fd  << _NC << endl;
 		content.append(readbuf, byte);
 	}
 	return byte;

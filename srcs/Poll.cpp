@@ -70,12 +70,6 @@ void		PollSet::enroll( Stream* stream, short events )
 
 void	PollSet::_drop( int fd )
 {
-
-	// Stream*	link1 = NULL;
-	// Stream*	link2 = NULL;
-	// Stream*	link3 = NULL;
-	// Stream*	link4 = NULL;
-
 	Poll	p;
 	Stream* s;
 
@@ -86,26 +80,7 @@ void	PollSet::_drop( int fd )
 	if (connSock)
 	{
 		cout << BLUE("(ConnSocket)") << endl;
-		if (connSock->linkInputPipe)
-		{
-			// link1 = connSock->linkInputPipe;
-			connSock->linkInputPipe->linkConn = NULL;
-		}
-		if (connSock->linkOutputPipe)
-		{
-			// link2 = connSock->linkOutputPipe;
-			connSock->linkOutputPipe->linkConn = NULL;
-		}
-		if (connSock->linkInputFile)
-		{
-			// link3 = connSock->linkInputFile;
-			connSock->linkInputFile->linkConn = NULL;
-		}
-		if (connSock->linkOutputFile)
-		{
-			// link4 = connSock->linkOutputFile;
-			connSock->linkOutputFile->linkConn = NULL;
-		}
+		connSock->unlinkAll();
 	}
 
 	else if (CONVERT(s, Pipe))
@@ -119,32 +94,34 @@ void	PollSet::_drop( int fd )
 	pollMap.erase(fd);
 	close(fd);
 
-	// if (link1)	{/* cout << "drop link 1 " << endl; */dropLink(link1);}
-	// if (link2)	{/* cout << "drop link 2 " << endl; */dropLink(link2);}
-	// if (link3)	{/* cout << "drop link 3 " << endl; */dropLink(link3);}
-	// if (link4)	{/* cout << "drop link 4 " << endl; */dropLink(link4);}
 }
 
-void	PollSet::drop( Stream* stream )
-{
-	_drop(stream->getFD());
-}
-
-void	PollSet::drop( int fd )
-{
-	_drop(fd);
-}
+void	PollSet::drop( Stream* stream ) { _drop(stream->getFD()); }
+void	PollSet::drop( int fd )			{ _drop(fd); }
 
 void	PollSet::makePollVec()
 {
-
+	Pipe*		p = NULL;
+	FileStream* f = NULL;
 	_Map::iterator it, ite;
 	it = pollMap.begin(), ite = pollMap.end();
 
 	pollVec.clear();
-	for ( ; it != ite; it++)
+
+	for ( ; it != ite;)
 	{
-		pollVec.push_back(it->second.first);
+		p = CONVERT(it->second.second, Pipe);
+		f = CONVERT(it->second.second, FileStream);
+		if ((p && p->linkConn == NULL) || (f && f->linkConn == NULL))
+		{
+			cout << it->second.second->getFD() << " is dropped substream" << endl;
+			drop((it++)->second.second);
+		}
+		else
+		{
+			pollVec.push_back(it->second.first);
+			++it;
+		}
 	}
 
 }
@@ -218,25 +195,25 @@ Stream*				PollSet::readRoutine(Stream* stream)
 	}
 	else if (connected)
 	{
-		// TAG(PollSet, examine); cout << GREEN("New data to read ")
-		// << stream->getFD() << BLUE(" (ConnSocket)") <<endl;
+		TAG(PollSet, examine); cout << GREEN("New data to read ")
+		<< stream->getFD() << BLUE(" (ConnSocket)") <<endl;
 		return connected;
 	}
 	else if (CGIpipe)
 	{
-		// TAG(PollSet, examine); cout << GREEN("New data to read ")
-		// << stream->getFD() << PURPLE(" (Pipe)") <<endl;
+		TAG(PollSet, examine); cout << GREEN("New data to read ")
+		<< stream->getFD() << PURPLE(" (Pipe)") <<endl;
 		return CGIpipe;
 	}
 	else if (filestream)
 	{
-		// TAG(PollSet, examine); cout << GREEN("New data to read ")
-		// << stream->getFD() << YELLOW(" (FileStream)") <<endl;
+		TAG(PollSet, examine); cout << GREEN("New data to read ")
+		<< stream->getFD() << YELLOW(" (FileStream)") <<endl;
 		return filestream;
 	}
 	else
 	{
-		// TAG(PollSet, examine); cout << RED("Unknown type: ") << endl;
+		TAG(PollSet, examine); cout << RED("Unknown type: ") << endl;
 		throw exception();
 	}
 }
