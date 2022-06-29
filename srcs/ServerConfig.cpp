@@ -11,14 +11,14 @@ class LocationConfig;
 ServerConfig::ServerConfig() : Config() {}
 ServerConfig::ServerConfig(string str, Config *httpConf) : Config()
 {
-    cout << PURPLE(" server block ") << endl;
+    // cout << PURPLE(" server block ") << endl;
     setHttpDirective(httpConf);
     // impl set serverconfig variables
     configtemp = str;
     SeparateLocationBlock();
     SetupConfig();
     makeLocationBlock();
-    cout << PURPLE(" server block ") << endl;
+    // cout << PURPLE(" server block ") << endl;
 }
 // ServerConfig(const ServerConfig &src) : Config() {}
 ServerConfig::~ServerConfig() {}

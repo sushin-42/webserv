@@ -100,7 +100,6 @@ void	PollSet::makePollVec()
 		f = CONVERT(it->second.second, FileStream);
 		if ((p && p->linkConn == NULL) || (f && f->linkConn == NULL))
 		{
-			cout << it->second.second->getFD() << " is dropped substream" << endl;
 			drop((it++)->second.second);
 		}
 		else

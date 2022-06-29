@@ -5,7 +5,7 @@
 LocationConfig::LocationConfig() : Config() {}
 LocationConfig::LocationConfig(pair<string, string> locationConfUri, ServerConfig *serverConf) : Config()
 {
-    cout << BLUE(" location block ") << endl;
+    // cout << BLUE(" location block ") << endl;
     setServerDirective(serverConf);
     URI = locationConfUri.first;
     configtemp = locationConfUri.second;
@@ -13,7 +13,7 @@ LocationConfig::LocationConfig(pair<string, string> locationConfUri, ServerConfi
     assign = checkAssign(URI);
     SetupConfig();
     setLimitExceptMethod();
-    cout << BLUE(" location block ") << endl;
+    // cout << BLUE(" location block ") << endl;
 }
 // LocationConfig(const LocationConfig &src) : Config() {}
 LocationConfig::~LocationConfig() {}

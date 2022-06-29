@@ -84,7 +84,7 @@ void HttpConfig::defaultSet()
 }
 void HttpConfig::setConfig(string config)
 {
-    cout << RED(" http block ") << endl;
+    // cout << RED(" http block ") << endl;
     etc = config;
     defaultSet();
     separateHttpBlock();
@@ -92,7 +92,7 @@ void HttpConfig::setConfig(string config)
     SetupConfig();
     makeServerBlock();
     makeServerMap();
-    cout << RED(" http block ") << endl;
+    // cout << RED(" http block ") << endl;
 }
 
 
