@@ -188,12 +188,12 @@
 		pid = waitpid(linkInputPipe->pid, &linkInputPipe->status, WNOHANG);
 		if (!(pid == linkInputPipe->pid || pid == -1))
 		{
-			TAG(ConnSocket, isPipeAlive) <<  _NOTE(pipe still alive: ) <<  _UL << linkInputPipe->pid << _NC << endl;
+			TAG(ConnSocket) <<  _NOTE(pipe still alive: ) <<  _UL << linkInputPipe->pid << _NC << endl;
 			return true;
 		}
 		else
 		{
-			TAG(ConnSocket, isPipeAlive) << _GOOD(waitpid on ) << linkInputPipe->pid << CYAN(" returns ") << _UL << pid << _NC << endl;
+			TAG(ConnSocket) << _GOOD(waitpid on ) << linkInputPipe->pid << CYAN(" returns ") << _UL << pid << _NC << endl;
 			return false;
 		}
 	}
@@ -214,7 +214,7 @@
 		*/
 		FINsended = true;
 
-		TAG(ConnSocket, gracefulClose) << _GOOD(server send FIN: ) << _UL << this->fd << _NC << endl;
+		TAG(ConnSocket) << _GOOD(server send FIN: ) << _UL << this->fd << _NC << endl;
 	}
 
 	void	ConnSocket::setHeaderOrReadMore()
@@ -333,7 +333,7 @@
 		{
 		case 0:
 
-			TAG(ConnSocket, recvRequest); cout << GRAY("CLIENT EXIT ") << this->fd << endl;
+			TAG(ConnSocket); cout << GRAY("CLIENT EXIT ") << this->fd << endl;
 			if (ReqH.exist("Content-Length") &&
 				toNum<unsigned int>(ReqH["Content-Length"]) > ReqB.getContent().length())
 			{
@@ -347,7 +347,7 @@
 			break;
 
 		case -1:
-			TAG(ConnSocket, recvRequest) << YELLOW("No data to read") << endl;
+			TAG(ConnSocket) << YELLOW("No data to read") << endl;
 			throw somethingWrong(strerror(errno));
 			break;
 		default:
@@ -384,7 +384,7 @@
 			rWrited += byte;
 		else
 		{
-			TAG(ConnSocket, send) << _FAIL(unexpected error: ) << errno << endl;
+			TAG(ConnSocket) << _FAIL(unexpected error: ) << errno << endl;
 			writeUndoneBuf.erase(this->fd);
 
 			this->unlinkAll();
@@ -396,7 +396,7 @@
 		//@ all data sended @//
 		if (rWrited == rContentLen)
 		{
-			TAG(ConnSocket, send) << _GOOD(all data sended to) << this->fd << ": " << rWrited << " / " << rContentLen << " bytes" << endl;
+			TAG(ConnSocket) << _GOOD(all data sended to) << this->fd << ": " << rWrited << " / " << rContentLen << " bytes" << endl;
 			writeUndoneBuf.erase(this->fd);
 			if (linkInputPipe && linkInputPipe->readDone == false)
 				throw readMore();
@@ -408,7 +408,7 @@
 		//' not all data sended. have to be buffered '//
 		else
 		{
-			TAG(ConnSocket, send) << _NOTE(Not all data sended to) << this->fd << ": " << rWrited << " / " << rContentLen  << " bytes" << endl;
+			TAG(ConnSocket) << _NOTE(Not all data sended to) << this->fd << ": " << rWrited << " / " << rContentLen  << " bytes" << endl;
 			throw sendMore();
 		}
 	}

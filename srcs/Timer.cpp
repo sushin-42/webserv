@@ -42,7 +42,7 @@ Timer::~Timer() {}
 			remainingTime = difftime(timeout, elapsedTime);
 			if (remainingTime <= 0)
 			{
-				TAG(Timer, monitor) << _UL << stream->getFD() << _NC << RED(" TIMEOUT: ") _UL << timeout  << "s" << _NC <<  endl;
+				TAG(Timer) << _UL << stream->getFD() << _NC << RED(" TIMEOUT: ") _UL << timeout  << "s" << _NC <<  endl;
 				timeoutPool.push_back(stream->getFD());
 			}
 			else if (remainingTime <= min.second)
