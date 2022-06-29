@@ -128,7 +128,7 @@ int main(int argc, char** argv)
 												CONVERT(&e, ConnSocket::somethingWrong))
 											{
 												connected->unlinkAll();
-												POLLSET->drop(stream);
+												POLLSET->drop(connected);
 
 												continue;
 											}
