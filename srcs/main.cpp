@@ -26,22 +26,28 @@
 #include "Exceptions.hpp"
 
 
-map<string, string> MIME;
 //**------------------------------------------------------------------------
 //                                  TODO                                   .
 //*
-//*		1. drop link
-//*		2. error_page
-//*		3. CGI stderr
-//*		4. CGI local-redir
+//*		1. CGI stderr
 //*
 //*------------------------------------------------------------------------**/
+
+map<string, string> MIME;
+int	conn=0;
+void	printCummConn(int s)
+{
+	(void)s;
+	cerr << CYAN("\rCummulated connections: ") << _UL << conn << _NC  << endl;
+}
 
 int main(int argc, char** argv)
  {
 	if (argvError(argc))
 		return (errMsg());
 	signal(SIGPIPE, SIG_IGN);
+	signal(SIGINFO, printCummConn);
+
 	try
 	{
 		HttpConfig::getInstance()->setConfig(ReadConfig(argv));
@@ -82,7 +88,7 @@ int main(int argc, char** argv)
 		for ( ; it < ite; it++)
 		{
 			stream = *it;
-			if	(CONVERT(stream, ServerSocket))	{ continue; }
+			if	(CONVERT(stream, ServerSocket))	{ conn++; continue; }
 
 			connected	= CONVERT(stream, ConnSocket);
 			CGIpipe		= CONVERT(stream, Pipe);
