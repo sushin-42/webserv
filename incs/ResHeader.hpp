@@ -50,6 +50,7 @@ public:
 	void	fetchStatusField();
 
 	void	print();
+	void	clear();
 };
 
 IHeader::status_code_t	checkFile(const string& path);

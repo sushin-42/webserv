@@ -6,7 +6,7 @@
 # include "ConfigLoader.hpp"
 # include "ConfigChecker.hpp"
 # include "checkFile.hpp"
-#include <exception>
+# include <exception>
 # include <string>
 # include "Poll.hpp"
 
@@ -20,8 +20,8 @@
 	ConnSocket::ConnSocket()
 	: ISocket(), len(sizeof(info)),
 	  recvContent(), ReqH(), ReqB(), ResH(), ResB(),
-	  pending(true), chunk(false), FINsended(false), internalRedirect(false),
-	  internalRedirectCount(10),
+	  pending(true), chunk(false), FINsended(false), internalRedirect(false), keepAlive(true),
+	  internalRedirectCount(0), currentReqCount(0),
 	  linkInputPipe(NULL), linkOutputPipe(NULL),
 	  linkInputFile(NULL), linkOutputFile(NULL),
 	  linkServerSock(NULL), conf(NULL) {}
@@ -80,7 +80,7 @@
 			catch (exception& e)	{ throw; }
 		}
 
-
+		recvContent.clear();
 		reqTarget = this->ReqH.getRequsetTarget();
 
 		try 						{ filename = CHECK->getFileName(this->conf, reqTarget); }
@@ -95,7 +95,6 @@
 			// alreadyExist ? throw noContent() : throw Created();
 			this->ResH.setStatusCode(alreadyExist ? 204 : 201);
 			this->ResH.setReasonPhrase(alreadyExist ? "No Content" : "Created");
-			this->ResH.setDefaultHeaders();
 			this->makeResponseHeader();
 
 			return;
@@ -112,10 +111,10 @@
 		try							{ filename = checkIndex(this->conf, filename); }
 		catch (httpError& e)		{ throw; }
 		catch (autoIndex& a)		{ this->ResH.setStatusCode(200);
-									  this->ResH.setDefaultHeaders();					//FIXIT: prefix
-									  this->ResB.setContent(directoryListing(a.path, "/"));	/* alias case: need to append Loc URI || or req Target ? */
+									  this->ResB.setContent(directoryListing(a.path, "/"));	//FIXIT: prefix
 									  this->ResH["Content-Length"]	= toString(this->ResB.getContent().length());
-									  this->ResH["Content-Type"]		= "text/html";
+									  this->ResH["Content-Type"]	= "text/html";
+									  this->makeResponseHeader();
 									  throw ;
 									}
 
@@ -226,6 +225,7 @@
 			//IMPL: keep-alive request count--
 			if (isValidHeader(recvContent))
 			{
+				currentReqCount++;
 				/* set ReqH here */
 				switch (checkMethod(recvContent))
 				{
@@ -258,8 +258,17 @@
 					throw badRequest();
 
 				if (CHECK->isAllowed(this->conf, ReqH.getMethod()) == false)
-
 					throw methodNotAllowed();
+
+				if (currentReqCount == 1)
+				{
+					if (
+						(ReqH.exist("Connection") && ReqH["Connection"] == "close") ||
+						// this->conf->keepalive_timeout == 0 ||
+						this->conf->keepalive_requests == 0
+					)
+					this->keepAlive = false; /* default: true */
+				}
 
 				/* extract trailing body */
 				recvContent = extractBody(recvContent);
@@ -401,10 +410,15 @@
 			LOGGING(ConnSocket, _GOOD(all data sended to )  "%d: %zu / %zu bytes", this->fd, rWrited, rContentLen);
 			writeUndoneBuf.erase(this->fd);
 			if (linkInputPipe && linkInputPipe->readDone == false)
-				throw readMore();
+				throw readMore();	/* it was chunked data from pipe */
+
 
 			this->unlinkAll();
-			gracefulClose();	/* maybe drop after get FIN from client */
+			ReqH.clear(), ReqB.clear();
+			recvContent.clear();
+			this->internalRedirectCount = 0;
+			if (this->keepAlive == false)
+				gracefulClose();	/* maybe drop after get FIN from client */
 		}
 
 		//' not all data sended. have to be buffered '//
@@ -418,7 +432,6 @@
 
 	void	ConnSocket::setErrorPage(status_code_t status, const string& reason, const string& text)
 	{
-		this->ResH.setHTTPversion("HTTP/1.1");
 		this->ResH.setStatusCode(status);
 		this->ResH.setReasonPhrase(reason);
 		this->ResB.setContent(
@@ -437,6 +450,14 @@
 	void	ConnSocket::makeResponseHeader()
 	{
 		this->ResH.clearContent();	/* keep headerfield, remove content only */
+
+		if (this->keepAlive == true && this->currentReqCount < this->conf->keepalive_requests)
+			this->ResH["Connection"] = "keep-alive";
+		else
+		{
+			this->ResH["Connection"] = "close";
+			this->keepAlive = false;
+		}
 
 		this->ResH.setHTTPversion("HTTP/1.1");
 		this->ResH.fetchStatusField();
@@ -467,12 +488,14 @@ void	ConnSocket::returnError(httpError& error)
 	redirectError* r =  CONVERT(&error, redirectError);
 	this->ResH.clear();
 	this->ResB.clear();
-	this->setErrorPage(error.status, error.what(), error.what());
 	if (r)
 		this->ResH["Location"] = r->location;
-	this->ResH.setDefaultHeaders();
-	this->ResH.makeStatusLine();
-	this->ResH.integrate();
+	if (CONVERT(&error, badRequest)
+	||	CONVERT(&error, internalServerError)
+	||	CONVERT(&error, payloadTooLarge))
+		keepAlive = false;
+	this->setErrorPage(error.status, error.what(), error.what());
+	this->makeResponseHeader();
 }
 
 void ConnSocket::checkErrorPage()
@@ -489,7 +512,7 @@ void ConnSocket::checkErrorPage()
 	_ERRORMAP::iterator	it = error_page.find(status);
 
 	if (it == error_page.end())				return;
-	if (this->internalRedirectCount == 0)	{cout <<"ISE" <<endl;throw internalServerError(); }
+	if (this->internalRedirectCount == MAX_INTERNAL_REDIRECT)	{throw internalServerError(); }
 
 	_ERRORPAIR	status_URI = (it->second);
 

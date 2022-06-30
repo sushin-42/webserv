@@ -33,7 +33,7 @@
 # define PUT	2
 # define POST	3
 # define DELETE	4
-
+# define MAX_INTERNAL_REDIRECT 10
 
 /*
  @ There are 3 ways of detecting the end of the stream depending on what requests you are handling:
@@ -67,7 +67,9 @@ public:
 	bool		chunk;				/* to distinguish script output chunk with server chunk */
 	bool		FINsended;			/* we already sended FIN, DO NOT send more data. */
 	bool		internalRedirect;
+	bool		keepAlive;
 	int			internalRedirectCount;
+	int			currentReqCount;
 
 	Pipe*			linkInputPipe;
 	Pipe*			linkOutputPipe;

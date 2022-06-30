@@ -280,7 +280,7 @@ void	Pipe::localRedir()
 		connected->unlink(this);
 		POLLSET->drop(this);
 
-		if (connected->internalRedirectCount == 0)
+		if (connected->internalRedirectCount == MAX_INTERNAL_REDIRECT)
 			throw internalServerError();
 		else
 			throw internalRedirect();	/* goto connected->core phase, deligate makeResponseHeader to FileStream. */

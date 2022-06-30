@@ -106,7 +106,8 @@ int main(int argc, char** argv)
 				if (stream == connected && connected->internalRedirect)
 				{
 					connected->internalRedirect = false;
-					connected->internalRedirectCount--;
+					connected->internalRedirectCount++;
+
 					inputStream = connected;
 					goto _core;
 				}
@@ -157,8 +158,7 @@ _core:
 												POLLSET->prepareSend( connected->getFD() );
 												continue;
 											}
-			catch	(autoIndex& a)			{	connected->makeResponseHeader();
-												POLLSET->prepareSend( connected->getFD() ); /* go down ? */	 }
+			catch	(autoIndex& a)			{	POLLSET->prepareSend( connected->getFD() ); /* go down ? */	 }
 
 			inputStream->coreDone();
 			continue;

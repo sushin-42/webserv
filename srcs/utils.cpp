@@ -108,14 +108,14 @@ ssize_t readFrom(int fd, string &content)
 	switch (byte)
 	{
 	case 0:
-		LOGGING(utils, GRAY ("read ") UL("%zu") "bytes from " UL("%d"), byte, fd);
+		LOGGING(utils, GRAY ("read ") UL("%zu") " bytes from " UL("%d"), byte, fd);
 		break;
 	case -1:
-		LOGGING(utils, GRAY ("read ") UL("%zu") "bytes from " UL("%d"), byte, fd);
+		LOGGING(utils, GRAY ("read ") UL("%zu") " bytes from " UL("%d"), byte, fd);
 		LOGGING(utils, RED("Error : ") "%s", strerror(errno));
 		break;
 	default:
-		LOGGING(utils, GRAY ("read ") UL("%zu") "bytes from " UL("%d"), byte, fd);
+		LOGGING(utils, GRAY ("read ") UL("%zu") " bytes from " UL("%d"), byte, fd);
 		content.append(readbuf, byte);
 	}
 	return byte;

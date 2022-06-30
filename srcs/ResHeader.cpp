@@ -44,9 +44,8 @@ void	ResHeader::clearContent()
 
 void	ResHeader::setDefaultHeaders()
 {
-	(*this)["Connection"]			= "close";
 	(*this)["Server"]				= "Webserv 0.1";
-	// (*this)["Keep-Alive"]		=
+
 	// (*this)["Last-Modified"]		=
 	// (*this)["E-Tag"]				=
 }
@@ -61,6 +60,15 @@ void	ResHeader::print()
 		cout << it->first << endl;
 	cout << "==================================" << endl;
 }
+
+void	ResHeader::clear()
+{
+	IHeader::clear();
+	this->statusCode = 200;
+	this->reasonPhrase = "OK";
+}
+
+
 
 IHeader::status_code_t	checkFile(const string& path)
 {
