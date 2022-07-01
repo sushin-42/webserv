@@ -239,11 +239,11 @@
 				ReqH.setRequsetTarget(recvContent);
 				ReqH.setContent(extractHeader(recvContent));
 				ReqH.setHeaderField(KVtoMap(recvContent, ':'));
-
-				// cout << RED("<-----------------") << endl;
-				// cout << this->ReqH.getContent();
-				// cout << RED("<-----------------") << endl;
-
+#ifdef PRINTHEADER
+				cout << RED("<-----------------") << endl;
+				cout << this->ReqH.getContent();
+				cout << RED("<-----------------") << endl;
+#endif
 				/* conf is still default_server conf */
 				if (ReqH.exist("Host"))
 				{
@@ -464,9 +464,11 @@
 		this->ResH.setDefaultHeaders();
 		this->ResH.makeStatusLine();
 		this->ResH.integrate();
-		// cout << CYAN("----------------->") << endl;
-		// cout << this->ResH.getContent();
-		// cout << CYAN("----------------->") << endl;
+#ifdef PRINTHEADER
+		cout << CYAN("----------------->") << endl;
+		cout << this->ResH.getContent();
+		cout << CYAN("----------------->") << endl;
+#endif
 	}
 
 	string		ConnSocket::getOutputContent() { return this->ResH.getContent() + this->ResB.getContent(); }

@@ -255,4 +255,4 @@ _AllDone:
 		return;
 	}
 
-	void	ReqBody::clear() { content.clear(); /*IText::clear();*/ }
+	void	ReqBody::clear() { content.clear(), clearChunk(); /*IText::clear();*/ }

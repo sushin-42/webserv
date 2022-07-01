@@ -166,7 +166,7 @@ void	Pipe::send(const string& content, map<int, struct undone>& writeUndoneBuf)
 	//' not all data sended. have to be buffered '//
 	else
 	{
-		LOGGING(FileStream, _NOTE(Not all data sended to )  UL("%d") ": %zu / %zu bytes", this->fd, rWrited, rContentLen);
+		LOGGING(Pipe, _NOTE(Not all data sended to )  UL("%d") ": %zu / %zu bytes", this->fd, rWrited, rContentLen);
 
 		throw sendMore();
 	}

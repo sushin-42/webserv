@@ -5,7 +5,7 @@ EOC         = "\033[0;0m"
 LINE_CLEAR  = "\x1b[1A\x1b[M"
 
 CC = c++
-CFLAGS = -Wall -Werror -Wextra -std=c++98 -DDEBUG
+CFLAGS = -Wall -Werror -Wextra -std=c++98 -DPRINTHEADER #-DDEBUG
 INC_DIR = incs
 SRC_DIR = srcs
 OBJS =  ${SRCS:.cpp=.o}
