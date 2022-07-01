@@ -80,7 +80,10 @@
 			catch (exception& e)	{ throw; }
 		}
 
-		recvContent.clear();
+		if (CHECK->isAllowed(this->conf, ReqH.getMethod()) == false)
+			throw methodNotAllowed();
+
+		// recvContent.clear();
 		reqTarget = this->ReqH.getRequsetTarget();
 
 		try 						{ filename = CHECK->getFileName(this->conf, reqTarget); }
@@ -256,9 +259,6 @@
 				}
 				else
 					throw badRequest();
-
-				if (CHECK->isAllowed(this->conf, ReqH.getMethod()) == false)
-					throw methodNotAllowed();
 
 				if (currentReqCount == 1)
 				{
