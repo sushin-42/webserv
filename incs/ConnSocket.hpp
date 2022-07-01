@@ -43,7 +43,7 @@
 */
 
 
-char checkMethod(const string& content);
+string checkMethod(const string& content);
 class ServerSocket;
 class ConnSocket : public ISocket
 {
@@ -56,9 +56,9 @@ friend class ServerSocket;
 private:
 	socklen_t			len;
 	// char				buf[1024];
-	string				recvContent;	// cumulate received content
 
 public:
+	string				recvContent;	// cumulate received content
 	ReqHeader	ReqH;
 	ReqBody		ReqB;
 	ResHeader	ResH;

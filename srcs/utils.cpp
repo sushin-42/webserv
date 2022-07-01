@@ -236,7 +236,24 @@ bool isValidHeader(const string &content)
 	if (content.empty())
 		return false;
 
-	pEnd = content.find("\r\n", pStart); // parse start-line
+	pEnd = content.find("\r\n", pStart);
+
+	/* parse start-line	 */
+	line = content.substr(pStart, pEnd - pStart);
+	string::size_type posSP	= 0;
+	int					sp	= 0;
+	for (; posSP < pEnd; posSP++)
+	{
+		if (line[posSP] == ' ')
+		{
+			if ( posSP == 0)	return false;
+			if ( line.find_first_not_of("\t\r\n\f\v ", posSP) != posSP + 1 ) return false;
+			else sp++;
+		}
+	}
+	if (sp != 2) return false;
+
+	/* parse header field */
 	pStart = pEnd + 2;
 
 	while ((pEnd = content.find("\r\n", pStart)) != string::npos)

@@ -230,14 +230,7 @@
 			{
 				currentReqCount++;
 				/* set ReqH here */
-				switch (checkMethod(recvContent))
-				{
-				case GET:	ReqH.setMethod("GET");		break;
-				case PUT:	ReqH.setMethod("PUT");		break;
-				case POST:	ReqH.setMethod("POST");		break;
-				case DELETE:ReqH.setMethod("DELETE");	break;
-				default: throw methodNotAllowed();
-				}
+				ReqH.setMethod(checkMethod(recvContent));
 				ReqH.setHTTPversion("HTTP/1.1");	//TODO: parse from request
 				ReqH.setRequsetTarget(recvContent);
 				ReqH.setContent(extractHeader(recvContent));
@@ -319,9 +312,11 @@
 				if (CL > conf->client_max_body_size)
 				{
 					ReqB.setContent(recvContent.substr(0, conf->client_max_body_size));
-					throw payloadTooLarge();		//NOTE: 버리는 데이터 처리 필요?
+					recvContent = recvContent.substr(conf->client_max_body_size);
+					throw payloadTooLarge();
 				}
 				ReqB.setContent(recvContent.substr(0, CL));
+				recvContent = recvContent.substr(CL);
 			}
 			else
 				throw readMore();
@@ -414,11 +409,13 @@
 
 
 			this->unlinkAll();
-			ReqH.clear(), ReqB.clear();
-			recvContent.clear();
-			this->internalRedirectCount = 0;
 			if (this->keepAlive == false)
 				gracefulClose();	/* maybe drop after get FIN from client */
+
+			ReqH.clear(), ReqB.clear();
+			this->internalRedirectCount = 0;
+			if (!recvContent.empty())
+				throw gotoCore();
 		}
 
 		//' not all data sended. have to be buffered '//
@@ -473,15 +470,11 @@
 
 	string		ConnSocket::getOutputContent() { return this->ResH.getContent() + this->ResB.getContent(); }
 
-char checkMethod(const string& content)
+string checkMethod(const string& content)
 {
 	string::size_type end = content.find(" ");
 	string method = content.substr(0, end);
-	if		(method == "GET")	return GET;
-	else if (method == "PUT")	return PUT;
-	else if (method == "POST")	return POST;
-	else if (method == "DELETE")return DELETE;
-	return 0;
+	return method;
 }
 
 // void	ConnSocket::returnError(status_code_t status, const string& message)

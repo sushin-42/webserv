@@ -139,8 +139,6 @@ int main(int argc, char** argv)
 
 												continue;
 											}
-											// linkConn->unlink(this);
-											// POLLSET->drop(this);
 										}
 
 //@----------------------------------RECV DONE-------------------------------@//
@@ -181,6 +179,7 @@ _send:
 			catch (exception& e)		{
 											if		(CONVERT(&e, sendMore))	{POLLSET->prepareSend( outputStream->getFD() ); continue;}	// not all data sended
 											else if	(CONVERT(&e, readMore)) {continue;}	// not all data sended, and have to read from pipe
+											else if	(CONVERT(&e, gotoCore)) { inputStream=connected; goto _core;}	// Connection was keep-alive, data received remained.
 											else							{}
 										}
 		}
