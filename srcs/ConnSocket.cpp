@@ -290,11 +290,15 @@
 			try
 			{
 				ReqB.decodingChunk(conf->client_max_body_size);
+				recvContent = ReqB.chunk.trailingData;	/* if not ALL DONE, it throws exception */
 			}
 			catch (exception& e)
 			{
 				if (CONVERT(&e, ReqBody::invalidChunk))
+				{
+					cout << "INVALID CHUNK" << endl;
 					throw badRequest();
+				}
 				if (CONVERT(&e, ReqBody::limitExeeded))
 					throw payloadTooLarge();
 				if (CONVERT(&e, readMore))
@@ -415,7 +419,9 @@
 			ReqH.clear(), ReqB.clear();
 			this->internalRedirectCount = 0;
 			if (!recvContent.empty())
+			{
 				throw gotoCore();
+			}
 		}
 
 		//' not all data sended. have to be buffered '//

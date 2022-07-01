@@ -25,6 +25,7 @@ friend class ConnSocket;
 		string						data;
 		string::size_type			cur;
 		string::size_type			newChunkStart;
+		string						trailingData;
 
 		bool						isAllDone() { return state ==  8 ;}
 	}								chunk;

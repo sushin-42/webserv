@@ -26,9 +26,10 @@
 		chunk.state = 0;
 		chunk.cur = 0;
 		chunk.newChunkStart = 0;
-		chunk.data = "";
+		chunk.data.clear();
 		chunk.size = -1;
 		chunk.total = 0;
+		chunk.trailingData.clear();
 	}
 
 	void	ReqBody::appendChunk(const string& newdata)
@@ -175,7 +176,9 @@
 			if (canGoAhead(chunk.data, chunk.cur,1))
 				chunk.cur++;
 			else
+			{
 				goto _readmore;
+			}
 
 	_ReadingData:
 			state = ReadingData;
@@ -250,9 +253,15 @@ _limitExceeded:
 		clearChunk();
 		throw limitExeeded();
 _AllDone:
+		chunk.state=state;
 		if (chunk.state == AllDone)
-			clearChunk();
-		return;
+		{
+			if (canGoAhead(chunk.data, chunk.cur, 1))
+				chunk.trailingData = chunk.data.substr(chunk.cur + 1);
+			else
+				chunk.trailingData = "";
+		}
+		return ;
 	}
 
 	void	ReqBody::clear() { content.clear(), clearChunk(); /*IText::clear();*/ }
