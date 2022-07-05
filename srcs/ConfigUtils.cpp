@@ -231,6 +231,23 @@ void parse_root(vector<string> arg, Config *config)
     // ServerConfig *server = dynamic_cast<ServerConfig *>(config);
     // // LocationConfig *location = dynamic_cast<LocationConfig *>(config);
 }
+void parse_cdflag(vector<string> arg, Config *config)
+{
+    string lowString;
+    LocationConfig *location;
+    if (arg.size() != 1)
+        throw Config::parseCDflagFail();
+    location = dynamic_cast<LocationConfig *>(config);
+    if (location == NULL)
+        throw Config::parseCDflagFail("cdflag directive must use location block");
+    lowString = convertStringToLower(arg[0]);
+    if (lowString == "off")
+        location->cdflag = false;
+    else if (lowString == "on")
+        location->cdflag = true;
+    else
+        throw Config::parseCDflagFail();
+}
 
 void parse_alias(vector<string> arg, Config *config)
 {
@@ -240,6 +257,8 @@ void parse_alias(vector<string> arg, Config *config)
         throw Config::parseAliasFail();
     isPath(arg[0]);
     location = dynamic_cast<LocationConfig *>(config);
+    if (location == NULL)
+        throw Config::parseAliasFail("alias directive must use location block");
     location->alias = arg[0];
     config->dupeCheck.root = true;
 }
@@ -254,6 +273,8 @@ void parse_listen(vector<string> arg, Config *config)
     if (arg.size() != 1)
         throw Config::parseListenFail();
     ServerConfig *server = dynamic_cast<ServerConfig *>(config);
+    if (server == NULL)
+        throw Config::parseListenFail("listen directive must use server block");
     if ((pos = arg[0].find(':')) != string::npos)
     {
         ip = convertStringToIP(arg[0].substr(0, pos));
@@ -279,7 +300,8 @@ void parse_listen(vector<string> arg, Config *config)
 void parse_server_name(vector<string> arg, Config *config)
 {
     ServerConfig *server = dynamic_cast<ServerConfig *>(config);
-
+    if (server == NULL)
+        throw Config::parseServerNameFail("server_name directive must use server block");
     for (vector<string>::size_type i = 0; i < arg.size(); i++)
         server->server_name.push_back(arg[i]);
 }
@@ -319,7 +341,7 @@ void parse_auto_index(vector<string> arg, Config *config)
 bool exsitErrorpageEqual(string arg, int &equalstatus)
 {
     size_t arglen = arg.size();
-    
+
     if (arglen == 1 && arg[0] == '=')
     {
         equalstatus = 200;
@@ -328,17 +350,16 @@ bool exsitErrorpageEqual(string arg, int &equalstatus)
     else if (arg[0] == '=')
     {
         arg = arg.substr(1);
-	
+
         std::stringstream ssInt(arg);
-	
+
         ssInt >> equalstatus;
         if (ssInt.fail())
-		    return false;
+            return false;
         return true;
     }
     else
         return false;
-    
 }
 
 void parse_error_page(vector<string> arg, Config *config)
@@ -476,6 +497,8 @@ void parse_limit_except_method(vector<string> arg, Config *config)
     vector<string>::size_type check;
 
     location = dynamic_cast<LocationConfig *>(config);
+    if (location == NULL)
+        throw parseLimitExceptMethodFail("limit_except_method directive must use location block");
     location->checkSetLimitExceptMethod = true;
     for (vector<string>::size_type i = 0; i < arg.size(); i++)
     {

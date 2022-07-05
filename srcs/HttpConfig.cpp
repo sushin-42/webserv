@@ -95,18 +95,15 @@ void HttpConfig::setConfig(string config)
     // cout << RED(" http block ") << endl;
 }
 
-
-
 void HttpConfig::makeServerMap()
 {
-    for (size_t k = 0 ; k < link.size(); k++)
+    for (size_t k = 0; k < link.size(); k++)
     {
         ServerConfig *serv = CONVERT(link[k], ServerConfig);
 
-        for (size_t i = 0 ; i < serv->ipPort.size(); i++)
+        for (size_t i = 0; i < serv->ipPort.size(); i++)
             serverMap[serv->ipPort[i]].push_back(link[k]);
     }
-
 }
 
 void HttpConfig::separateHttpBlock()

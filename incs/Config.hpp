@@ -29,6 +29,7 @@ struct Duplicate
 	bool lingering_timeout;
 	bool send_timeout;
 	bool client_body_timeout;
+	bool cdflag;
 
 	bool &operator[](int ind) { return *(&index + ind); }
 };
@@ -163,6 +164,17 @@ public:
 		explicit parseAliasFail() : msg(RED("parseAliasFail")) {}
 		explicit parseAliasFail(const string &m) : msg(m) {}
 		virtual ~parseAliasFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+	class parseCDflagFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseCDflagFail() : msg(RED("parseCDflagFail")) {}
+		explicit parseCDflagFail(const string &m) : msg(m) {}
+		virtual ~parseCDflagFail() throw(){};
 		virtual const char *what() const throw() { return msg.c_str(); }
 	};
 

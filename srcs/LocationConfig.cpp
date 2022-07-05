@@ -10,6 +10,7 @@ LocationConfig::LocationConfig(pair<string, string> locationConfUri, ServerConfi
     URI = locationConfUri.first;
     configtemp = locationConfUri.second;
     alias = "";
+    cdflag = false;
     assign = checkAssign(URI);
     SetupConfig();
     setLimitExceptMethod();

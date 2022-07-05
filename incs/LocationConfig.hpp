@@ -15,6 +15,7 @@ public:
     vector<string> limit_except_method;
     bool checkSetLimitExceptMethod;
     string alias;
+    bool cdflag;
 
     // server directive
     vector<string> server_name;

@@ -581,4 +581,5 @@ void Config::MapSetting()
     // only location_block
     m["limit_except_method"] = &parse_limit_except_method;
     m["alias"] = &parse_alias;
+    m["cdflag"] = &parse_cdflag;
 }

@@ -53,7 +53,7 @@ void parse_client_body_timeout(vector<string> arg, Config *config);
 void parse_limit_except_method(vector<string> arg, Config *config);
 void parse_alias(vector<string> arg, Config *config);
 void parse_cgi(vector<string> arg, Config *config);
-
+void parse_cdflag(vector<string> arg, Config *config);
 //=====================================parse_arg========================================
 
 void EraseComment(string &configtemp);
