@@ -45,6 +45,15 @@ int	FileStream::open(int mode)
 	return ret;
 }
 
+int				FileStream::open(int mode, int permission)
+{
+	int ret;
+	ret = ::open(this->filename.c_str(), mode, permission);
+
+	this->fd = ret;
+	return ret;
+}
+
 int	FileStream::open(const string& filename, int mode)
 {
 	int ret;

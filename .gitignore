@@ -4,3 +4,5 @@ client.cpp
 webserv
 memo
 *.conf
+.clangd
+.vscode/*

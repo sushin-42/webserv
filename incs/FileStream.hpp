@@ -41,6 +41,7 @@ public:
 *========================================================================**/
 
 	int				open(int mode);
+	int				open(int mode, int permission);
 	int				open(const string& filename, int mode);
 	void			setFilename( const string& filename);
 	const string&	getFilename() const;

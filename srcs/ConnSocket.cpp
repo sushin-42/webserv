@@ -549,7 +549,7 @@ bool	createPUToutputFile(ConnSocket* connected, const string filename)
 
 	bool alreadyExist = (access(filename.c_str(),F_OK) == 0);
 
-	f->open(O_WRONLY | O_CREAT | O_TRUNC | O_NONBLOCK);
+	f->open(O_WRONLY | O_CREAT | O_TRUNC | O_NONBLOCK, 0777);
 	if (f->getFD() == -1)
 		throw Conflict();
 
