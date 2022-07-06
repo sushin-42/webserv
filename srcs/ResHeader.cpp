@@ -44,7 +44,7 @@ void	ResHeader::clearContent()
 
 void	ResHeader::setDefaultHeaders()
 {
-	(*this)["Server"]				= "Webserv 0.1";
+	(*this)["Server"]				= WEBSERV_VERSION;
 
 	// (*this)["Last-Modified"]		=
 	// (*this)["E-Tag"]				=

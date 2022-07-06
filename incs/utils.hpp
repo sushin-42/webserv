@@ -14,6 +14,7 @@
 
 #define CONVERT(X, Y) dynamic_cast<Y *>(X)
 #define CONVERT_REF(X, Y) dynamic_cast<Y &>(X)
+#define WEBSERV_VERSION	"Webserv 0.1"
 using namespace std;
 class Config;
 class PollSet;
