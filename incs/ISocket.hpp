@@ -45,7 +45,7 @@ public:
 		bzero(info.sin_zero, sizeof(info.sin_zero));
 
 		fd = socket(PF_INET, SOCK_STREAM, 0);
-		fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK | SO_REUSEADDR);
+		fcntl(fd, F_SETFL, O_NONBLOCK);
 	}
 	ISocket( const ISocket& src )
 	:Stream(src), info(src.info) {}
