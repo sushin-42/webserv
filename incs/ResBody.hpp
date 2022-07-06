@@ -23,10 +23,6 @@ public:
 *========================================================================**/
 
 	ResBody(): IText() {}
-	// ResBody( const string& path ): IText()
-	// {
-	// 	readFile(path);
-	// }
 	ResBody( const ResBody& src ): IText(src.content) {}
 	~ResBody() {}
 
@@ -40,8 +36,6 @@ public:
 * #                          member functions
 *========================================================================**/
 
-	// status_code_t	readFile( FileStream* f );
-	// status_code_t	readFile( const string& path );
 	void	clear();
 };
 #endif
