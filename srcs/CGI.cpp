@@ -11,6 +11,7 @@
 #include "Exceptions.hpp"
 # include "core.hpp"
 # include "ConfigChecker.hpp"
+#include <unistd.h>
 
 pair<status_code_t, string>	checkStatusField(const string& status)
 {
@@ -108,14 +109,14 @@ int childRoutine(
 				ServerSocket* serv,
 				ConnSocket* connected,
 				const string& executable,
-				const string& path
+				const string& scriptpath
 			)
 {
 	vector<char*> argv, envp;
 
 
 	argv.push_back(const_cast<char*>(executable.c_str()));
-	argv.push_back(const_cast<char*>(path.c_str()));
+	argv.push_back(const_cast<char*>(scriptpath.c_str()));
 	argv.push_back(NULL);
 
 	// cerr << argv[0] << " | " << argv[1] << endl;
@@ -139,12 +140,17 @@ int childRoutine(
 	dup2(PtoC[0], STDIN_FILENO), close(PtoC[0]), close(PtoC[1]);
 	// sleep(1);	//NOTE: 자식프로세스가 왜  기다려주지 ㅎ;
 
+	if (chdir(scriptpath.substr(0,scriptpath.find_last_of('/')).c_str()) == -1) {
+		cerr << "chdir error: " << strerror(errno) << endl;		//NOTE: INTERNAL SERVER ERROR
+		exit(-1);
+	}
+
 	if (execve(
 				(executable).c_str(),
 				(char * const*)(argv.data()),
 				(char * const*)(envp.data())
 			) == -1) {
-				cerr << "exec error: " << strerror(errno) << errno <<endl;		//NOTE: INTERNAL SERVER ERROR
+				cerr << "exec error: " << strerror(errno) << endl;		//NOTE: INTERNAL SERVER ERROR
 				exit(-1);
 			}
 	return -1;

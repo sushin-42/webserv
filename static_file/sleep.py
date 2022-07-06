@@ -2,6 +2,7 @@
 import cgi
 import cgitb
 import time
+import os
 
 #. client redir
 # without body:
@@ -39,7 +40,8 @@ print("Accept: text/abcd", flush=True)
 # time.sleep(1)
 
 print(flush=True)
-time.sleep(3)
+# time.sleep(3)
+print(os.getcwd())
 
 # print("Content-length: 2022")
 # time.sleep(3)
