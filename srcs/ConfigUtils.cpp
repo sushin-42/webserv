@@ -231,7 +231,7 @@ void parse_root(vector<string> arg, Config *config)
     // ServerConfig *server = dynamic_cast<ServerConfig *>(config);
     // // LocationConfig *location = dynamic_cast<LocationConfig *>(config);
 }
-void parse_cdflag(vector<string> arg, Config *config)
+void parse_file_access(vector<string> arg, Config *config)
 {
     string lowString;
     LocationConfig *location;
@@ -239,12 +239,12 @@ void parse_cdflag(vector<string> arg, Config *config)
         throw Config::parseCDflagFail();
     location = dynamic_cast<LocationConfig *>(config);
     if (location == NULL)
-        throw Config::parseCDflagFail("cdflag directive must use location block");
+        throw Config::parseCDflagFail("file_access directive must use location block");
     lowString = convertStringToLower(arg[0]);
     if (lowString == "off")
-        location->cdflag = false;
+        location->file_access = false;
     else if (lowString == "on")
-        location->cdflag = true;
+        location->file_access = true;
     else
         throw Config::parseCDflagFail();
 }
@@ -297,13 +297,13 @@ void parse_listen(vector<string> arg, Config *config)
     // server->port.push_back(port);
 }
 
-void parse_server_name(vector<string> arg, Config *config)
+void parse_server_names(vector<string> arg, Config *config)
 {
     ServerConfig *server = dynamic_cast<ServerConfig *>(config);
     if (server == NULL)
-        throw Config::parseServerNameFail("server_name directive must use server block");
+        throw Config::parseServerNameFail("server_names directive must use server block");
     for (vector<string>::size_type i = 0; i < arg.size(); i++)
-        server->server_name.push_back(arg[i]);
+        server->server_names.push_back(arg[i]);
 }
 
 void parse_index(vector<string> arg, Config *config)
@@ -606,9 +606,9 @@ string ReadConfig(char **argv)
 //         {
 //             cout << "ip : " << server->ipPort[j].first << " port : " << server->ipPort[j].second << endl;
 //         }
-//         for (vector<string>::size_type j = 0; j < server->server_name.size(); j++)
+//         for (vector<string>::size_type j = 0; j < server->server_names.size(); j++)
 //         {
-//             cout << "serve_rname : " << server->server_name[j] << endl;
+//             cout << "serve_rname : " << server->server_names[j] << endl;
 //         }
 //         printConfig(link->link[i]);
 //         for (vector<Config *>::size_type j = 0; j < link->link[i]->link.size(); j++)

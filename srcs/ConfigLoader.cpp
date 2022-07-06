@@ -34,8 +34,8 @@ void						ConfigLoader::pritAddrs()
 			ServerConfig* s = CONVERT((*vit), ServerConfig);
 			if (s)
 			{
-				vector<string>::iterator sit = s->server_name.begin();
-				vector<string>::iterator site = s->server_name.end();
+				vector<string>::iterator sit = s->server_names.begin();
+				vector<string>::iterator site = s->server_names.end();
 				cout << "\tserver name: ";
 				for (;sit!=site;sit++)
 					cout << *sit << " ";
@@ -99,7 +99,7 @@ ServerConfig*	ConfigLoader::getMatchedServer(ServerSocket* serv, const string& h
 	for (; it < ite ; it++)
 	{
 		ServerConfig* servConf = CONVERT(*it, ServerConfig);
-		vector<string> names = servConf->server_name;
+		vector<string> names = servConf->server_names;
 		vector<string>::iterator itName, iteName;
 		itName = names.begin(), iteName = names.end();
 		for (; itName < iteName ; itName++)
@@ -124,7 +124,7 @@ ServerConfig*	ConfigLoader::getMatchedServer(const string& ip, unsigned short po
 	for (; it < ite ; it++)
 	{
 		ServerConfig* servConf = CONVERT(*it, ServerConfig);
-		vector<string> names = servConf->server_name;
+		vector<string> names = servConf->server_names;
 		vector<string>::iterator itName, iteName;
 		itName = names.begin(), iteName = names.end();
 		for (; itName < iteName ; itName++)

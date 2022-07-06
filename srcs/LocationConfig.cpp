@@ -10,7 +10,7 @@ LocationConfig::LocationConfig(pair<string, string> locationConfUri, ServerConfi
     URI = locationConfUri.first;
     configtemp = locationConfUri.second;
     alias = "";
-    cdflag = false;
+    file_access = false;
     assign = checkAssign(URI);
     SetupConfig();
     setLimitExceptMethod();
@@ -67,7 +67,7 @@ void LocationConfig::setServerDirective(ServerConfig *serverConf)
     this->error_page = serverConf->error_page;
     this->cgi = serverConf->cgi;
     // only server directive
-    this->server_name = serverConf->server_name;
+    this->server_names = serverConf->server_names;
     this->ipPort = serverConf->ipPort;
 }
 void LocationConfig::setLimitExceptMethod()

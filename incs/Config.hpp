@@ -29,7 +29,7 @@ struct Duplicate
 	bool lingering_timeout;
 	bool send_timeout;
 	bool client_body_timeout;
-	bool cdflag;
+	bool file_access;
 
 	bool &operator[](int ind) { return *(&index + ind); }
 };
@@ -80,7 +80,7 @@ public:
 	map<string, string> cgi;
 
 	// 	// bool				absolute_redirect;
-	// 	// bool				server_name_in_redirect;
+	// 	// bool				server_names_in_redirect;
 	// 	// bool				port_in_redirect;
 
 	/**========================================================================
@@ -112,7 +112,7 @@ public:
 
 	// void parse_root(vector<string> arg, Config *config);
 	// void parse_listen(vector<string> arg, Config *config);
-	// void parse_server_name(vector<string> arg, Config *config);
+	// void parse_server_names(vector<string> arg, Config *config);
 	// void parse_index(vector<string> arg, Config *config);
 	// void parse_auto_index(vector<string> arg, Config *config);
 	// void parse_error_page(vector<string> arg, Config *config);

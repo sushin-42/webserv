@@ -15,10 +15,10 @@ public:
     vector<string> limit_except_method;
     bool checkSetLimitExceptMethod;
     string alias;
-    bool cdflag;
+    bool file_access;
 
     // server directive
-    vector<string> server_name;
+    vector<string> server_names;
     vector<_Addr> ipPort;
 
     /**========================================================================

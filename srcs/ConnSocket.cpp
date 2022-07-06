@@ -243,7 +243,7 @@
 				/* conf is still default_server conf */
 				if (ReqH.exist("Host"))
 				{
-					/* find server_name matched with Host */
+					/* find server_names matched with Host */
 					this->conf = CONF->getMatchedServer(this->linkServerSock, ReqH["Host"]);
 
 					/* find location matched with URI, or keep server config */

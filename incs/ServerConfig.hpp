@@ -9,7 +9,7 @@ class ServerConfig : public Config
 
 public:
     vector<_LocUri> locationConfUri;
-    vector<string> server_name;
+    vector<string> server_names;
     vector<_Addr> ipPort;
 
     /**========================================================================

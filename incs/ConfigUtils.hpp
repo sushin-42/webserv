@@ -35,7 +35,7 @@ bool exsitErrorpageEqual(string arg, int &equalstatus);
 
 void parse_root(vector<string> arg, Config *config);
 void parse_listen(vector<string> arg, Config *config);
-void parse_server_name(vector<string> arg, Config *config);
+void parse_server_names(vector<string> arg, Config *config);
 void parse_index(vector<string> arg, Config *config);
 void parse_auto_index(vector<string> arg, Config *config);
 void parse_error_page(vector<string> arg, Config *config);
@@ -53,7 +53,7 @@ void parse_client_body_timeout(vector<string> arg, Config *config);
 void parse_limit_except_method(vector<string> arg, Config *config);
 void parse_alias(vector<string> arg, Config *config);
 void parse_cgi(vector<string> arg, Config *config);
-void parse_cdflag(vector<string> arg, Config *config);
+void parse_file_access(vector<string> arg, Config *config);
 //=====================================parse_arg========================================
 
 void EraseComment(string &configtemp);
@@ -116,9 +116,9 @@ string ReadConfig(char **argv);
 //         {
 //             cout << "ip : " << server->ipPort[j].first << " port : " << server->ipPort[j].second << endl;
 //         }
-//         for (vector<string>::size_type j = 0; j < server->server_name.size(); j++)
+//         for (vector<string>::size_type j = 0; j < server->server_names.size(); j++)
 //         {
-//             cout << "serve_rname : " << server->server_name[j] << endl;
+//             cout << "serve_rname : " << server->server_names[j] << endl;
 //         }
 //         printConfig(link->link[i]);
 //         for (vector<Config *>::size_type j = 0; j < link->link[i]->link.size(); j++)

@@ -137,12 +137,12 @@ string Config::ExtractBlock(string &configtemp, size_t start)
 //     server->ipPort.push_back(make_pair(ip, port));
 // }
 
-// void Config::parse_server_name(vector<string> arg, Config *config)
+// void Config::parse_server_names(vector<string> arg, Config *config)
 // {
 //     ServerConfig *server = dynamic_cast<ServerConfig *>(config);
 
 //     for (vector<string>::size_type i = 0; i < arg.size(); i++)
-//         server->server_name.push_back(arg[i]);
+//         server->server_names.push_back(arg[i]);
 // }
 
 // void Config::parse_index(vector<string> arg, Config *config)
@@ -576,10 +576,10 @@ void Config::MapSetting()
 
     // only server block
     m["listen"] = &parse_listen;
-    m["server_name"] = &parse_server_name;
+    m["server_name"] = &parse_server_names;
 
     // only location_block
     m["limit_except_method"] = &parse_limit_except_method;
     m["alias"] = &parse_alias;
-    m["cdflag"] = &parse_cdflag;
+    m["file_access"] = &parse_file_access;
 }
