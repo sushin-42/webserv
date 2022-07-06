@@ -55,7 +55,6 @@ friend class ServerSocket;
 
 private:
 	socklen_t			len;
-	// char				buf[1024];
 
 public:
 	string				recvContent;	// cumulate received content
@@ -77,6 +76,7 @@ public:
 	FileStream*			linkOutputFile;
 	ServerSocket*		linkServerSock;
 	Config*				conf;
+	string				serverName;
 
 
 /**========================================================================

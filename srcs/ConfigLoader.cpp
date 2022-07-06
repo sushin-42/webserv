@@ -197,7 +197,28 @@ string			validateHost(const string& host)
 	return "";
 }
 
+string			ConfigLoader::getServerName(ServerSocket* serv, const string& host) const
+{
+	string	Host = validateHost(host);
+	_Confs	v = serv->confs;
+	_Confs::iterator it, ite;
+	it = v.begin(), ite = v.end();
 
+	for (; it < ite ; it++)
+	{
+		ServerConfig* servConf = CONVERT(*it, ServerConfig);
+		vector<string> names = servConf->server_names;
+		vector<string>::iterator itName, iteName;
+		itName = names.begin(), iteName = names.end();
+		for (; itName < iteName ; itName++)
+		{
+			if (itName->compare(Host) == 0 ||
+				(*itName + ":" + toString(serv->getPort())).compare(Host) == 0)
+				return *itName;
+		}
+	}
+	return serv->getIP();
+}
 
 
 

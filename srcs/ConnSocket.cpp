@@ -24,7 +24,8 @@
 	  internalRedirectCount(0), currentReqCount(0),
 	  linkInputPipe(NULL), linkOutputPipe(NULL),
 	  linkInputFile(NULL), linkOutputFile(NULL),
-	  linkServerSock(NULL), conf(NULL) {}
+	  linkServerSock(NULL), conf(NULL),
+	  serverName() {}
 
 	ConnSocket::~ConnSocket() {}
 
@@ -245,7 +246,7 @@
 				{
 					/* find server_names matched with Host */
 					this->conf = CONF->getMatchedServer(this->linkServerSock, ReqH["Host"]);
-
+					this->serverName = CONF->getServerName(this->linkServerSock,ReqH["Host"]);
 					/* find location matched with URI, or keep server config */
 					this->conf = CONF->getMatchedLocation(ReqH.getURI().path,
 														  CONVERT(this->conf, ServerConfig));
@@ -521,6 +522,7 @@ void ConnSocket::checkErrorPage()
 	cout << CYAN("ERROR REDIR TO: ")  << ReqH.getURI().path << endl;
 	this->ReqH.setMethod("GET");
 	this->conf = CONF->getMatchedServer(this->linkServerSock, this->ReqH["Host"]);
+	this->serverName = CONF->getServerName(this->linkServerSock,ReqH["Host"]);
 	this->conf = CONF->getMatchedLocation(this->ReqH.getURI().path,
 										CONVERT(this->conf, ServerConfig));
 	// this->unlinkAll();

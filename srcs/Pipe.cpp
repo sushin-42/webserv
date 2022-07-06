@@ -273,6 +273,7 @@ void	Pipe::localRedir()
 		connected->ResH.removeKey("transfer-encoding");
 
 		connected->conf = CONF->getMatchedServer(connected->linkServerSock, connected->ReqH["Host"]);
+		connected->serverName = CONF->getServerName(connected->linkServerSock,connected->ReqH["Host"]);
 		connected->conf = CONF->getMatchedLocation(connected->ReqH.getURI().path,
 													CONVERT(connected->conf, ServerConfig));
 

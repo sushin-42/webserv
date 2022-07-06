@@ -70,6 +70,8 @@ public:
 
 	/* return LocationConfig matched with URI, or ServerConfig */
 	Config*			getMatchedLocation(const string& URI, ServerConfig* servConf) const;
+
+	string			getServerName(ServerSocket* serv, const string& host) const;
 };
 
 bool			isNotHostChar(char c);
