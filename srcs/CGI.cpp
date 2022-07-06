@@ -71,7 +71,7 @@ map<string, string>	makeCGIEnv(ServerSocket* serv, ConnSocket* connected)
 		envs["QUERY_STRING"]	= connected->ReqH.getURI().query,
 		envs["SERVER_PROTOCOL"] = connected->ReqH.getHTTPversion();
 		envs["SERVER_SOFTWARE"] = WEBSERV_VERSION;
-		envs["SERVER_NAME"] = serv->getIP();	//TODO
+		envs["SERVER_NAME"] = connected->serverName;
 		envs["SERVER_PORT"] = toString(serv->getPort());
 		envs["REMOTE_ADDR"] = envs["REMOTE_HOST"] = connected->getIP();	// if host name exists, host == name
 		// envs["AUTH_TYPE"] = auth-scheme ( Basic, Digest )
