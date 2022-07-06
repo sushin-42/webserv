@@ -66,9 +66,9 @@ map<string, string>	makeCGIEnv(ServerSocket* serv, ConnSocket* connected)
 		}
 
 		envs["GATEWAY_INTERFACE"] = "CGI/1.1",
-		envs["PATH_INFO"] = CHECK->getFileName(connected->conf, connected->ReqH.getURI().path),
+		envs["PATH_INFO"] = CHECK->getFileName(connected->conf, connected->ReqH.getURI().path),	//NOTE: absolute path or rel-path from location
 		// envs["PATH_TRANSLATED"] = ,
-		// envs["QUERY_STRING"]	= "" | query,
+		envs["QUERY_STRING"]	= connected->ReqH.getURI().query,
 		envs["SERVER_PROTOCOL"] = connected->ReqH.getHTTPversion();
 		envs["SERVER_SOFTWARE"] = "webserv";
 		envs["SERVER_NAME"] = serv->getIP();	//TODO
