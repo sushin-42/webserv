@@ -281,11 +281,8 @@
 
 		if (ReqH.exist("Transfer-Encoding"))	// it will override Content-Length
 		{
-			/*
-				current:
-				- discard after "0\r\n\r\n" ?
-				- accept payload contains "0\r\n\r\n"
-			*/
+			if (ReqH.exist("Content-Length"))
+				throw badRequest();
 			ReqB.setChunk(recvContent);
 			try
 			{
