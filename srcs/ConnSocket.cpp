@@ -60,8 +60,8 @@
 
 	void	ConnSocket::core()
 	{
-		struct stat s;
-		string			reqTarget;
+		struct stat		s;
+		string			reqPath;
 
 		string			filename;
 		string			ext;
@@ -83,10 +83,9 @@
 		if (CHECK->isAllowed(this->conf, ReqH.getMethod()) == false)
 			throw methodNotAllowed();
 
-		// recvContent.clear();
-		reqTarget = this->ReqH.getRequsetTarget();
+		reqPath = this->ReqH.getURI().path;
 
-		try 						{ filename = CHECK->getFileName(this->conf, reqTarget); }
+		try 						{ filename = CHECK->getFileName(this->conf, reqPath); }
 		catch (httpError& e)		{ throw; }
 
 
@@ -105,7 +104,7 @@
 
 		try							{ s =_checkFile(filename);
 									  if (S_ISDIR(s.st_mode) && filename.back() != '/')
-									  		throw movedPermanently("http://" + this->ReqH["Host"] + reqTarget + '/');
+									  		throw movedPermanently("http://" + this->ReqH["Host"] + reqPath + '/');
 									}
 		catch (httpError& e)		{
 									  throw;
@@ -232,7 +231,8 @@
 				/* set ReqH here */
 				ReqH.setMethod(checkMethod(recvContent));
 				ReqH.setHTTPversion("HTTP/1.1");	//TODO: parse from request
-				ReqH.setRequsetTarget(recvContent);
+				ReqH.setRequestTarget(extractRequestTarget(recvContent));
+				ReqH.setURI(splitRequestTarget(ReqH.getRequestTarget()));
 				ReqH.setContent(extractHeader(recvContent));
 				ReqH.setHeaderField(KVtoMap(recvContent, ':'));
 #ifdef PRINTHEADER
@@ -247,7 +247,7 @@
 					this->conf = CONF->getMatchedServer(this->linkServerSock, ReqH["Host"]);
 
 					/* find location matched with URI, or keep server config */
-					this->conf = CONF->getMatchedLocation(ReqH.getRequsetTarget(),
+					this->conf = CONF->getMatchedLocation(ReqH.getURI().path,
 														  CONVERT(this->conf, ServerConfig));
 				}
 				else
@@ -515,12 +515,13 @@ void ConnSocket::checkErrorPage()
 	_ERRORPAIR	status_URI = (it->second);
 
 	this->ResH.setStatusCode(status_URI.first);
-	this->ReqH.setRequsetTarget(status_URI.second);
+	this->ReqH.setRequestTarget(status_URI.second);
+	this->ReqH.setURI(splitRequestTarget(this->ReqH.getRequestTarget()));
 
-	cout << CYAN("ERROR REDIR TO: ")  << ReqH.getRequsetTarget() << endl;
+	cout << CYAN("ERROR REDIR TO: ")  << ReqH.getURI().path << endl;
 	this->ReqH.setMethod("GET");
 	this->conf = CONF->getMatchedServer(this->linkServerSock, this->ReqH["Host"]);
-	this->conf = CONF->getMatchedLocation(this->ReqH.getRequsetTarget(),
+	this->conf = CONF->getMatchedLocation(this->ReqH.getURI().path,
 										CONVERT(this->conf, ServerConfig));
 	// this->unlinkAll();
 	throw ::internalRedirect();

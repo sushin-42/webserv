@@ -59,24 +59,24 @@ private:
 
 public:
 	string				recvContent;	// cumulate received content
-	ReqHeader	ReqH;
-	ReqBody		ReqB;
-	ResHeader	ResH;
-	ResBody		ResB;
-	bool		pending;
-	bool		chunk;				/* to distinguish script output chunk with server chunk */
-	bool		FINsended;			/* we already sended FIN, DO NOT send more data. */
-	bool		internalRedirect;
-	bool		keepAlive;
-	int			internalRedirectCount;
-	int			currentReqCount;
+	ReqHeader			ReqH;
+	ReqBody				ReqB;
+	ResHeader			ResH;
+	ResBody				ResB;
+	bool				pending;
+	bool				chunk;				/* to distinguish script output chunk with server chunk */
+	bool				FINsended;			/* we already sended FIN, DO NOT send more data. */
+	bool				internalRedirect;
+	bool				keepAlive;
+	int					internalRedirectCount;
+	int					currentReqCount;
 
-	Pipe*			linkInputPipe;
-	Pipe*			linkOutputPipe;
-	FileStream*		linkInputFile;
-	FileStream*		linkOutputFile;
-	ServerSocket*	linkServerSock;
-	Config*			conf;
+	Pipe*				linkInputPipe;
+	Pipe*				linkOutputPipe;
+	FileStream*			linkInputFile;
+	FileStream*			linkOutputFile;
+	ServerSocket*		linkServerSock;
+	Config*				conf;
 
 
 /**========================================================================

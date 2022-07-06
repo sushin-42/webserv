@@ -21,14 +21,11 @@
 * #                          member functions
 *========================================================================**/
 
-	void	ReqHeader::setRequsetTarget(const string& content)
-	{
-		string::size_type start = content.find(" ") + 1;
-		string::size_type end	= content.find(" ", start);
+	void			ReqHeader::setURI(const URI& uri)	{ this->uri = uri; }
+	const URI&		ReqHeader::getURI() const			{ return this->uri; }
 
-		this->requestTarget = content.substr(start, end - (start));
-	}
-	const string&	ReqHeader::getRequsetTarget() const	{ return this->requestTarget; }
+	void			ReqHeader::setRequestTarget(const string& s){ this->requestTarget = s; }
+	const string&	ReqHeader::getRequestTarget() const	{ return this->requestTarget; }
 
 	void			ReqHeader::setMethod(const string& m)	{ this->method = m; }
 	const string&	ReqHeader::getMethod() const			{ return this->method; };

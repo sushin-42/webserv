@@ -1,9 +1,10 @@
 #ifndef REQHEADER_HPP
 # define REQHEADER_HPP
+# include <fcntl.h>
+# include <string>
 # include "IHeader.hpp"
 # include "Config.hpp"
-# include <fcntl.h>
-#include <string>
+# include "utils.hpp"
 
 
 class ReqHeader : public IHeader
@@ -15,6 +16,7 @@ class ReqHeader : public IHeader
 private:
 	string	method;
 	string	requestTarget;
+	URI		uri;
 
 /**========================================================================
 * @                           Constructors
@@ -39,8 +41,10 @@ public:
 * #                          member functions
 *========================================================================**/
 
-	void			setRequsetTarget(const string& content);
-	const string&	getRequsetTarget() const;
+	void			setRequestTarget(const string& content);
+	const string&	getRequestTarget() const;
+	void			setURI(const URI& uri);
+	const URI&		getURI() const;
 	void			setMethod(const string& m);
 	const string&	getMethod() const;
 

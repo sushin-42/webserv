@@ -323,3 +323,43 @@ void				createServerSockets(map<
 
 
 }
+
+string	extractRequestTarget(const string& content)
+{
+	string::size_type start = content.find(" ") + 1;
+	string::size_type end	= content.find(" ", start);
+
+	return content.substr(start, end - (start));
+}
+
+URI		splitRequestTarget(string reqTarget)
+{
+	URI	ret = (URI){reqTarget, "", ""};
+
+	string::size_type	pathEnd, queryEnd;
+
+	pathEnd = reqTarget.find_first_of("?#");
+	if (pathEnd == string::npos)	return ret;
+	else
+	{
+		ret.path = reqTarget.substr(0,pathEnd);
+
+		if (reqTarget[pathEnd] == '?')
+		{
+			queryEnd = reqTarget.find('#', pathEnd + 1);
+			ret.query = reqTarget.substr(
+										pathEnd + 1,
+										queryEnd == string::npos ?
+											string::npos : queryEnd - (pathEnd + 1)
+										);
+
+		}
+		else
+			queryEnd = pathEnd;
+
+		if (queryEnd != string::npos)	// '#' exists
+			ret.fragment = reqTarget.substr(queryEnd + 1);
+	}
+
+	return ret;
+}

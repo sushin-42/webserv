@@ -267,15 +267,16 @@ void	Pipe::localRedir()
 		//@ regard as request to Location, but some header-fields from CGI remain @//
 		//@ Content-Length, Content-Type, Transfer-Encoding will be replaced @//
 		connected->pending = true;
-		connected->ReqH.setRequsetTarget(connected->ResH["location"]);
+		connected->ReqH.setRequestTarget(connected->ResH["location"]);
+		connected->ReqH.setURI(splitRequestTarget(connected->ReqH.getRequestTarget()));
 		connected->ResH.removeKey("location");
 		connected->ResH.removeKey("transfer-encoding");
 
 		connected->conf = CONF->getMatchedServer(connected->linkServerSock, connected->ReqH["Host"]);
-		connected->conf = CONF->getMatchedLocation(connected->ReqH.getRequsetTarget(),
+		connected->conf = CONF->getMatchedLocation(connected->ReqH.getURI().path,
 													CONVERT(connected->conf, ServerConfig));
 
-		cout << RED("LOCAL REDIR TO: ")  << connected->ReqH.getRequsetTarget() << endl;
+		cout << RED("LOCAL REDIR TO: ")  << connected->ReqH.getURI().path << endl;
 
 		connected->unlink(this);
 		POLLSET->drop(this);

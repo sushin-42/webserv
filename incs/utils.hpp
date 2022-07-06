@@ -17,6 +17,12 @@
 using namespace std;
 class Config;
 class PollSet;
+typedef struct URI
+{
+	string	path;
+	string	query;
+	string	fragment;
+} URI;
 
 string fileToString(const string &path);
 
@@ -66,6 +72,9 @@ bool	has2CRLF(const string &content);
 bool	isNumber(const string &s);
 bool 	argvError(int argc);
 int		errMsg();
+string	extractRequestTarget(const string& content);
+URI		splitRequestTarget(string reqTarget);
+
 
 
 template <class T>
