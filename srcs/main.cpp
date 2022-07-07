@@ -50,7 +50,7 @@ int main(int argc, char** argv)
 
 	try
 	{
-		HttpConfig::getInstance()->setConfig(ReadConfig(argv));
+		HttpConfig::getInstance()->setConfig(ReadConfig(argc, argv));
 	}
 	catch (const std::exception &e)
 	{

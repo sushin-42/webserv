@@ -57,7 +57,7 @@ void parse_file_access(vector<string> arg, Config *config);
 //=====================================parse_arg========================================
 
 void EraseComment(string &configtemp);
-string ReadConfig(char **argv);
+string ReadConfig(int argc, char **argv);
 
 //-----------------print config-----------------
 

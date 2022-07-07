@@ -285,7 +285,7 @@ bool isNumber(const string &s)
 
 bool argvError(int argc)
 {
-	return (argc != 2);
+	return (argc > 2);
 }
 
 int errMsg()

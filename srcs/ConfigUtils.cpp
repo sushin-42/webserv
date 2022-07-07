@@ -530,9 +530,16 @@ void EraseComment(string &configtemp)
     }
 }
 
-string ReadConfig(char **argv)
+string ReadConfig(int argc, char **argv)
 {
     string line, configtemp;
+    char temp[100];
+    string a = "compare/default.conf";
+    if (argc == 1)
+    {
+        strcpy(temp, a.c_str());
+        argv[1] = temp;
+    }
     ifstream file(*(argv + 1));
 
     if (file.is_open())
