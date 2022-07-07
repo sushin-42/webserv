@@ -82,7 +82,7 @@
 		}
 
 		if (CHECK->isAllowed(this->conf, ReqH.getMethod()) == false)
-			throw methodNotAllowed();
+			throw forbidden();
 
 		reqPath = this->ReqH.getURI().path;
 
