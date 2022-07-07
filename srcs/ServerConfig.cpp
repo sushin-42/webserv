@@ -87,6 +87,7 @@ void ServerConfig::setHttpDirective(Config *httpConf)
     this->client_body_timeout = httpConf->client_body_timeout;
     this->error_page = httpConf->error_page;
     this->cgi = httpConf->cgi;
+    this->timer = httpConf->timer;
 }
 /**========================================================================
  * !                            Exceptions

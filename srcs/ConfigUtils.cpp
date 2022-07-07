@@ -442,6 +442,14 @@ void parse_reset_timedout_connection(vector<string> arg, Config *config)
     config->dupeCheck.reset_timedout_connection = true;
 }
 
+void parse_timer(vector<string> arg, Config *config)
+{
+    if (arg.size() != 1 || config->dupeCheck.timer == true)
+        throw Config::parseTimerFail();
+    config->timer = convertStringToTime(arg[0]);
+    config->dupeCheck.timer = true;
+}
+
 void parse_lingering_timeout(vector<string> arg, Config *config)
 {
     if (arg.size() != 1 || config->dupeCheck.lingering_timeout == true)

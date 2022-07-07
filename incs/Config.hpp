@@ -30,6 +30,7 @@ struct Duplicate
 	bool send_timeout;
 	bool client_body_timeout;
 	bool file_access;
+	bool timer;
 
 	bool &operator[](int ind) { return *(&index + ind); }
 };
@@ -76,6 +77,7 @@ public:
 	time_t keepalive_timeout; //간격 -> poll에서 갱신되는 lastActive
 	time_t send_timeout;
 	time_t client_body_timeout;
+	time_t timer;
 
 	map<string, string> cgi;
 
@@ -223,6 +225,17 @@ public:
 		explicit parseErrorPageFail() : msg(RED("parseErrorPageFail")) {}
 		explicit parseErrorPageFail(const string &m) : msg(m) {}
 		virtual ~parseErrorPageFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+	class parseTimerFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseTimerFail() : msg(RED("parseTimerFail")) {}
+		explicit parseTimerFail(const string &m) : msg(m) {}
+		virtual ~parseTimerFail() throw(){};
 		virtual const char *what() const throw() { return msg.c_str(); }
 	};
 	class parseCgiFail : public exception

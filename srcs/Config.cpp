@@ -573,6 +573,7 @@ void Config::MapSetting()
     m["client_max_body_size"] = &parse_client_max_body_size;
     m["default_type"] = &parse_default_type;
     m["cgi"] = &parse_cgi;
+    m["timer"] = &parse_timer;
 
     // only server block
     m["listen"] = &parse_listen;

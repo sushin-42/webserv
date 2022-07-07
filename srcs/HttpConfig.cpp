@@ -78,6 +78,9 @@ void HttpConfig::defaultSet()
             case 12:
                 client_body_timeout = convertStringToTime("60s");
                 break;
+            case 13:
+                timer = convertStringToTime("20s");
+                break;
             }
         }
     }
