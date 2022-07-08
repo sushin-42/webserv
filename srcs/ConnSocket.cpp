@@ -108,6 +108,7 @@
 
 				this->ResH.setStatusCode(alreadyExist ? 204 : 201);
 				this->ResH.setReasonPhrase(alreadyExist ? "No Content" : "Created");
+				if (ResH.getStatusCode() == 201) { this->ResH["Content-Length"] = "0"; this->ResH["Location"] = "http://" + this->ReqH["Host"] + uriPath;}
 				this->makeResponseHeader();
 
 				return;
