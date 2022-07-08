@@ -573,6 +573,21 @@ bool	createPUToutputFile(ConnSocket* connected, const string filename)
 
 }
 
+void	deleteFile(const string& filename)
+{
+	struct 	stat s;
+
+	try						{ s = _checkFile(filename); }
+	catch (httpError& e)	{ throw; }
+
+	if (S_ISDIR(s.st_mode) && filename.back() != '/')
+		throw Conflict();
+
+	if (remove(filename.c_str()) == 0)
+		return ;
+	throw Conflict();
+}
+
 bool	isCGI(Config* conf, const string& filename)
 {
 	string CGIexecutable;

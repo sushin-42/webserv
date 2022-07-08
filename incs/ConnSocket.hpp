@@ -134,8 +134,10 @@ private:
 
 };
 
+
 bool	isDynamicResource(Config* conf, const string& filename);
 bool	createPUToutputFile(ConnSocket* connected, const string filename);
 void	writePUToutputFile(ConnSocket* c, const string& fn);
+void	deleteFile(const string& filename);
 
 #endif
