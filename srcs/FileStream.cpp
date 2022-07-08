@@ -161,8 +161,8 @@ void			FileStream::core()
 		connected->ResH["Content-Type"]	= CONF->MIME.find(ext) != CONF->MIME.end() ?
 										  CONF->MIME[ext] : connected->conf->default_type;
 
-		if (!connected->ResB.getContent().empty())
-			connected->ResH["Content-Length"]	= toString(connected->ResB.getContent().length());
+		// if (!connected->ResB.getContent().empty())
+		connected->ResH["Content-Length"]	= toString(connected->ResB.getContent().length());
 
 		connected->makeResponseHeader();
 }
