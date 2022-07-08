@@ -28,7 +28,7 @@ string	ConfigChecker::getFileName(Config* conf, const string& reqTarget)
 	return filename;
 }
 
-bool	ConfigChecker::isAllowed(Config* conf, const string& method)
+bool	ConfigChecker::isForbiddenMethod(Config* conf, const string& method)
 {
 	_Loc* locConf = CONVERT(conf, _Loc);
 	if (locConf == NULL)	return true;
@@ -41,9 +41,9 @@ bool	ConfigChecker::isAllowed(Config* conf, const string& method)
 	for (; itMethod != iteMethod ; itMethod++)
 	{
 		if (*itMethod == method)
-			return true;
+			return false;
 	}
-	return false;
+	return true;
 }
 
 string	ConfigChecker::getAlias(Config* conf)

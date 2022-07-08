@@ -62,10 +62,12 @@
 	void	ConnSocket::core()
 	{
 		struct stat		s;
-		string			reqPath;
+		string			uriPath;
 
 		string			filename;
 		string			ext;
+		string			CGIexecutable;
+		string			method;
 
 		bool			alreadyExist = false;
 
@@ -81,31 +83,40 @@
 			catch (exception& e)	{ throw; }
 		}
 
-		if (CHECK->isAllowed(this->conf, ReqH.getMethod()) == false)
+
+		method = ReqH.getMethod();
+		if (CHECK->isForbiddenMethod(this->conf, method))
 			throw forbidden();
 
-		reqPath = this->ReqH.getURI().path;
+		uriPath = this->ReqH.getURI().path;
 
-		try 						{ filename = CHECK->getFileName(this->conf, reqPath); }
+		try 						{ filename = CHECK->getFileName(this->conf, uriPath); }
 		catch (httpError& e)		{ throw; }
 
 
-		if (this->ReqH.getMethod() == "PUT")
+		if (method == "PUT")
 		{
-			try						{ alreadyExist = createPUToutputFile(this, filename); (void)alreadyExist; }
-			catch (Conflict& e)		{ throw; }
+			if (this->conf->file_access == false)
+			{
+				if (isDynamicResource(this->conf, filename) == false)
+					throw methodNotAllowed();
+			}
+			else
+			{
+				try						{ alreadyExist = createPUToutputFile(this, filename); }
+				catch (Conflict& e)		{ throw; }
 
-			// alreadyExist ? throw noContent() : throw Created();
-			this->ResH.setStatusCode(alreadyExist ? 204 : 201);
-			this->ResH.setReasonPhrase(alreadyExist ? "No Content" : "Created");
-			this->makeResponseHeader();
+				this->ResH.setStatusCode(alreadyExist ? 204 : 201);
+				this->ResH.setReasonPhrase(alreadyExist ? "No Content" : "Created");
+				this->makeResponseHeader();
 
-			return;
+				return;
+			}
 		}
 
 		try							{ s =_checkFile(filename);
 									  if (S_ISDIR(s.st_mode) && filename.back() != '/')
-									  		throw movedPermanently("http://" + this->ReqH["Host"] + reqPath + '/');
+									  		throw movedPermanently("http://" + this->ReqH["Host"] + uriPath + '/');
 									}
 		catch (httpError& e)		{
 									  throw;
@@ -560,4 +571,22 @@ bool	createPUToutputFile(ConnSocket* connected, const string filename)
 
 	return alreadyExist;
 
+}
+
+bool	isCGI(Config* conf, const string& filename)
+{
+	string CGIexecutable;
+
+	CGIexecutable = CHECK->getCGIexcutable(conf, "." + getExt(filename));
+	if ( CGIexecutable.empty() == false )
+		return true;
+	return false;
+}
+bool	isDynamicResource(Config* conf, const string& filename)
+{
+	if (isCGI(conf, filename)
+		/* ... */
+							)
+		return true;
+	return false;
 }

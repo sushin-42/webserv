@@ -41,7 +41,7 @@ public:
 		return checker;
 	}
 
-	bool				isAllowed(Config* conf, const string& method);
+	bool				isForbiddenMethod(Config* conf, const string& method);
 	string				getAlias(Config* conf);
 	string				replaceURI(const string& reqTarget, const string& locURI, const string& alias);
 	string				trimLocationURI(const string& reqTarget, const string& locURI);
