@@ -34,7 +34,6 @@ SRCS =  $(SRC_DIR)/checkFile.cpp \
 		$(SRC_DIR)/ServerConfig.cpp \
 		$(SRC_DIR)/ServerSocket.cpp \
 		$(SRC_DIR)/Timer.cpp \
-		$(SRC_DIR)/core.cpp \
 		$(SRC_DIR)/main.cpp \
 		$(SRC_DIR)/utils.cpp
 
