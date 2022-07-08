@@ -71,6 +71,13 @@
 
 		bool			alreadyExist = false;
 
+		if (this->internalRedirect == true)
+		{
+			internalRedirect = false;
+			internalRedirectCount++;
+			goto _skip;
+		}
+
 		if (ReqH.empty())
 		{
 			try						{ setHeaderOrReadMore(); }
@@ -83,7 +90,7 @@
 			catch (exception& e)	{ throw; }
 		}
 
-
+_skip:
 		method = ReqH.getMethod();
 		if (CHECK->isForbiddenMethod(this->conf, method))
 			throw forbidden();

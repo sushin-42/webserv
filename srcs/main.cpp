@@ -105,9 +105,6 @@ int main(int argc, char** argv)
 				POLLSET->unsetSend(stream->getFD());
 				if (stream == connected && connected->internalRedirect)
 				{
-					connected->internalRedirect = false;
-					connected->internalRedirectCount++;
-
 					inputStream = connected;
 					goto _core;
 				}
