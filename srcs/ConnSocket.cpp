@@ -1,6 +1,7 @@
 # include "ConnSocket.hpp"
 # include "CGI.hpp"
 # include "Exceptions.hpp"
+#include "ResBody.hpp"
 # include "utils.hpp"
 # include "ServerConfig.hpp"
 # include "ConfigLoader.hpp"
@@ -69,8 +70,6 @@
 		string			CGIexecutable;
 		string			method;
 
-		bool			alreadyExist = false;
-
 		if (this->internalRedirect == true)
 		{
 			internalRedirect = false;
@@ -101,7 +100,7 @@ _skip:
 		catch (httpError& e)		{ throw; }
 
 
-		if (method == "PUT")
+		if (method == "PUT" || method == "DELETE")
 		{
 			if (this->conf->file_access == false)
 			{
@@ -110,12 +109,17 @@ _skip:
 			}
 			else
 			{
-				try						{ alreadyExist = createPUToutputFile(this, filename); }
-				catch (Conflict& e)		{ throw; }
+				pair<status_code_t, string> ret;
+				try						{ ret = controlFile(method, this, filename); }
+				catch (httpError& e)	{ throw; }
 
-				this->ResH.setStatusCode(alreadyExist ? 204 : 201);
-				this->ResH.setReasonPhrase(alreadyExist ? "No Content" : "Created");
-				if (ResH.getStatusCode() == 201) { this->ResH["Content-Length"] = "0"; this->ResH["Location"] = "http://" + this->ReqH["Host"] + uriPath;}
+				this->ResH.setStatusCode(ret.first);
+				this->ResH.setReasonPhrase(ret.second);
+				if (ResH.getStatusCode() == 201)
+				{
+					this->ResH["Content-Length"] = "0";
+					this->ResH["Location"] = "http://" + this->ReqH["Host"] + uriPath;
+				}
 				this->makeResponseHeader();
 
 				return;
@@ -561,7 +565,17 @@ const char *	ConnSocket::connClosed::what() const throw() { return msg.c_str(); 
 * ,                               Others
 *========================================================================**/
 
-bool	createPUToutputFile(ConnSocket* connected, const string filename)
+pair<status_code_t, string>
+controlFile(const string& method, ConnSocket* connected, const string& filename)
+{
+	if		(method == "PUT")		return createPUToutputFile(connected, filename);
+	else if	(method == "DELETE")	return deleteFile(filename);
+
+	throw internalServerError();
+}
+
+pair<status_code_t, string>
+createPUToutputFile(ConnSocket* connected, const string filename)
 {
 
 	FileStream* f = new FileStream(filename);
@@ -577,11 +591,13 @@ bool	createPUToutputFile(ConnSocket* connected, const string filename)
 
 	POLLSET->enroll(f, POLLOUT);
 
-	return alreadyExist;
+	return alreadyExist ?  make_pair<status_code_t>(204, "No Content") :
+						   make_pair<status_code_t>(201, "Created" );
 
 }
 
-void	deleteFile(const string& filename)
+pair<status_code_t, string>
+deleteFile(const string& filename)
 {
 	struct 	stat s;
 
@@ -592,7 +608,7 @@ void	deleteFile(const string& filename)
 		throw Conflict();
 
 	if (remove(filename.c_str()) == 0)
-		return ;
+		return make_pair<status_code_t, string>(204, "No Content");
 	throw Conflict();
 }
 

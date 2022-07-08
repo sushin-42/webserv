@@ -135,9 +135,11 @@ private:
 };
 
 
-bool	isDynamicResource(Config* conf, const string& filename);
-bool	createPUToutputFile(ConnSocket* connected, const string filename);
-void	writePUToutputFile(ConnSocket* c, const string& fn);
-void	deleteFile(const string& filename);
+bool						isDynamicResource(Config* conf, const string& filename);
+void						writePUToutputFile(ConnSocket* c, const string& fn);
+
+pair<status_code_t, string>	controlFile(const string& method, ConnSocket* connected, const string& filename); /* wrapper for PUT | DELETE */
+pair<status_code_t, string>	createPUToutputFile(ConnSocket* connected, const string filename);
+pair<status_code_t, string>	deleteFile(const string& filename);
 
 #endif
