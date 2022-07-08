@@ -70,6 +70,7 @@ public:
 	string default_type; // 확장자가 mime.type에 없을때, 기본값
 	ssize_t client_max_body_size;
 	bool reset_timedout_connection;
+	bool file_access;
 
 	time_t lingering_time;	  //총시간->  fin 보낸순간.
 	time_t lingering_timeout; //간격 ->  lastActive 일단 fin보낸순간, 그 다음부터 폴에서 갱신

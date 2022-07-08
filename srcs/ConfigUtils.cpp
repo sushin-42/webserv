@@ -234,17 +234,14 @@ void parse_root(vector<string> arg, Config *config)
 void parse_file_access(vector<string> arg, Config *config)
 {
     string lowString;
-    LocationConfig *location;
+    
     if (arg.size() != 1)
         throw Config::parseCDflagFail();
-    location = dynamic_cast<LocationConfig *>(config);
-    if (location == NULL)
-        throw Config::parseCDflagFail("file_access directive must use location block");
     lowString = convertStringToLower(arg[0]);
     if (lowString == "off")
-        location->file_access = false;
+        config->file_access = false;
     else if (lowString == "on")
-        location->file_access = true;
+        config->file_access = true;
     else
         throw Config::parseCDflagFail();
 }

@@ -15,7 +15,7 @@ public:
     vector<string> limit_except_method;
     bool checkSetLimitExceptMethod;
     string alias;
-    bool file_access;
+    
 
     // server directive
     vector<string> server_names;
