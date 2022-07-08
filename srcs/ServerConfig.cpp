@@ -88,6 +88,7 @@ void ServerConfig::setHttpDirective(Config *httpConf)
     this->error_page = httpConf->error_page;
     this->cgi = httpConf->cgi;
     this->timer = httpConf->timer;
+    this->file_access = httpConf->file_access;
 }
 /**========================================================================
  * !                            Exceptions
