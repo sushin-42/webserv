@@ -89,7 +89,7 @@ void	Pipe::recv()
 	{
 
 	case -1:	/* internal server error */
-		LOGGING(Pipe,  RED("Unexcpected error from file: ") UL("%d"), this->getFD());
+		LOGGING(Pipe,  RED("Unexcpected error from pipe: ") UL("%d"), this->getFD());
 
 		linkConn->unlink(this);
 		POLLSET->drop(this);
@@ -97,7 +97,7 @@ void	Pipe::recv()
 		throw internalServerError();
 
 	case 0:		/* close pipe, process output */
-		LOGGING(Pipe,  GRAY("file closed: ") UL("%d"), this->getFD());
+		LOGGING(Pipe,  GRAY("pipe closed: ") UL("%d"), this->getFD());
 
 		this->readDone = true;
 		connected->pending = false;
@@ -118,7 +118,11 @@ void	Pipe::coreDone()
 		POLLSET->drop(this);
 	}
 	if (connected->pending == false)
+	{
 		POLLSET->prepareSend( connected );
+		if (readDone)
+			connected->pending=true;
+	}
 	return;
 }
 
