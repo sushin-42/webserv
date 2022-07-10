@@ -161,7 +161,7 @@ void	Pipe::send(const string& content, map<int, struct undone>& writeUndoneBuf)
 	//@ all data sended @//
 	if (rWrited == rContentLen)
 	{
-		LOGGING(Pipe, _GOOD(all data writed to File )  UL("%d") ": %zu / %zu bytes", this->getFD(), rWrited, rContentLen);
+		LOGGING(Pipe, _GOOD(all data writed to pipe )  UL("%d") ": %zu / %zu bytes", this->getFD(), rWrited, rContentLen);
 		writeUndoneBuf.erase(this->fd);
 
 		linkConn->unlink(this);
