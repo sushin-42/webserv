@@ -71,6 +71,7 @@ void LocationConfig::setServerDirective(ServerConfig *serverConf)
     // only server directive
     this->server_names = serverConf->server_names;
     this->ipPort = serverConf->ipPort;
+    this->d_return = serverConf->d_return;
 }
 void LocationConfig::setLimitExceptMethod()
 {
