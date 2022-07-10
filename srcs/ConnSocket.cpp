@@ -2,6 +2,7 @@
 # include "CGI.hpp"
 # include "Exceptions.hpp"
 #include "ResBody.hpp"
+#include "httpError.hpp"
 # include "utils.hpp"
 # include "ServerConfig.hpp"
 # include "ConfigLoader.hpp"
@@ -91,6 +92,8 @@
 
 _skip:
 		method = ReqH.getMethod();
+		if (method == "HEAD")
+			throw methodNotAllowed();	/* for tester */
 		if (CHECK->isForbiddenMethod(this->conf, method))
 			throw forbidden();
 
@@ -99,7 +102,9 @@ _skip:
 		try 						{ filename = CHECK->getFileName(this->conf, uriPath); }
 		catch (httpError& e)		{ throw; }
 
-
+		if (method == "POST")
+				if (isDynamicResource(this->conf, filename) == false)
+					throw methodNotAllowed();
 		if (method == "PUT" || method == "DELETE")
 		{
 			if (this->conf->file_access == false)
