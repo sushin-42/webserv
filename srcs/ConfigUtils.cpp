@@ -53,6 +53,16 @@ int convertStringToStateCode(string code)
     return static_cast<int>(val);
 }
 
+short convertStringToStateCodeInReturnDirective(string code)
+{
+    ssize_t val = 0;
+
+    val = convertStringToSsize_T(code);
+    if (val != 301 && val != 302 && val != 303 && val != 307 && val != 308)
+        throw Config::parseReturnFail("| invalid status code | 301, 302, 303, 307, 308");
+    return static_cast<short>(val);
+}
+
 string convertStringToIpv4(unsigned int ip)
 {
     stringstream ss;
@@ -301,6 +311,18 @@ void parse_server_names(vector<string> arg, Config *config)
         throw Config::parseServerNameFail("server_names directive must use server block");
     for (vector<string>::size_type i = 0; i < arg.size(); i++)
         server->server_names.push_back(arg[i]);
+}
+
+void parse_return(vector<string> arg, Config *config)
+{
+    ServerConfig *server = dynamic_cast<ServerConfig *>(config);
+    LocationConfig *location = dynamic_cast<LocationConfig *>(config);
+    if (arg.size() != 2)
+        throw Config::parseReturnFail();
+    if (server == NULL && location == NULL)
+        throw Config::parseReturnFail("return directive must use server block or location block");
+    config->d_return.first = convertStringToStateCodeInReturnDirective(arg[0]);
+    config->d_return.second = arg[1];
 }
 
 void parse_index(vector<string> arg, Config *config)

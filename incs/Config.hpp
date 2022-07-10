@@ -31,6 +31,7 @@ struct Duplicate
 	bool client_body_timeout;
 	bool file_access;
 	bool timer;
+	bool d_return;
 
 	bool &operator[](int ind) { return *(&index + ind); }
 };
@@ -39,6 +40,7 @@ typedef pair<string, string> _LocUri;
 typedef pair<string, unsigned short> _Addr;
 typedef vector<Config *> _Confs;
 typedef map<_Addr, _Confs> _Map;
+typedef unsigned short		status_code_t;
 
 class Config
 {
@@ -81,7 +83,7 @@ public:
 	time_t timer;
 
 	map<string, string> cgi;
-
+	pair<status_code_t, string> d_return;
 	// 	// bool				absolute_redirect;
 	// 	// bool				server_names_in_redirect;
 	// 	// bool				port_in_redirect;
@@ -202,6 +204,18 @@ public:
 		explicit parseServerNameFail() : msg(RED("parseServerNameFail")) {}
 		explicit parseServerNameFail(const string &m) : msg(m) {}
 		virtual ~parseServerNameFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+
+	class parseReturnFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseReturnFail() : msg(RED("parseReturnFail")) {}
+		explicit parseReturnFail(const string &m) : msg(m) {}
+		virtual ~parseReturnFail() throw(){};
 		virtual const char *what() const throw() { return msg.c_str(); }
 	};
 

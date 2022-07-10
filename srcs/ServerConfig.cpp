@@ -89,6 +89,7 @@ void ServerConfig::setHttpDirective(Config *httpConf)
     this->cgi = httpConf->cgi;
     this->timer = httpConf->timer;
     this->file_access = httpConf->file_access;
+    this->d_return = make_pair(0, "");
 }
 /**========================================================================
  * !                            Exceptions

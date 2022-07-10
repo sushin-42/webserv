@@ -578,6 +578,7 @@ void Config::MapSetting()
     // only server block
     m["listen"] = &parse_listen;
     m["server_name"] = &parse_server_names;
+    m["return"] = &parse_return; // with location block
 
     // only location_block
     m["limit_except_method"] = &parse_limit_except_method;
