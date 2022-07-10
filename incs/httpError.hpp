@@ -66,6 +66,14 @@ class lengthRequired: public httpError
 				virtual ~lengthRequired() throw();
 };
 
+class URITooLong: public httpError
+{
+	public:		explicit URITooLong();
+				explicit URITooLong(status_code_t s, const string& m);
+				virtual ~URITooLong() throw();
+};
+
+
 class Created: public httpError
 {
 	public:		string	location;
@@ -129,6 +137,20 @@ class permanentRedirect: public redirectError
 	public:		explicit permanentRedirect();
 				explicit permanentRedirect(const string& loc);
 				virtual ~permanentRedirect() throw();
+};
+
+class notImplemented: public httpError
+{
+	public:		explicit notImplemented();
+				explicit notImplemented(status_code_t s, const string& m);
+				virtual ~notImplemented() throw();
+};
+
+class HTTPVersionNotSupported: public httpError
+{
+	public:		explicit HTTPVersionNotSupported();
+				explicit HTTPVersionNotSupported(status_code_t s, const string& m);
+				virtual ~HTTPVersionNotSupported() throw();
 };
 
 #endif

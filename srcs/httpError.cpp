@@ -58,11 +58,14 @@ lengthRequired::~lengthRequired() throw() {};
 payloadTooLarge::payloadTooLarge(): httpError(413, "Payload Too Large") {}
 payloadTooLarge::~payloadTooLarge() throw() {};
 
+URITooLong::URITooLong(): httpError(414, "URI Too Long") {}
+URITooLong::~URITooLong() throw() {};
+
 internalServerError::internalServerError(): httpError(500, "Internal Server Error") {}
 internalServerError::~internalServerError() throw() {};
 
+notImplemented::notImplemented(): httpError(501, "Not Implemented") {}
+notImplemented::~notImplemented() throw() {};
 
-
-
-
-
+HTTPVersionNotSupported::HTTPVersionNotSupported(): httpError(505, "HTTP Version Not Supported") {}
+HTTPVersionNotSupported::~HTTPVersionNotSupported() throw() {};
