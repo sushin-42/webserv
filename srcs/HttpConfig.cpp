@@ -81,6 +81,16 @@ void HttpConfig::defaultSet()
             case 13:
                 timer = convertStringToTime("20s");
                 break;
+            case 15:
+                /*d_return;*/
+                break;
+            case 16:
+	            server_name_in_redirect = false;
+                break;
+            case 17:
+	            port_in_redirect = true;
+                break;
+
             }
         }
     }

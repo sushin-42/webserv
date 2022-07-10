@@ -1,4 +1,6 @@
 #include "ConfigChecker.hpp"
+#include "Config.hpp"
+#include "httpError.hpp"
 #include <string>
 
 ConfigChecker*	ConfigChecker::checker;
@@ -96,4 +98,33 @@ string				ConfigChecker::getCGIexcutable(Config* conf, const string& ext)
 	if (it != conf->cgi.end())
 		return it->second;
 	return "";
+}
+
+void	ConfigChecker::externalRedirect(Config* conf, const string& host, short port, const string& serverName)
+{
+	status_code_t	status		= conf->d_return.first;
+	string			loc			= conf->d_return.second;
+	string			scheme		= "http://";
+	string			authority	= host;
+
+	if (loc.empty() == false && loc[0] == '/')
+	{
+		if (conf->server_name_in_redirect)
+		{
+			authority = serverName;
+			if (conf->port_in_redirect)
+				authority += (":" + toString(port));
+		}
+		loc = "http://" + authority + loc;
+	}
+
+	switch (status) {
+	case 301: throw movedPermanently(loc);
+	case 302: throw found(loc);
+	case 303: throw seeOther(loc);
+	case 307: throw temporaryRedirect(loc);
+	case 308: throw permanentRedirect(loc);
+	case 0:	return ;
+	}
+
 }

@@ -244,7 +244,7 @@ void parse_root(vector<string> arg, Config *config)
 void parse_file_access(vector<string> arg, Config *config)
 {
     string lowString;
-    
+
     if (arg.size() != 1)
         throw Config::parseCDflagFail();
     lowString = convertStringToLower(arg[0]);
@@ -355,6 +355,40 @@ void parse_auto_index(vector<string> arg, Config *config)
     else
         throw Config::parseAutoIndexFail();
     config->dupeCheck.autoindex = true;
+}
+
+void parse_server_name_in_redirect(vector<string> arg, Config *config)
+{
+
+    string lowString;
+
+    if (arg.size() != 1 || config->dupeCheck.server_name_in_redirect == true)
+        throw Config::parseServerNameInRedirectFail();
+    lowString = convertStringToLower(arg[0]);
+    if (lowString == "off")
+        config->server_name_in_redirect = false;
+    else if (lowString == "on")
+        config->server_name_in_redirect = true;
+    else
+        throw Config::parseServerNameInRedirectFail();
+    config->dupeCheck.server_name_in_redirect = true;
+}
+
+void parse_port_in_redirect(vector<string> arg, Config *config)
+{
+
+    string lowString;
+
+    if (arg.size() != 1 || config->dupeCheck.port_in_redirect == true)
+        throw Config::parsePortInRedirectFail();
+    lowString = convertStringToLower(arg[0]);
+    if (lowString == "off")
+        config->port_in_redirect = false;
+    else if (lowString == "on")
+        config->port_in_redirect = true;
+    else
+        throw Config::parsePortInRedirectFail();
+    config->dupeCheck.port_in_redirect = true;
 }
 
 bool exsitErrorpageEqual(string arg, int &equalstatus)

@@ -584,4 +584,6 @@ void Config::MapSetting()
     m["limit_except_method"] = &parse_limit_except_method;
     m["alias"] = &parse_alias;
     m["file_access"] = &parse_file_access;
+    m["server_name_in_redirect"] = &parse_server_name_in_redirect;
+    m["port_in_redirect"] = &parse_port_in_redirect;
 }

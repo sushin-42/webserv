@@ -48,6 +48,7 @@ public:
 	pair<string,string>	routeRequestTarget(Config* conf, const string& reqTarget);
 	string				getFileName(Config* conf, const string& reqTarget);
 	string				getCGIexcutable(Config* conf, const string& ext);
+	void				externalRedirect(Config* conf, const string& host, short port, const string& serverName);
 };
 
 #endif

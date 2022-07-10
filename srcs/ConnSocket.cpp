@@ -96,6 +96,8 @@ _skip:
 			throw methodNotAllowed();	/* for tester */
 		if (CHECK->isForbiddenMethod(this->conf, method))
 			throw forbidden();
+		if (conf->d_return.first)
+			CHECK->externalRedirect(conf, ReqH["Host"], linkServerSock->getPort(), serverName);
 
 		uriPath = this->ReqH.getURI().path;
 
@@ -103,8 +105,8 @@ _skip:
 		catch (httpError& e)		{ throw; }
 
 		if (method == "POST")
-				if (isDynamicResource(this->conf, filename) == false)
-					throw methodNotAllowed();
+			if (isDynamicResource(this->conf, filename) == false)
+				throw methodNotAllowed();
 		if (method == "PUT" || method == "DELETE")
 		{
 			if (this->conf->file_access == false)

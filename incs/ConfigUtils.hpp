@@ -56,6 +56,8 @@ void parse_cgi(vector<string> arg, Config *config);
 void parse_file_access(vector<string> arg, Config *config);
 void parse_timer(vector<string> arg, Config *config);
 void parse_return(vector<string> arg, Config *config);
+void parse_server_name_in_redirect(vector<string> arg, Config *config);
+void parse_port_in_redirect(vector<string> arg, Config *config);
 //=====================================parse_arg========================================
 
 void EraseComment(string &configtemp);

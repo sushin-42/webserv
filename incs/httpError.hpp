@@ -105,4 +105,30 @@ class movedPermanently: public redirectError
 				virtual ~movedPermanently() throw();
 };
 
+class found: public redirectError
+{
+	public:		explicit found();
+				explicit found(const string& loc);
+				virtual ~found() throw();
+};
+
+class seeOther: public redirectError
+{
+	public:		explicit seeOther();
+				explicit seeOther(const string& loc);
+				virtual ~seeOther() throw();
+};
+class temporaryRedirect: public redirectError
+{
+	public:		explicit temporaryRedirect();
+				explicit temporaryRedirect(const string& loc);
+				virtual ~temporaryRedirect() throw();
+};
+class permanentRedirect: public redirectError
+{
+	public:		explicit permanentRedirect();
+				explicit permanentRedirect(const string& loc);
+				virtual ~permanentRedirect() throw();
+};
+
 #endif

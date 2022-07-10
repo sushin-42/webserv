@@ -21,6 +21,22 @@ movedPermanently::movedPermanently(): redirectError(301, "Moved Permanently", ""
 movedPermanently::movedPermanently(const string& loc): redirectError(301, "Moved Permanently", loc) {}
 movedPermanently::~movedPermanently() throw() {};
 
+found::found(): redirectError(302, "Found", "") {}
+found::found(const string& loc): redirectError(302, "Found", loc) {}
+found::~found() throw() {};
+
+seeOther::seeOther(): redirectError(303, "See Other", "") {}
+seeOther::seeOther(const string& loc): redirectError(303, "See Other", loc) {}
+seeOther::~seeOther() throw() {};
+
+temporaryRedirect::temporaryRedirect(): redirectError(307, "Temporary Redirect", "") {}
+temporaryRedirect::temporaryRedirect(const string& loc): redirectError(307, "Temporary Redirect", loc) {}
+temporaryRedirect::~temporaryRedirect() throw() {};
+
+permanentRedirect::permanentRedirect(): redirectError(308, "Permanent Redirect", "") {}
+permanentRedirect::permanentRedirect(const string& loc): redirectError(308, "Permanent Redirect", loc) {}
+permanentRedirect::~permanentRedirect() throw() {};
+
 badRequest::badRequest(): httpError(400, "Bad Request") {}
 badRequest::~badRequest() throw() {};
 

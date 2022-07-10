@@ -90,6 +90,8 @@ void ServerConfig::setHttpDirective(Config *httpConf)
     this->timer = httpConf->timer;
     this->file_access = httpConf->file_access;
     this->d_return = make_pair(0, "");
+    this->server_name_in_redirect = httpConf->server_name_in_redirect;
+    this->port_in_redirect = httpConf->port_in_redirect;
 }
 /**========================================================================
  * !                            Exceptions

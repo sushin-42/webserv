@@ -10,7 +10,7 @@ LocationConfig::LocationConfig(pair<string, string> locationConfUri, ServerConfi
     URI = locationConfUri.first;
     configtemp = locationConfUri.second;
     alias = "";
-    
+
     assign = checkAssign(URI);
     SetupConfig();
     setLimitExceptMethod();
@@ -72,6 +72,9 @@ void LocationConfig::setServerDirective(ServerConfig *serverConf)
     this->server_names = serverConf->server_names;
     this->ipPort = serverConf->ipPort;
     this->d_return = serverConf->d_return;
+
+    this->server_name_in_redirect = serverConf->server_name_in_redirect;
+    this->port_in_redirect = serverConf->port_in_redirect;
 }
 void LocationConfig::setLimitExceptMethod()
 {

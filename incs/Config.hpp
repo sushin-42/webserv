@@ -32,6 +32,8 @@ struct Duplicate
 	bool file_access;
 	bool timer;
 	bool d_return;
+	bool server_name_in_redirect;
+	bool port_in_redirect;
 
 	bool &operator[](int ind) { return *(&index + ind); }
 };
@@ -84,9 +86,9 @@ public:
 
 	map<string, string> cgi;
 	pair<status_code_t, string> d_return;
+	bool	server_name_in_redirect;
+	bool	port_in_redirect;
 	// 	// bool				absolute_redirect;
-	// 	// bool				server_names_in_redirect;
-	// 	// bool				port_in_redirect;
 
 	/**========================================================================
 	 * @                           Constructors
@@ -228,6 +230,30 @@ public:
 		explicit parseAutoIndexFail() : msg(RED("parseAutoIndexFail")) {}
 		explicit parseAutoIndexFail(const string &m) : msg(m) {}
 		virtual ~parseAutoIndexFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+
+	class parseServerNameInRedirectFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parseServerNameInRedirectFail() : msg(RED("parseServerNameInRedirectFail")) {}
+		explicit parseServerNameInRedirectFail(const string &m) : msg(m) {}
+		virtual ~parseServerNameInRedirectFail() throw(){};
+		virtual const char *what() const throw() { return msg.c_str(); }
+	};
+
+	class parsePortInRedirectFail : public exception
+	{
+	private:
+		string msg;
+
+	public:
+		explicit parsePortInRedirectFail() : msg(RED("parsePortInRedirectFail")) {}
+		explicit parsePortInRedirectFail(const string &m) : msg(m) {}
+		virtual ~parsePortInRedirectFail() throw(){};
 		virtual const char *what() const throw() { return msg.c_str(); }
 	};
 
