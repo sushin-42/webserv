@@ -44,8 +44,6 @@ inline std::string ltrim(std::string s, const char *t)
 std::string			trim(std::string s, const char *t);
 string 				lowerize(const string &s);
 map<string, string> KVtoMap(const string &content, char delim);
-string 				extractHeader(const string &content);
-string 				extractBody(const string &content);
 ssize_t				readFrom(int fd, string &content);
 string&				replaceToken(string &content, const string &token, const string &value);
 string 				capitalize(const string &s);
@@ -56,6 +54,15 @@ void				createServerSockets(map<
 											pair<string, unsigned short>,
 											vector<Config*>
 										>& addrs );
+
+
+/* inplace */
+string 				extractHeader(string &content);
+string				extractFirstWord(string& content);
+
+string				pickOutRequestTarget(const string& content);
+string				pickOutMethod(const string& content);
+string 				pickOutBody(const string &content);
 
 pair<pid_t, int> whoDied();	/* we will check periodically all process forked. */
 
@@ -73,7 +80,7 @@ bool	has2CRLF(const string &content);
 bool	isNumber(const string &s);
 bool 	argvError(int argc);
 int		errMsg();
-string	extractRequestTarget(const string& content);
+
 URI		splitRequestTarget(string reqTarget);
 
 

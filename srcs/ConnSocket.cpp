@@ -253,12 +253,12 @@ _skip:
 			{
 				currentReqCount++;
 				/* set ReqH here */
-				ReqH.setMethod(checkMethod(recvContent));
-				ReqH.setHTTPversion("HTTP/1.1");	//TODO: parse from request
-				ReqH.setRequestTarget(extractRequestTarget(recvContent));
+				ReqH.setMethod(extractFirstWord(recvContent));
+				ReqH.setRequestTarget(extractFirstWord(recvContent));
+				ReqH.setHTTPversion(extractFirstWord(recvContent));
 				ReqH.setURI(splitRequestTarget(ReqH.getRequestTarget()));
 				ReqH.setContent(extractHeader(recvContent));
-				ReqH.setHeaderField(KVtoMap(recvContent, ':'));
+				ReqH.setHeaderField(KVtoMap(this->ReqH.getContent(), ':'));
 #ifdef PRINTHEADER
 				cout << RED("<-----------------") << endl;
 				cout << this->ReqH.getContent();
@@ -288,7 +288,7 @@ _skip:
 				}
 
 				/* extract trailing body */
-				recvContent = extractBody(recvContent);
+				recvContent = pickOutBody(recvContent);
 			}
 			else
 				throw badRequest();
@@ -316,10 +316,7 @@ _skip:
 			catch (exception& e)
 			{
 				if (CONVERT(&e, ReqBody::invalidChunk))
-				{
-					cout << "INVALID CHUNK" << endl;
 					throw badRequest();
-				}
 				if (CONVERT(&e, ReqBody::limitExeeded))
 					throw payloadTooLarge();
 				if (CONVERT(&e, readMore))
@@ -497,14 +494,6 @@ _skip:
 
 	string		ConnSocket::getOutputContent() { return this->ResH.getContent() + this->ResB.getContent(); }
 
-string checkMethod(const string& content)
-{
-	string::size_type end = content.find(" ");
-	string method = content.substr(0, end);
-	return method;
-}
-
-// void	ConnSocket::returnError(status_code_t status, const string& message)
 void	ConnSocket::returnError(httpError& error)
 {
 	redirectError* r =  CONVERT(&error, redirectError);

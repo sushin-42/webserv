@@ -60,10 +60,11 @@ map<string, string> KVtoMap(const string &content, char delim)
 	return ret;
 }
 
-string extractHeader(const string &content)
+string extractHeader(string& content)
 {
-	string::size_type pStart = 0;
-	string::size_type pEnd = string::npos;
+	string 				header;
+	string::size_type	pStart = 0;
+	string::size_type	pEnd = string::npos;
 
 	while ((pEnd = content.find('\n', pStart)) != string::npos)
 	{
@@ -72,10 +73,12 @@ string extractHeader(const string &content)
 			break;
 		pStart = pEnd + 1;
 	}
-	return (content.substr(0, pEnd));
+	header = content.substr(0, pEnd);
+	content = content.substr(pEnd);
+	return (header);
 }
 
-string extractBody(const string &content)
+string pickOutBody(const string &content)
 {
 	string::size_type pStart = 0;
 	string::size_type pEnd = string::npos;
@@ -97,6 +100,13 @@ string extractBody(const string &content)
 		pStart = pEnd + 1;
 	}
 	return (content.substr(pEnd + offset + 1));
+}
+
+string pickOutMethod(const string& content)
+{
+	string::size_type end = content.find(" ");
+	string method = content.substr(0, end);
+	return method;
 }
 
 ssize_t readFrom(int fd, string &content)
@@ -324,7 +334,21 @@ void				createServerSockets(map<
 
 }
 
-string	extractRequestTarget(const string& content)
+string	extractFirstWord(string& content)
+{
+	string::size_type offset;
+	string::size_type posSP = content.find_first_of(" \r");
+	string word = content.substr(0, posSP);
+
+	if		(content[posSP] == ' ')	offset = 1;
+	else if	(content[posSP] == '\r')offset = 2;
+	else	{cout << "HERE" << endl; throw badRequest();}	// noreach
+
+	content = content.substr(posSP + offset);
+	return word;
+}
+
+string	pickOutRequestTarget(const string& content)
 {
 	string::size_type start = content.find(" ") + 1;
 	string::size_type end	= content.find(" ", start);

@@ -43,7 +43,6 @@
 */
 
 
-string checkMethod(const string& content);
 class ServerSocket;
 class ConnSocket : public ISocket
 {

@@ -55,7 +55,7 @@ void	Pipe::core()
 			this->processOutputHeader();
 			connected->pending = false;
 			this->headerDone = true;
-			this->output = extractBody(this->output);	// store remained after header
+			this->output = pickOutBody(this->output);	// store remained after header
 			if (this->output.empty())
 				return ;		 						// if extracted trailing Body == '', makeChunk will send '0\r\n\r\n'
 		}
