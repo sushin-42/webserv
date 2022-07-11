@@ -22,7 +22,7 @@
 #include "ReqHeader.hpp"
 #include "ResBody.hpp"
 # include "color.hpp"
-#include "httpError.hpp"
+#include "HTTP_Error.hpp"
 
 # include "Pipe.hpp"
 # include "ResHeader.hpp"
@@ -108,7 +108,7 @@ public:
 
 	void	makeResponseHeader();
 	void	setErrorPage(status_code_t status, const string& reason, const string& text);
-	void	returnError(httpError& error);
+	void	returnError(HTTP_Error& error);
 	void	checkErrorPage();
 
 	void	recv();

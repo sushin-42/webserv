@@ -86,7 +86,7 @@ string findIndexFile(Config* conf, const string& filename)
 	string	_filename = filename;
 ;
 	try						{ s = _checkFile(_filename); }
-	catch (httpError& e)	{ throw; }
+	catch (HTTP_Error& e)	{ throw; }
 
 	if (S_ISDIR(s.st_mode))
 	{
@@ -117,7 +117,7 @@ string	checkIndex(Config* conf, const string& filename)//, struct stat s )
 	// if (S_ISDIR(s.st_mode))	//*! index MAYBE work with non-dir file *//
 	// {
 		try							{ indexfile = findIndexFile(conf, filename); }
-		catch (httpError& e)		{ throw; }
+		catch (HTTP_Error& e)		{ throw; }
 
 		if (indexfile.back() == '/')
 		{
@@ -136,7 +136,7 @@ string	checkIndex(Config* conf, const string& filename)//, struct stat s )
 	// if (S_ISDIR(s.st_mode))
 	// {
 	// 	try							{ indexfile = findIndexFile(connected->conf, filename); }
-	// 	catch (httpError& e)		{ throw; }
+	// 	catch (HTTP_Error& e)		{ throw; }
 
 	// 	if (indexfile.back() == '/')
 	// 	{

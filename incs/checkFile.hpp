@@ -3,7 +3,7 @@
 #include <string>
 #include <sys/stat.h>
 #include <dirent.h>
-#include "httpError.hpp"
+#include "HTTP_Error.hpp"
 #include "Config.hpp"
 using namespace std;
 

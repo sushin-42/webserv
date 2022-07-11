@@ -2,7 +2,7 @@
 # include "CGI.hpp"
 # include "Exceptions.hpp"
 #include "ResBody.hpp"
-#include "httpError.hpp"
+#include "HTTP_Error.hpp"
 # include "utils.hpp"
 # include "ServerConfig.hpp"
 # include "ConfigLoader.hpp"
@@ -103,7 +103,7 @@ _skip:
 		uriPath = this->ReqH.getURI().path;
 
 		try 						{ filename = CHECK->getFileName(this->conf, uriPath); }
-		catch (httpError& e)		{ throw; }
+		catch (HTTP_Error& e)		{ throw; }
 
 		if (method == "POST")
 			if (isDynamicResource(this->conf, filename) == false)
@@ -119,7 +119,7 @@ _skip:
 			{
 				pair<status_code_t, string> ret;
 				try						{ ret = controlFile(method, this, filename); }
-				catch (httpError& e)	{ throw; }
+				catch (HTTP_Error& e)	{ throw; }
 
 				this->ResH.setStatusCode(ret.first);
 				this->ResH.setReasonPhrase(ret.second);
@@ -138,12 +138,12 @@ _skip:
 									  if (S_ISDIR(s.st_mode) && filename.back() != '/')
 									  		throw movedPermanently("http://" + this->ReqH["Host"] + uriPath + '/');
 									}
-		catch (httpError& e)		{
+		catch (HTTP_Error& e)		{
 									  throw;
 									}
 
 		try							{ filename = checkIndex(this->conf, filename); }
-		catch (httpError& e)		{ throw; }
+		catch (HTTP_Error& e)		{ throw; }
 		catch (autoIndex& a)		{ this->ResH.setStatusCode(200);
 									  this->ResB.setContent(directoryListing(a.path, "/"));	//FIXIT: prefix
 									  this->ResH["Content-Length"]	= toString(this->ResB.getContent().length());
@@ -504,9 +504,9 @@ _skip:
 
 	string		ConnSocket::getOutputContent() { return this->ResH.getContent() + this->ResB.getContent(); }
 
-void	ConnSocket::returnError(httpError& error)
+void	ConnSocket::returnError(HTTP_Error& error)
 {
-	redirectError* r =  CONVERT(&error, redirectError);
+	HTTP_3XX_Error* r =  CONVERT(&error, HTTP_3XX_Error);
 	this->ResH.clear();
 	this->ResB.clear();
 	if (r)
@@ -601,7 +601,7 @@ deleteFile(const string& filename)
 	struct 	stat s;
 
 	try						{ s = _checkFile(filename); }
-	catch (httpError& e)	{ throw; }
+	catch (HTTP_Error& e)	{ throw; }
 
 	if (S_ISDIR(s.st_mode) && filename.back() != '/')
 		throw Conflict();

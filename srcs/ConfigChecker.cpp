@@ -1,6 +1,6 @@
 #include "ConfigChecker.hpp"
 #include "Config.hpp"
-#include "httpError.hpp"
+#include "HTTP_Error.hpp"
 #include <string>
 
 ConfigChecker*	ConfigChecker::checker;

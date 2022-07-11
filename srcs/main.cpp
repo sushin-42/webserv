@@ -21,7 +21,7 @@
 #include "ResHeader.hpp"
 #include "ServerSocket.hpp"
 #include "core.hpp"
-#include "httpError.hpp"
+#include "HTTP_Error.hpp"
 #include "utils.hpp"
 #include "Exceptions.hpp"
 
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
 
 			try							{	inputStream->recv();	}
 			catch	(readMore& r)		{	continue; }
-			catch	(httpError& h)		{
+			catch	(HTTP_Error& h)		{
 											connected->returnError(h);
 											POLLSET->prepareSend( connected->getFD() );
 											continue;
@@ -148,7 +148,7 @@ _core:
 												POLLSET->prepareSend( connected->getFD() );	/* make ConnSocket to be catched in PollSet#examine() */
 												continue;
 											}
-			catch	(httpError& h)			{
+			catch	(HTTP_Error& h)			{
 												connected->returnError(h);
 												POLLSET->prepareSend( connected->getFD() );
 												continue;
