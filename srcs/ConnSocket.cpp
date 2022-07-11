@@ -92,9 +92,9 @@
 
 _skip:
 		method = ReqH.getMethod();
-		if (method != "GET" || method != "POST" ||
-			method != "PUT" ||method != "DELETE")
-			throw methodNotAllowed();	/* for tester */
+		if (!(method == "GET" || method == "POST" ||
+			  method == "PUT" || method == "DELETE"))
+				throw methodNotAllowed();	/* for tester */
 		if (CHECK->isForbiddenMethod(this->conf, method))
 			throw forbidden();
 		if (conf->d_return.first)
@@ -269,7 +269,7 @@ _skip:
 				ReqH.setHeaderField(KVtoMap(this->ReqH.getContent(), ':'));
 #ifdef PRINTHEADER
 				cout << RED("<-----------------") << endl;
-				cout << this->ReqH.getContent();
+				cout << this->ReqH.getContent() << endl;
 				cout << RED("<-----------------") << endl;
 #endif
 				/* conf is still default_server conf */
@@ -296,7 +296,7 @@ _skip:
 				}
 
 				/* extract trailing body */
-				recvContent = pickOutBody(recvContent);
+				// recvContent = pickOutBody(recvContent);
 			}
 			else
 				throw badRequest();
@@ -308,28 +308,30 @@ _skip:
 	void	ConnSocket::setBodyOrReadMore()
 	{
 		string method = ReqH.getMethod();
-		// if (method == "GET" || method == "HEAD")
-			// return;
-
-		if (ReqH.exist("Transfer-Encoding"))	// it will override Content-Length
+		if (ReqH.exist("Transfer-Encoding"))
 		{
 			if (ReqH.exist("Content-Length"))
 				throw badRequest();
-			ReqB.setChunk(recvContent);
-			try
+			if (ReqH["Transfer-Encoding"] == "chunked")
 			{
-				ReqB.decodingChunk(conf->client_max_body_size);
-				recvContent = ReqB.chunk.trailingData;	/* if not ALL DONE, it throws exception */
+				ReqB.setChunk(recvContent);
+				try
+				{
+					ReqB.decodingChunk(conf->client_max_body_size);
+					recvContent = ReqB.chunk.trailingData;	/* if not ALL DONE, it throws exception */
+				}
+				catch (exception& e)
+				{
+					if (CONVERT(&e, ReqBody::invalidChunk))
+						throw badRequest();
+					if (CONVERT(&e, ReqBody::limitExeeded))
+						throw payloadTooLarge();
+					if (CONVERT(&e, readMore))
+						throw readMore();
+				}
 			}
-			catch (exception& e)
-			{
-				if (CONVERT(&e, ReqBody::invalidChunk))
-					throw badRequest();
-				if (CONVERT(&e, ReqBody::limitExeeded))
-					throw payloadTooLarge();
-				if (CONVERT(&e, readMore))
-					throw readMore();
-			}
+			else
+				throw notImplemented();
 		}
 		else if (ReqH.exist("Content-Length"))
 		{

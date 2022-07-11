@@ -65,16 +65,17 @@ string extractHeader(string& content)
 	string 				header;
 	string::size_type	pStart = 0;
 	string::size_type	pEnd = string::npos;
+	string::size_type	offset;
 
 	while ((pEnd = content.find('\n', pStart)) != string::npos)
 	{
-		if ((content[pEnd + 1] == '\n') ||
-			(content[pEnd + 1] == '\r' && content[pEnd + 2] == '\n'))
+		if ((content[pEnd + 1] == '\n' && (offset = 2)) ||
+			(content[pEnd + 1] == '\r' && content[pEnd + 2] == '\n' && (offset = 3)))
 			break;
 		pStart = pEnd + 1;
 	}
-	header = content.substr(0, pEnd);
-	content = content.substr(pEnd);
+	header = content.substr(0, pEnd + offset);
+	content = content.substr(pEnd + offset);
 	return (header);
 }
 
