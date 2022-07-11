@@ -90,7 +90,7 @@ string findIndexFile(Config* conf, const string& filename)
 
 	if (S_ISDIR(s.st_mode))
 	{
-		if (_filename.back() != '/') { _filename += '/'; }
+		if (_filename[_filename.length() - 1] != '/') { _filename += '/'; }
 
 		indexfile = findFirstMatched(_filename, conf->index);
 		if (!indexfile.empty())	// found
@@ -119,7 +119,7 @@ string	checkIndex(Config* conf, const string& filename)//, struct stat s )
 		try							{ indexfile = findIndexFile(conf, filename); }
 		catch (HTTP_Error& e)		{ throw; }
 
-		if (indexfile.back() == '/')
+		if (indexfile[indexfile.length() - 1] == '/')
 		{
 			if (conf->auto_index)
 				throw autoIndex(indexfile);

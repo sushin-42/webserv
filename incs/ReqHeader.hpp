@@ -41,6 +41,7 @@ public:
 * #                          member functions
 *========================================================================**/
 
+	void			setHTTPversion(const string& v);
 	void			setRequestTarget(const string& content);
 	const string&	getRequestTarget() const;
 	void			setURI(const URI& uri);

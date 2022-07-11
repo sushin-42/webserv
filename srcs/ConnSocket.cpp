@@ -135,7 +135,7 @@ _skip:
 		}
 
 		try							{ s =_checkFile(filename);
-									  if (S_ISDIR(s.st_mode) && filename.back() != '/')
+									  if (S_ISDIR(s.st_mode) && filename[filename.length() - 1] != '/')
 									  		throw movedPermanently("http://" + this->ReqH["Host"] + uriPath + '/');
 									}
 		catch (HTTP_Error& e)		{
@@ -443,7 +443,7 @@ _skip:
 
 			this->unlinkAll();
 			if (this->keepAlive == false)
-				gracefulClose();	/* maybe drop after get FIN from client */
+				return gracefulClose();	/* maybe drop after get FIN from client */
 
 			ReqH.clear(), ReqB.clear();
 			this->internalRedirectCount = 0;
@@ -607,7 +607,7 @@ deleteFile(const string& filename)
 	try						{ s = _checkFile(filename); }
 	catch (HTTP_Error& e)	{ throw; }
 
-	if (S_ISDIR(s.st_mode) && filename.back() != '/')
+	if (S_ISDIR(s.st_mode) && filename[filename.length() - 1] != '/')
 		throw Conflict();
 
 	if (remove(filename.c_str()) == 0)

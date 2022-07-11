@@ -232,7 +232,7 @@ bool isValidHeaderField(const string &line)
 	if (name.find_first_not_of(" \t") != 0)
 		return false;
 
-	if (isspace(name.back()))
+	if (isspace(name[name.length() - 1]))
 		return false;
 
 	return true;

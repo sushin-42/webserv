@@ -1,4 +1,5 @@
 #include "ReqHeader.hpp"
+#include "HTTP_Error.hpp"
 
 
 /**========================================================================
@@ -24,7 +25,11 @@
 	void			ReqHeader::setURI(const URI& uri)	{ this->uri = uri; }
 	const URI&		ReqHeader::getURI() const			{ return this->uri; }
 
-	void			ReqHeader::setRequestTarget(const string& s){ this->requestTarget = s; }
+	void			ReqHeader::setRequestTarget(const string& s){
+																	if (s.length() > 8192) /* 8KB */
+																		throw URITooLong();
+																	this->requestTarget = s;
+																}
 	const string&	ReqHeader::getRequestTarget() const	{ return this->requestTarget; }
 
 	void			ReqHeader::setMethod(const string& m)	{ this->method = m; }
@@ -47,4 +52,34 @@
 		for (; it != ite; it++)
 			cout << it->first << endl;
 		cout << "==================================" << endl;
+	}
+
+	void	ReqHeader::setHTTPversion(const string &v)
+	{
+		string	protocol = "HTTP/";
+		string	version = v.substr(protocol.length());
+
+		if (v.length() < 8)					throw badRequest();
+		if (v.find(protocol) != 0)			throw badRequest();
+
+		string::size_type pos = 0;
+		if (isdigit(version[pos]) == false)	throw badRequest();
+		for	(; pos < version.length(); pos++)
+			if (isdigit(version[pos]) == false)
+				break;
+
+		if (version[pos++] != '.')					throw badRequest();
+		if (pos >= version.length())				throw badRequest();
+
+		for	(; pos < version.length(); pos++)
+			if (isdigit(version[pos]) == false)
+				break;
+		if (pos != version.length())				throw badRequest();
+
+		char*	t;
+		double	ver;
+		ver = strtod(version.c_str(), &t);
+		if (ver != 1.1)								throw HTTPVersionNotSupported();
+
+		IHeader::setHTTPversion(v);
 	}
