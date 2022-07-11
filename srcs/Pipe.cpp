@@ -129,7 +129,7 @@ void	Pipe::coreDone()
 string	Pipe::getOutputContent() { return this->linkConn->ReqB.getContent();  }
 void	Pipe::send(const string& content, map<int, struct undone>& writeUndoneBuf)
 {
-	try						{ writeUndoneBuf.at(this->fd); }
+	try						{ getValueIfExists(writeUndoneBuf, this->fd); }
 	catch (exception& e)	{ writeUndoneBuf[this->fd] = (struct undone){"",0};
 								writeUndoneBuf[this->fd].content.append(content.data(), content.length());	}
 

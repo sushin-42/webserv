@@ -120,6 +120,17 @@ T	toNum(const string& s)
 	return num;
 }
 
+template <class _Key, class _Value>
+const _Value& getValueIfExists(const map<_Key, _Value>& m, const _Key& key)
+{
+	typename map<_Key, _Value>::const_iterator it = m.find(key);
+
+	if (it != m.end())
+		return it->second;
+	throw exception();
+}
+
+
 
 template <size_t>
 struct sfinaer {};

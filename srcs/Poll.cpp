@@ -216,7 +216,7 @@ Stream*	PollSet::writeRoutine(Stream* stream)
 
 const Poll&		PollSet::getPoll(const Stream* const stream) const				{ return _getPoll(stream->getFD()); }
 const Poll&		PollSet::getPoll(int fd) const									{ return _getPoll(fd); }
-const Poll&		PollSet::_getPoll(int fd) const									{ return pollMap.at(fd).first; }
+const Poll&		PollSet::_getPoll(int fd) const									{ return (getValueIfExists(pollMap, fd).first); }
 
 void			PollSet::setEvent(const Stream* const stream, short event)		{ _setEvent(stream->getFD(), event); }
 void			PollSet::setEvent(int fd, short event)							{ _setEvent(fd, event); }

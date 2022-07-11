@@ -102,7 +102,7 @@ void	FileStream::send(const string& content, map<int, struct undone>& writeUndon
 {
 	if (this->fd == -1) return;
 
-	try						{ writeUndoneBuf.at(this->fd); }
+	try						{ getValueIfExists(writeUndoneBuf, this->fd); }
 	catch (exception& e)	{ writeUndoneBuf[this->fd] = (struct undone){"",0};
 							  writeUndoneBuf[this->fd].content.append(content.data(), content.length());	}
 

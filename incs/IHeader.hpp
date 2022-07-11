@@ -56,7 +56,7 @@ public:
 
 	const string& operator[](const string& key) const
 	{
-		return headerField.at(lowerize(key));	// MAY throw exception if key not exists.
+		return getValueIfExists(headerField, lowerize(key));
 	}
 
 /**========================================================================
