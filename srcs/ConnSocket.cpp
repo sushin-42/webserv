@@ -270,6 +270,7 @@ _skip:
 				ReqH.setHeaderField(KVtoMap(this->ReqH.getContent(), ':'));
 #ifdef PRINTHEADER
 				cout << RED("<-----------------") << endl;
+				cout << this->ReqH.getMethod() << " " << this->ReqH.getRequestTarget() << " " << this->ReqH.getHTTPversion() << endl;
 				cout << this->ReqH.getContent() << endl;
 				cout << RED("<-----------------") << endl;
 #endif
