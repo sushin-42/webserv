@@ -199,15 +199,19 @@ string			validateHost(const string& host)
 
 string			ConfigLoader::getServerName(ServerSocket* serv, const string& host) const
 {
-	string	Host = validateHost(host);
-	_Confs	v = serv->confs;
-	_Confs::iterator it, ite;
-	it = v.begin(), ite = v.end();
+	string				Host = validateHost(host);
+	_Confs				v = serv->confs;
+	_Confs::iterator	it, ite;
 
+	ServerConfig*		defaultServConf;
+
+
+	it = v.begin(), ite = v.end();
+	defaultServConf = CONVERT(*it, ServerConfig);
 	for (; it < ite ; it++)
 	{
-		ServerConfig* servConf = CONVERT(*it, ServerConfig);
-		vector<string> names = servConf->server_names;
+		ServerConfig*	servConf = CONVERT(*it, ServerConfig);
+		vector<string> 	names	= servConf->server_names;
 		vector<string>::iterator itName, iteName;
 		itName = names.begin(), iteName = names.end();
 		for (; itName < iteName ; itName++)
@@ -217,7 +221,7 @@ string			ConfigLoader::getServerName(ServerSocket* serv, const string& host) con
 				return *itName;
 		}
 	}
-	return serv->getIP();
+	return defaultServConf->server_names[0];
 }
 
 
