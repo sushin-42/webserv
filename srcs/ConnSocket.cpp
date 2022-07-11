@@ -359,7 +359,8 @@ _skip:
 		}
 		else
 		{
-			if (recvContent.empty() == false)
+			if (!(method == "GET" || method == "HEAD")
+			&&	recvContent.empty() == false)
 				throw lengthRequired();
 		}
 	}
@@ -511,9 +512,12 @@ void	ConnSocket::returnError(HTTP_Error& error)
 	this->ResB.clear();
 	if (r)
 		this->ResH["Location"] = r->location;
-	if (CONVERT(&error, badRequest)
-	||	CONVERT(&error, internalServerError)
-	||	CONVERT(&error, payloadTooLarge))
+	if (CONVERT(&error, HTTP_5XX_Error)
+	||	CONVERT(&error, badRequest)				/* 400 */
+	||	CONVERT(&error, lengthRequired)			/* 411 */
+	||	CONVERT(&error, payloadTooLarge)		/* 413 */
+	||	CONVERT(&error, URITooLong)				/* 414 */
+	)
 		keepAlive = false;
 	this->setErrorPage(error.status, error.what(), error.what());
 	this->makeResponseHeader();
