@@ -2,7 +2,7 @@
 # define PIPE_HPP
 # include "utils.hpp"
 # include "Stream.hpp"
-# include "Undone.hpp"
+
 # include <sys/_types/_pid_t.h>
 
 class ConnSocket;
@@ -46,7 +46,7 @@ public:
 	string	getOutputContent();
 	void	recv();
 	void	coreDone();
-	void	send(const string& content, map<int, struct undone>& writeUndoneBuf);
+	void	send(const string& content);
 	void	core();
 	void	moveToResH(const string& output);
 	void	localRedir();

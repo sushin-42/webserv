@@ -3,6 +3,7 @@
 #include "ConfigLoader.hpp"
 #include "Poll.hpp"
 #include "fcntl.h"
+#include "WriteUndoneBuf.hpp"
 
 /**========================================================================
 * @                           Constructors
@@ -98,16 +99,16 @@ void	FileStream::coreDone()
 }
 
 
-void	FileStream::send(const string& content, map<int, struct undone>& writeUndoneBuf)
+void	FileStream::send(const string& content)
 {
 	if (this->fd == -1) return;
 
-	try						{ getValueIfExists(writeUndoneBuf, this->fd); }
-	catch (exception& e)	{ writeUndoneBuf[this->fd] = (struct undone){"",0};
-							  writeUndoneBuf[this->fd].content.append(content.data(), content.length());	}
+	try						{ UNDONEBUF->at(this->fd); }
+	catch (exception& e)	{ (*UNDONEBUF)[this->fd] = (struct undone){"",0};
+							  (*UNDONEBUF)[this->fd].content.append(content.data(), content.length());	}
 
-	string&		rContent	= writeUndoneBuf[this->fd].content;
-	ssize_t&	rWrited		= writeUndoneBuf[this->fd].totalWrited;
+	string&		rContent	= (*UNDONEBUF)[this->fd].content;
+	ssize_t&	rWrited		= (*UNDONEBUF)[this->fd].totalWrited;
 	ssize_t		rContentLen	= rContent.length();
 	ssize_t		byte		= 0;
 
@@ -119,7 +120,7 @@ void	FileStream::send(const string& content, map<int, struct undone>& writeUndon
 	else
 	{
 		LOGGING(FileStream, _FAIL(unexpected error: ) "%d", errno);
-		writeUndoneBuf.erase(this->fd);
+		UNDONEBUF->erase(this->fd);
 
 		linkConn->unlink(this);
 		POLLSET->drop(this);
@@ -131,7 +132,7 @@ void	FileStream::send(const string& content, map<int, struct undone>& writeUndon
 	if (rWrited == rContentLen)
 	{
 		LOGGING(FileStream, _GOOD(all data writed to File )  UL("%s") ": %zu / %zu bytes", this->filename.c_str(), rWrited, rContentLen);
-		writeUndoneBuf.erase(this->fd);
+		UNDONEBUF->erase(this->fd);
 
 
 		POLLSET->prepareSend( linkConn->getFD() );

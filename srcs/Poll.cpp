@@ -3,6 +3,7 @@
 #include "Pipe.hpp"
 #include "Stream.hpp"
 #include "Timer.hpp"
+#include "WriteUndoneBuf.hpp"
 #include <ios>
 
 PollSet*	PollSet::pollset;
@@ -72,12 +73,12 @@ void	PollSet::_drop( int fd )
 
 	else if (CONVERT(s, FileStream))
 	{
-		LOGGING(PollSet, GRAY("Drop ") "%d " PURPLE("(Pipe)"),  fd);
+		LOGGING(PollSet, GRAY("Drop ") "%d " YELLOW("(FileStream)"),  fd);
 	}
-
 
 	delete s;
 	pollMap.erase(fd);
+	UNDONEBUF->erase(fd);
 	close(fd);
 
 }

@@ -3,6 +3,7 @@
 # include "Exceptions.hpp"
 #include "ResBody.hpp"
 #include "HTTP_Error.hpp"
+#include "WriteUndoneBuf.hpp"
 # include "utils.hpp"
 # include "ServerConfig.hpp"
 # include "ConfigLoader.hpp"
@@ -403,15 +404,15 @@ _skip:
 		// POLLSET->prepareSend( this );	// set POLLOUT only if autodir ?
 	}
 
-	void	ConnSocket::send(const string& content, map<int, undone>& writeUndoneBuf)
+	void	ConnSocket::send(const string& content)
 	{
 		if (FINsended) return;
-		try						{ getValueIfExists(writeUndoneBuf, this->fd); }
-		catch (exception& e)	{ writeUndoneBuf[this->fd] = (struct undone){"",0};
-								  writeUndoneBuf[this->fd].content.append(content.data(), content.length());	}
+		try						{ UNDONEBUF->at(this->fd); }
+		catch (exception& e)	{ (*UNDONEBUF)[this->fd] = (struct undone){"",0};
+								  (*UNDONEBUF)[this->fd].content.append(content.data(), content.length());	}
 
-		string&		rContent	= writeUndoneBuf[this->fd].content;
-		ssize_t&	rWrited		= writeUndoneBuf[this->fd].totalWrited;
+		string&		rContent	= (*UNDONEBUF)[this->fd].content;
+		ssize_t&	rWrited		= (*UNDONEBUF)[this->fd].totalWrited;
 		ssize_t		rContentLen	= rContent.length();
 		ssize_t		byte		= 0;
 		byte = write( this->fd,
@@ -424,7 +425,7 @@ _skip:
 		else
 		{
 			LOGGING(ConnSocket, _FAIL(unexpected error: ) "%d", errno);
-			writeUndoneBuf.erase(this->fd);
+			UNDONEBUF->erase(this->fd);
 
 			this->unlinkAll();
 			gracefulClose();	/* maybe drop after get FIN from client */
@@ -436,7 +437,7 @@ _skip:
 		if (rWrited == rContentLen)
 		{
 			LOGGING(ConnSocket, _GOOD(all data sended to )  "%d: %zu / %zu bytes", this->fd, rWrited, rContentLen);
-			writeUndoneBuf.erase(this->fd);
+			UNDONEBUF->erase(this->fd);
 			if (linkInputPipe && linkInputPipe->readDone == false)
 				throw readMore();	/* it was chunked data from pipe */
 

@@ -3,6 +3,7 @@
 #include "ConfigLoader.hpp"
 #include "ConnSocket.hpp"
 #include "Exceptions.hpp"
+#include "WriteUndoneBuf.hpp"
 
 /**========================================================================
 * @                           Constructors
@@ -127,16 +128,17 @@ void	Pipe::coreDone()
 }
 
 string	Pipe::getOutputContent() { return this->linkConn->ReqB.getContent();  }
-void	Pipe::send(const string& content, map<int, struct undone>& writeUndoneBuf)
+void	Pipe::send(const string& content)
 {
-	try						{ getValueIfExists(writeUndoneBuf, this->fd); }
-	catch (exception& e)	{ writeUndoneBuf[this->fd] = (struct undone){"",0};
-								writeUndoneBuf[this->fd].content.append(content.data(), content.length());	}
 
-	string&		rContent	= writeUndoneBuf[this->fd].content;
-	ssize_t&	rWrited		= writeUndoneBuf[this->fd].totalWrited;
+	try						{ UNDONEBUF->at(this->fd); }
+	catch (exception& e)	{ (*UNDONEBUF)[this->fd] = (struct undone){"",0};
+							  (*UNDONEBUF)[this->fd].content.append(content.data(), content.length());	}
+	string&		rContent	= (*UNDONEBUF)[this->fd].content;
+	ssize_t&	rWrited		= (*UNDONEBUF)[this->fd].totalWrited;
 	ssize_t		rContentLen	= rContent.length();
 	ssize_t		byte		= 0;
+
 
 	errno = 0;
 	byte = ::write( this->fd,
@@ -148,7 +150,7 @@ void	Pipe::send(const string& content, map<int, struct undone>& writeUndoneBuf)
 	else
 	{
 		LOGGING(Pipe, _FAIL(unexpected error: ) "%d", errno);
-		writeUndoneBuf.erase(this->fd);
+		UNDONEBUF->erase(this->fd);
 
 		linkConn->unlink(this);
 		POLLSET->drop(this);
@@ -162,7 +164,7 @@ void	Pipe::send(const string& content, map<int, struct undone>& writeUndoneBuf)
 	if (rWrited == rContentLen)
 	{
 		LOGGING(Pipe, _GOOD(all data writed to pipe )  UL("%d") ": %zu / %zu bytes", this->getFD(), rWrited, rContentLen);
-		writeUndoneBuf.erase(this->fd);
+		UNDONEBUF->erase(this->fd);
 
 		linkConn->unlink(this);
 		POLLSET->drop(this);

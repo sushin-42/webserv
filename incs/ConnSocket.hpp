@@ -27,7 +27,7 @@
 # include "Pipe.hpp"
 # include "ResHeader.hpp"
 # include "utils.hpp"
-# include "Undone.hpp"
+
 
 # define GET	1
 # define PUT	2
@@ -113,7 +113,7 @@ public:
 
 	void	recv();
 	void	coreDone();
-	void	send(const string& content, map<int, undone>& writeUndoneBuf);
+	void	send(const string& content);
 	void	core();
 	string	getOutputContent();
 

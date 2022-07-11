@@ -90,7 +90,7 @@ public:
 					virtual const char * what() const throw() { return msg.c_str(); }
 	};
 
-	void send(const string& s, map<int, struct undone>& u);
+	void send(const string& s);
 private:
 	virtual void			dummy() = 0;
 };

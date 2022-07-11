@@ -6,7 +6,7 @@
 # include <string>
 #include <unistd.h>
 #include <sys/time.h>
-#include "Undone.hpp"
+
 using namespace std;
 
 class Poll;
@@ -68,7 +68,7 @@ public:
 private:
 	virtual void	dummy() = 0;
 public:
-	virtual void	send(const string& content, map<int, undone>& writeUndoneBuf) = 0;
+	virtual void	send(const string& content) = 0;
 	virtual void	recv() = 0;
 	virtual void	coreDone() = 0;
 	virtual void	core() = 0;

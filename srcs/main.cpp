@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <iostream>
+#include <ostream>
 #include <signal.h>
 #include <poll.h>
 #include <string>
@@ -24,6 +25,7 @@
 #include "HTTP_Error.hpp"
 #include "utils.hpp"
 #include "Exceptions.hpp"
+#include "WriteUndoneBuf.hpp"
 
 
 //**------------------------------------------------------------------------
@@ -65,8 +67,6 @@ int main(int argc, char** argv)
 	Stream*						inputStream;
 	Stream*						outputStream;
 
-
-	map<int, undone>			writeUndoneBuf;
 	vector<Stream*>				ret;
 	vector<Stream*>::iterator	it, ite;
 	Stream*						stream;
@@ -82,7 +82,6 @@ int main(int argc, char** argv)
 		try								{ whoDied();
 										  ret = POLLSET->examine(); }
 		catch	(exception& e)			{ continue; }
-
 
 		it = ret.begin(), ite = ret.end();
 		for ( ; it < ite; it++)
@@ -173,7 +172,7 @@ _send:
 											}
 		}
 
-			try							{ outputStream->send(outputContent, writeUndoneBuf);}
+			try							{ outputStream->send(outputContent);}
 			catch (exception& e)		{
 											if		(CONVERT(&e, sendMore))	{POLLSET->prepareSend( outputStream->getFD() ); continue;}	// not all data sended
 											else if	(CONVERT(&e, readMore)) {continue;}	// not all data sended, and have to read from pipe

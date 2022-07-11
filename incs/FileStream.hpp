@@ -3,7 +3,7 @@
 
 # include "utils.hpp"
 # include "Stream.hpp"
-# include "Undone.hpp"
+
 
 class ConnSocket;
 
@@ -49,7 +49,7 @@ public:
 
 	void			recv();
 	void			coreDone();
-	void			send(const string& content, map<int, struct undone>& writeUndoneBuf);
+	void			send(const string& content);
 	void			core();
 	string			getOutputContent();
 

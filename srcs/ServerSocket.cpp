@@ -1,6 +1,6 @@
 #include "ServerSocket.hpp"
 #include "ConfigLoader.hpp"
-#include "Undone.hpp"
+
 
 /**========================================================================
 * #                          member functions
@@ -36,7 +36,7 @@
 		// cout << "accept OK :" << c.fd << endl;
 		return c;
 	}
-	void		ServerSocket::send(const string& s, map<int, struct undone>& u) { (void)s, (void)u; }
+	void		ServerSocket::send(const string& s) { (void)s; }
 	void		ServerSocket::core() {}
 	void		ServerSocket::recv() {}
 	void		ServerSocket::dummy() {}

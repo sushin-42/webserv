@@ -11,5 +11,4 @@
 	void			ISocket::setIP( const string& ip )				{ if (ip ==  "")	this->info.sin_addr.s_addr = INADDR_ANY;
 															  		  else				this->info.sin_addr.s_addr = inet_addr(ip.c_str()); }
 	void			ISocket::setPort( const unsigned short& port)	{ this->info.sin_port = htons(port); }
-	void			ISocket::send(const string& s, map<int, struct undone>& u)
-	{(void)s; (void)u;};
+	void			ISocket::send(const string& s)					{(void)s; }
