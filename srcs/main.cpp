@@ -64,7 +64,7 @@ int main(int argc, char** argv)
 
 	Stream*						inputStream;
 	Stream*						outputStream;
-	string						outputContent;
+
 
 	map<int, undone>			writeUndoneBuf;
 	vector<Stream*>				ret;
@@ -87,6 +87,7 @@ int main(int argc, char** argv)
 		it = ret.begin(), ite = ret.end();
 		for ( ; it < ite; it++)
 		{
+			string	outputContent;
 			stream = *it;
 			if	(CONVERT(stream, ServerSocket))	{ conn++; continue; }
 
