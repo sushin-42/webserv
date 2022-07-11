@@ -92,7 +92,8 @@
 
 _skip:
 		method = ReqH.getMethod();
-		if (method == "HEAD")
+		if (method != "GET" || method != "POST" ||
+			method != "PUT" ||method != "DELETE")
 			throw methodNotAllowed();	/* for tester */
 		if (CHECK->isForbiddenMethod(this->conf, method))
 			throw forbidden();
