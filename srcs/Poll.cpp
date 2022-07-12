@@ -262,8 +262,9 @@ void	PollSet::dropTimeout()
 		FileStream* f = CONVERT(pollMap[*it].second, FileStream);
 		Pipe*		p = CONVERT(pollMap[*it].second, Pipe);
 		if		(c)		c->unlinkAll();
-		else if (f)		f->linkConn->unlink(f);
-		else if (p)		p->linkConn->unlink(p);
+		else if (f)		(f->linkConn) ? f->linkConn->unlink(f) : (void)0;
+		else if (p)		(p->linkConn) ? p->linkConn->unlink(p) : (void)0;
+
 		POLLSET->drop(*it);
 	}
 	timer->timeoutPool.clear();
