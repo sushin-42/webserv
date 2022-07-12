@@ -259,7 +259,7 @@ _skip:
 		if (has2CRLF(recvContent))	//NOTE: what if bad-format request doesn't contain "\r\n\r\n"?
 		{
 			//IMPL: keep-alive request count--
-			if (isValidHeader(recvContent, "\r\n"))
+			if (isValidHeader(recvContent, "\r\n", true))
 			{
 				currentReqCount++;
 				/* set ReqH here */

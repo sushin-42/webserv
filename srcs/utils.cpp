@@ -250,7 +250,7 @@ bool isValidHeaderField(const string &line)
 	return true;
 }
 
-bool isValidHeader(const string &content, string lineTerminator)
+bool isValidHeader(const string &content, string lineTerminator, bool parseStartLine)
 {
 	string::size_type pStart = 0;
 	string::size_type pEnd = string::npos;
@@ -261,23 +261,26 @@ bool isValidHeader(const string &content, string lineTerminator)
 
 	pEnd = content.find(lineTerminator, pStart);
 
-	/* parse start-line	 */
-	line = content.substr(pStart, pEnd - pStart);
-	string::size_type posSP	= 0;
-	int					sp	= 0;
-	for (; posSP < pEnd; posSP++)
+	if (parseStartLine)
 	{
-		if (line[posSP] == ' ')
+		/* parse start-line	 */
+		line = content.substr(pStart, pEnd - pStart);
+		string::size_type posSP	= 0;
+		int					sp	= 0;
+		for (; posSP < pEnd; posSP++)
 		{
-			if ( posSP == 0)	return false;
-			if ( line.find_first_not_of("\t\r\n\f\v ", posSP) != posSP + 1 ) return false;
-			else sp++;
+			if (line[posSP] == ' ')
+			{
+				if ( posSP == 0)	return false;
+				if ( line.find_first_not_of("\t\r\n\f\v ", posSP) != posSP + 1 ) return false;
+				else sp++;
+			}
 		}
+		if (sp != 2) return false;
+		pStart = pEnd + 2;
 	}
-	if (sp != 2) return false;
 
 	/* parse header field */
-	pStart = pEnd + 2;
 
 	while ((pEnd = content.find(lineTerminator, pStart)) != string::npos)
 	{
