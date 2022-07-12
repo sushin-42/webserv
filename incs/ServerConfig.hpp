@@ -34,6 +34,7 @@ public:
     void SeparateLocationBlock();
     void makeLocationBlock();
     void setHttpDirective(Config *httpConf);
+    void checkServername();
     /**========================================================================
      * !                            Exceptions
      *========================================================================**/

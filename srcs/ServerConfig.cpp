@@ -15,6 +15,7 @@ ServerConfig::ServerConfig(string str, Config *httpConf) : Config()
     configtemp = str;
     SeparateLocationBlock();
     SetupConfig();
+    checkServername();
     makeLocationBlock();
 }
 ServerConfig::~ServerConfig() {}
@@ -88,7 +89,12 @@ void ServerConfig::setHttpDirective(Config *httpConf)
     this->d_return = make_pair(0, "");
     this->server_name_in_redirect = httpConf->server_name_in_redirect;
     this->port_in_redirect = httpConf->port_in_redirect;
-    this->server_names.push_back("");
+}
+
+void ServerConfig::checkServername()
+{
+    if (this->server_names.size() == 0)
+        this->server_names.push_back("");
 }
 /**========================================================================
  * !                            Exceptions
