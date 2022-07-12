@@ -1,4 +1,4 @@
-POST /body/static_page.html HTTP/1.1
+PUT /body/static_page.html HTTP/1.1
 Host: tester
 Transfer-encoding: chunked
 

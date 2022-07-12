@@ -1,5 +1,5 @@
 PUT /put_test/aa HTTP/1.1
-Host: localhost:8000
+Host: localhost
 Transfer-encoding: chunked
 
 9

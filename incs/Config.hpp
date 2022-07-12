@@ -29,11 +29,11 @@ struct Duplicate
 	bool lingering_timeout;
 	bool send_timeout;
 	bool client_body_timeout;
-	bool file_access;
 	bool timer;
-	bool d_return;
 	bool server_name_in_redirect;
 	bool port_in_redirect;
+	bool file_access;
+	bool d_return;
 
 	bool &operator[](int ind) { return *(&index + ind); }
 };
@@ -88,7 +88,6 @@ public:
 	pair<status_code_t, string> d_return;
 	bool	server_name_in_redirect;
 	bool	port_in_redirect;
-	// 	// bool				absolute_redirect;
 
 	/**========================================================================
 	 * @                           Constructors
@@ -117,23 +116,7 @@ public:
 	 * !                            Parse_utils
 	 *========================================================================**/
 
-	// void parse_root(vector<string> arg, Config *config);
-	// void parse_listen(vector<string> arg, Config *config);
-	// void parse_server_names(vector<string> arg, Config *config);
-	// void parse_index(vector<string> arg, Config *config);
-	// void parse_auto_index(vector<string> arg, Config *config);
-	// void parse_error_page(vector<string> arg, Config *config);
-	// void parse_keepalive_requests(vector<string> arg, Config *config);
-	// void parse_default_type(vector<string> arg, Config *config);
-	// void parse_client_max_body_size(vector<string> arg, Config *config);
-	// void parse_reset_timedout_connection(vector<string> arg, Config *config);
-	// void parse_lingering_timeout(vector<string> arg, Config *config);
-	// void parse_lingering_time(vector<string> arg, Config *config);
-	// void parse_keepalive_time(vector<string> arg, Config *config);
-	// void parse_keepalive_timeout(vector<string> arg, Config *config);
-	// void parse_send_timeout(vector<string> arg, Config *config);
-	// void parse_client_body_timeout(vector<string> arg, Config *config);
-	// void parse_limit_except_method(vector<string> arg, Config *config);
+	
 	/**========================================================================
 	 * !                            Exceptions
 	 *========================================================================**/

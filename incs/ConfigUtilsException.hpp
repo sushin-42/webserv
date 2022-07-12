@@ -115,5 +115,17 @@ public:
     virtual ~parseLimitExceptMethodFail() throw(){};
     virtual const char *what() const throw() { return msg.c_str(); }
 };
+
+class parseReadOpenFileFail : public exception
+{
+private:
+    string msg;
+
+public:
+    explicit parseReadOpenFileFail() : msg(RED("parseReadOpenFileFail")) {}
+    explicit parseReadOpenFileFail(const string &m) : msg(m) {}
+    virtual ~parseReadOpenFileFail() throw(){};
+    virtual const char *what() const throw() { return msg.c_str(); }
+};
 //=====================================parse_util exception========================================
 #endif

@@ -81,23 +81,21 @@ void HttpConfig::defaultSet()
             case 13:
                 timer = convertStringToTime("20s");
                 break;
-            case 15:
-                /*d_return;*/
-                break;
-            case 16:
+            case 14:
 	            server_name_in_redirect = false;
                 break;
-            case 17:
+            case 15:
 	            port_in_redirect = true;
                 break;
-
+            default:
+                break;
             }
         }
     }
 }
 void HttpConfig::setConfig(string config)
 {
-    // cout << RED(" http block ") << endl;
+    
     etc = config;
     defaultSet();
     separateHttpBlock();
@@ -105,7 +103,7 @@ void HttpConfig::setConfig(string config)
     SetupConfig();
     makeServerBlock();
     makeServerMap();
-    // cout << RED(" http block ") << endl;
+    
 }
 
 void HttpConfig::makeServerMap()

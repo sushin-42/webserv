@@ -1,5 +1,4 @@
 #include "ServerConfig.hpp"
-// #include "Config.hpp"
 #include "LocationConfig.hpp"
 
 class LocationConfig;
@@ -11,16 +10,13 @@ class LocationConfig;
 ServerConfig::ServerConfig() : Config() {}
 ServerConfig::ServerConfig(string str, Config *httpConf) : Config()
 {
-    // cout << PURPLE(" server block ") << endl;
     setHttpDirective(httpConf);
     // impl set serverconfig variables
     configtemp = str;
     SeparateLocationBlock();
     SetupConfig();
     makeLocationBlock();
-    // cout << PURPLE(" server block ") << endl;
 }
-// ServerConfig(const ServerConfig &src) : Config() {}
 ServerConfig::~ServerConfig() {}
 
 /**========================================================================
@@ -92,6 +88,7 @@ void ServerConfig::setHttpDirective(Config *httpConf)
     this->d_return = make_pair(0, "");
     this->server_name_in_redirect = httpConf->server_name_in_redirect;
     this->port_in_redirect = httpConf->port_in_redirect;
+    this->server_names.push_back("");
 }
 /**========================================================================
  * !                            Exceptions

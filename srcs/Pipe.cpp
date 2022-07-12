@@ -110,7 +110,7 @@ void	Pipe::recv()
 	}
 }
 
-void	Pipe::coreDone()
+void    Pipe::coreDone()
 {
 	ConnSocket* connected = this->linkConn;
 

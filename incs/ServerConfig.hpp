@@ -19,7 +19,6 @@ public:
 public:
     ServerConfig();
     ServerConfig(string str, Config *httpConf);
-    // ServerConfig(const ServerConfig &src) : Config() {}
     virtual ~ServerConfig();
 
     /**========================================================================

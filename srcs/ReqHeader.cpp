@@ -57,9 +57,10 @@
 	void	ReqHeader::setHTTPversion(const string &v)
 	{
 		string	protocol = "HTTP/";
-		string	version = v.substr(protocol.length());
+		string	version;
 
 		if (v.length() < 8)					throw badRequest();
+		version = v.substr(protocol.length());
 		if (v.find(protocol) != 0)			throw badRequest();
 
 		string::size_type pos = 0;

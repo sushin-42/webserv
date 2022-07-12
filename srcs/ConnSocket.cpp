@@ -130,7 +130,7 @@ _skip:
 					this->ResH["Location"] = "http://" + this->ReqH["Host"] + uriPath;
 				}
 				this->makeResponseHeader();
-
+				if (method == "DELETE") POLLSET->prepareSend(this);
 				return;
 			}
 		}
