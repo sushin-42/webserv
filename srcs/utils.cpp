@@ -79,6 +79,16 @@ string extractHeader(string& content)
 	return (header);
 }
 
+string pickOutHeader(const string &content, string lineTerminator)
+{
+	string::size_type offset = lineTerminator.length() * 2;
+	string::size_type pos =	content.find(lineTerminator+lineTerminator);
+
+	if (pos == string::npos)
+		return "";
+	return content.substr(0, pos + offset);
+}
+
 string pickOutBody(const string &content)
 {
 	string::size_type pStart = 0;
@@ -240,7 +250,7 @@ bool isValidHeaderField(const string &line)
 	return true;
 }
 
-bool isValidHeader(const string &content)
+bool isValidHeader(const string &content, string lineTerminator)
 {
 	string::size_type pStart = 0;
 	string::size_type pEnd = string::npos;
@@ -249,7 +259,7 @@ bool isValidHeader(const string &content)
 	if (content.empty())
 		return false;
 
-	pEnd = content.find("\r\n", pStart);
+	pEnd = content.find(lineTerminator, pStart);
 
 	/* parse start-line	 */
 	line = content.substr(pStart, pEnd - pStart);
@@ -269,17 +279,58 @@ bool isValidHeader(const string &content)
 	/* parse header field */
 	pStart = pEnd + 2;
 
-	while ((pEnd = content.find("\r\n", pStart)) != string::npos)
+	while ((pEnd = content.find(lineTerminator, pStart)) != string::npos)
 	{
 		line = content.substr(pStart, pEnd - pStart);
 		if (line.empty())
 			break;
 		if (!isValidHeaderField(line))
 			return false;
-		pStart = pEnd + 2;
+		pStart = pEnd + lineTerminator.length();
 	}
 	return true;
 }
+
+// bool isValidHeader(const string &content)
+// {
+// 	string::size_type pStart = 0;
+// 	string::size_type pEnd = string::npos;
+// 	string line;
+
+// 	if (content.empty())
+// 		return false;
+
+// 	pEnd = content.find("\r\n", pStart);
+
+// 	/* parse start-line	 */
+// 	line = content.substr(pStart, pEnd - pStart);
+// 	string::size_type posSP	= 0;
+// 	int					sp	= 0;
+// 	for (; posSP < pEnd; posSP++)
+// 	{
+// 		if (line[posSP] == ' ')
+// 		{
+// 			if ( posSP == 0)	return false;
+// 			if ( line.find_first_not_of("\t\r\n\f\v ", posSP) != posSP + 1 ) return false;
+// 			else sp++;
+// 		}
+// 	}
+// 	if (sp != 2) return false;
+
+// 	/* parse header field */
+// 	pStart = pEnd + 2;
+
+// 	while ((pEnd = content.find("\r\n", pStart)) != string::npos)
+// 	{
+// 		line = content.substr(pStart, pEnd - pStart);
+// 		if (line.empty())
+// 			break;
+// 		if (!isValidHeaderField(line))
+// 			return false;
+// 		pStart = pEnd + 2;
+// 	}
+// 	return true;
+// }
 
 bool has2CRLF(const string &content)
 {

@@ -76,11 +76,12 @@ void			FileStream::recv()
 
 		linkConn->unlink(this);
 		POLLSET->drop(this);
-
+		POLLSET->setEvent(this->linkConn, POLLIN);
 		throw internalServerError();
 
 	case 0:		/* close file, process output */
 		LOGGING(FileStream,  GRAY("file closed: ") UL("%s"), this->getFilename().c_str());
+		POLLSET->setEvent(this->linkConn, POLLIN);
 
 		break;	/* it will go to core, be dropped at coreDone */
 

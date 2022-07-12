@@ -3,7 +3,9 @@
 #include "ConfigLoader.hpp"
 #include "ConnSocket.hpp"
 #include "Exceptions.hpp"
+#include "HTTP_Error.hpp"
 #include "WriteUndoneBuf.hpp"
+#include "utils.hpp"
 
 /**========================================================================
 * @                           Constructors
@@ -92,7 +94,7 @@ void	Pipe::recv()
 
 		linkConn->unlink(this);
 		POLLSET->drop(this);
-
+		POLLSET->setEvent(connected, POLLIN);
 		throw internalServerError();
 
 	case 0:		/* close pipe, process output */
@@ -100,6 +102,7 @@ void	Pipe::recv()
 
 		this->readDone = true;
 		connected->pending = false;
+		POLLSET->setEvent(connected, POLLIN);
 		break;
 
 	default:
@@ -228,6 +231,10 @@ void	Pipe::processOutputHeader()
 	if (!connected)	return ;
 
 	pair<status_code_t, string>		Status;
+
+	if (isValidHeader(pickOutHeader(this->output, "\r\n"), "\r\n") == false &&
+		isValidHeader(pickOutHeader(this->output, "\n"), "\n") == false)
+			throw internalServerError();
 
 	moveToResH(this->output);
 

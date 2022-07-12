@@ -153,6 +153,7 @@ _skip:
 									  throw ;
 									}
 
+		POLLSET->unsetEvent(this, POLLIN);	/* DO NOT ALLOW RECV UNTIL READ FROM OTHER STREAM DONE */
 		string executable = CHECK->getCGIexcutable(this->conf, "." + getExt(filename));
 		if ( executable.empty() == false )		// if ".py" is directory, we don't run CGI
 		{
@@ -258,7 +259,7 @@ _skip:
 		if (has2CRLF(recvContent))	//NOTE: what if bad-format request doesn't contain "\r\n\r\n"?
 		{
 			//IMPL: keep-alive request count--
-			if (isValidHeader(recvContent))
+			if (isValidHeader(recvContent, "\r\n"))
 			{
 				currentReqCount++;
 				/* set ReqH here */
@@ -448,6 +449,8 @@ _skip:
 				return gracefulClose();	/* maybe drop after get FIN from client */
 
 			ReqH.clear(), ReqB.clear();
+			this->chunk = false;
+			this->pending = true;
 			this->internalRedirectCount = 0;
 			if (!recvContent.empty())
 			{

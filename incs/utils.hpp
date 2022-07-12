@@ -62,6 +62,7 @@ string				extractFirstWord(string& content);
 
 string				pickOutRequestTarget(const string& content);
 string				pickOutMethod(const string& content);
+string 				pickOutHeader(const string &content, string lineTerminator);
 string 				pickOutBody(const string &content);
 
 pair<pid_t, int> whoDied();	/* we will check periodically all process forked. */
@@ -75,7 +76,7 @@ inline bool isOWS(int c) { return (c == ' ' || c == '\t'); }
 inline bool isFieldchar(int c) { return (isVchar(c) || isOWS(c)); }
 
 bool	isValidHeaderField(const string &line);
-bool	isValidHeader(const string &content);
+bool	isValidHeader(const string &content, string lineTerminator);
 bool	has2CRLF(const string &content);
 bool	isNumber(const string &s);
 bool 	argvError(int argc);
