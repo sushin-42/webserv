@@ -25,7 +25,9 @@
 	void			ReqHeader::setURI(const URI& uri)	{ this->uri = uri; }
 	const URI&		ReqHeader::getURI() const			{ return this->uri; }
 
-	void			ReqHeader::setRequestTarget(const string& s){
+	void			ReqHeader::setRequestTarget(const string& s){	if (s.empty() ||
+																		s[0] != '/')
+																		throw badRequest();
 																	if (s.length() > 8192) /* 8KB */
 																		throw URITooLong();
 																	this->requestTarget = s;
