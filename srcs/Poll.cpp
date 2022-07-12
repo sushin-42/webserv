@@ -257,6 +257,13 @@ void	PollSet::dropTimeout()
 		//IMPL: reset_timedout_connection
 		// struct linger l = {.l_onoff = 1, .l_linger = 0};
 		// setsockopt((*itStream)->getFD(), SOL_SOCKET, SO_LINGER, &l, sizeof(l));
+
+		ConnSocket* c = CONVERT(pollMap[*it].second, ConnSocket);
+		FileStream* f = CONVERT(pollMap[*it].second, FileStream);
+		Pipe*		p = CONVERT(pollMap[*it].second, Pipe);
+		if		(c)		c->unlinkAll();
+		else if (f)		f->linkConn->unlink(f);
+		else if (p)		p->linkConn->unlink(p);
 		POLLSET->drop(*it);
 	}
 	timer->timeoutPool.clear();
