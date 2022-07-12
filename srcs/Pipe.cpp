@@ -234,7 +234,7 @@ void	Pipe::processOutputHeader()
 
 	if (isValidHeader(pickOutHeader(this->output, "\r\n"), "\r\n", true) == false &&
 		isValidHeader(pickOutHeader(this->output, "\n"), "\n", true) == false &&
-		isValidHeader(pickOutHeader(this->output, "\n"), "\n", false) == false &&
+		isValidHeader(pickOutHeader(this->output, "\r\n"), "\n", false) == false &&
 		isValidHeader(pickOutHeader(this->output, "\n"), "\n", false) == false)
 			throw internalServerError();
 
