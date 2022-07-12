@@ -138,10 +138,17 @@ int childRoutine(
 
 	dup2(CtoP[1], STDOUT_FILENO), close(CtoP[0]), close(CtoP[1]);
 	dup2(PtoC[0], STDIN_FILENO), close(PtoC[0]), close(PtoC[1]);
-	// sleep(1);	//NOTE: 자식프로세스가 왜  기다려주지 ㅎ;
+
+	int devNull = open("/dev/null", O_WRONLY);
+	if (devNull == -1)
+	{
+		cerr << "open \"/dev/null\" fail: " << strerror(errno) << endl;		//NOTE: INTERNAL SERVER ERROR
+		exit(-1);
+	}
+	dup2(devNull, STDERR_FILENO);
 
 	if (chdir(scriptpath.substr(0,scriptpath.find_last_of('/')).c_str()) == -1) {
-		cerr << "chdir error: " << strerror(errno) << endl;		//NOTE: INTERNAL SERVER ERROR
+		cerr << "chdir fail: " << strerror(errno) << endl;						//NOTE: INTERNAL SERVER ERROR
 		exit(-1);
 	}
 
@@ -150,7 +157,7 @@ int childRoutine(
 				(char * const*)(argv.data()),
 				(char * const*)(envp.data())
 			) == -1) {
-				cerr << "exec error: " << strerror(errno) << endl;		//NOTE: INTERNAL SERVER ERROR
+				cerr << "exec fail: " << strerror(errno) << endl;		//NOTE: INTERNAL SERVER ERROR
 				exit(-1);
 			}
 	return -1;
