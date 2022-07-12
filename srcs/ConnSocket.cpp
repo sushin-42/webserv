@@ -146,7 +146,7 @@ _skip:
 		try							{ filename = checkIndex(this->conf, filename); }
 		catch (HTTP_Error& e)		{ throw; }
 		catch (autoIndex& a)		{ this->ResH.setStatusCode(200);
-									  this->ResB.setContent(directoryListing(a.path, "/"));	//FIXIT: prefix
+									  this->ResB.setContent(directoryListing(a.path, CHECK->routeRequestTarget(conf, uriPath).first));	//FIXIT: prefix
 									  this->ResH["Content-Length"]	= toString(this->ResB.getContent().length());
 									  this->ResH["Content-Type"]	= "text/html";
 									  this->makeResponseHeader();

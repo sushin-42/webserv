@@ -208,6 +208,7 @@ string    directoryListing(const string& filename, const string& prefix)
 	indexing(dirs, filename);
 	it = dirs.begin(), ite = dirs.end();
 
+	/* remove prefix (system filepath) */
 	string uri = filename.substr(prefix.length());
     body = "<html>\r\n<head><title>Index of " + uri + "</title></head>\r\n<body>\r\n<h1>Index of " + uri +"</h1><hr><pre>";
 
