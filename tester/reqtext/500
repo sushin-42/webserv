@@ -1,0 +1,10 @@
+POST /loop.py HTTP/1.1
+Host: localhost
+Transfer-encoding: chunked
+
+9
+012345678
+9
+012345678
+0
+

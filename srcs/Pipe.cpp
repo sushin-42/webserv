@@ -45,7 +45,8 @@
 void	Pipe::core()
 {
 	ConnSocket* connected = this->linkConn;
-
+	if (readDone)
+		return;
 	if (this->headerDone == false)
 	{
 		connected->pending = true;
@@ -109,22 +110,20 @@ void	Pipe::recv()
 	}
 }
 
-void	Pipe::coreDone()
+void    Pipe::coreDone()
 {
-	ConnSocket* connected = this->linkConn;
-
-	if (readDone)
-	{
-		connected->unlink(this);
-		POLLSET->drop(this);
-	}
-	if (connected->pending == false)
-	{
-		POLLSET->prepareSend( connected );
-		if (readDone)
-			connected->pending=true;
-	}
-	return;
+    ConnSocket* connected = this->linkConn;
+    if (connected->pending == false)
+    {
+        POLLSET->prepareSend( connected );
+    }
+    if (readDone)
+    {
+        connected->pending=true;
+        connected->unlink(this);
+        POLLSET->drop(this);
+    }
+    return;
 }
 
 string	Pipe::getOutputContent() { return this->linkConn->ReqB.getContent();  }

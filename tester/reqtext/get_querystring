@@ -1,0 +1,2 @@
+GET /querystring.py?id=webserv HTTP/1.1
+Host: localhost

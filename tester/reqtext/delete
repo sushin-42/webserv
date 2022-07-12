@@ -1,0 +1,2 @@
+DELETE /delete_test/aa HTTP/1.1
+Host: localhost

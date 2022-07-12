@@ -2,10 +2,7 @@
 #define HTTPCONFIG_HPP
 #include <iostream>
 #include "Config.hpp"
-// typedef pair<string, string> _LocUri;
-// typedef pair<string, unsigned short> _Addr;
-// typedef vector<Config *> _Confs;
-// typedef map<_Addr, _Confs> _Map;
+
 class HttpConfig : public Config
 {
     /**========================================================================
@@ -44,7 +41,7 @@ public:
      * !                            Exceptions
      *========================================================================**/
 };
-// HttpConfig *HttpConfig::http;
+
 //*--------------------------------------------------------------------------*//
 
 #endif

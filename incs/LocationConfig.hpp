@@ -11,7 +11,7 @@ class LocationConfig : public Config
      *========================================================================**/
 public:
     string URI;  // location URI(/admin/)  {}
-    bool assign; //
+    bool assign;
     vector<string> limit_except_method;
     bool checkSetLimitExceptMethod;
     string alias;
@@ -28,7 +28,6 @@ public:
 public:
     LocationConfig();
     LocationConfig(_LocUri locationConfUri, ServerConfig *serverConf);
-    // LocationConfig(const LocationConfig &src) : Config() {}
     virtual ~LocationConfig();
     /**========================================================================
      * *                            operators
