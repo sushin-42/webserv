@@ -113,16 +113,15 @@ void	Pipe::coreDone()
 {
 	ConnSocket* connected = this->linkConn;
 
-	if (readDone)
-	{
-		connected->unlink(this);
-		POLLSET->drop(this);
-	}
 	if (connected->pending == false)
 	{
 		POLLSET->prepareSend( connected );
-		if (readDone)
-			connected->pending=true;
+	}
+	if (readDone)
+	{
+		connected->pending=true;
+		connected->unlink(this);
+		POLLSET->drop(this);
 	}
 	return;
 }
