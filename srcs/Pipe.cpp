@@ -46,6 +46,9 @@ void	Pipe::core()
 {
 	ConnSocket* connected = this->linkConn;
 
+	if (readDone)
+		return;
+
 	if (this->headerDone == false)
 	{
 		connected->pending = true;
@@ -61,10 +64,7 @@ void	Pipe::core()
 				return ;		 						// if extracted trailing Body == '', makeChunk will send '0\r\n\r\n'
 		}
 		else
-		{
-			// cout << "WAIT HEADER..." << endl;
 			throw readMore();
-		}
 	}
 	/* header done, body part exists */
 
