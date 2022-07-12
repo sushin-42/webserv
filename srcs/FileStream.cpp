@@ -157,7 +157,7 @@ void			FileStream::core()
 {
 		ConnSocket* connected;
 		connected = this->linkConn;
-		string ext		= getExt(connected->ReqH.getURI().path);
+		string ext		= getExt(filename);
 
 		connected->ResB.setContent(this->content);
 		connected->ResH["Content-Type"]	= CONF->MIME.find(ext) != CONF->MIME.end() ?
