@@ -46,14 +46,12 @@ void	Pipe::core()
 {
 	ConnSocket* connected = this->linkConn;
 
-	if (readDone)
-		return;
-
 	if (this->headerDone == false)
 	{
 		connected->pending = true;
 		if	(this->output.rfind("\r\n\r\n") != string::npos ||
-				this->output.rfind("\n\n") != string::npos)
+			 this->output.rfind("\n\n") != string::npos		||
+			 readDone)
 		{
 			// cout << "GOT HEADER!" << endl;
 			this->processOutputHeader();

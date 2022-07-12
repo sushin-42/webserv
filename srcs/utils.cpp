@@ -100,6 +100,8 @@ string pickOutBody(const string &content)
 		}
 		pStart = pEnd + 1;
 	}
+	if (pEnd == string::npos)
+		return "";
 	return (content.substr(pEnd + offset + 1));
 }
 
