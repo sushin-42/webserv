@@ -103,7 +103,7 @@ _skip:
 
 		uriPath = this->ReqH.getURI().path;
 
-		try 						{ filename = CHECK->getFileName(this->conf, uriPath); }
+		try 						{ filename = CHECK->getFileName(this->conf, uriPath);}
 		catch (HTTP_Error& e)		{ throw; }
 
 		if (method == "POST")
@@ -389,8 +389,9 @@ _skip:
 			break;
 
 		case -1:
-			LOGGING(ConnSocket, YELLOW("No data to read"));
-			throw somethingWrong(strerror(errno));
+			LOGGING(ConnSocket, YELLOW("SOMETHING WRONG"));
+			// throw somethingWrong(strerror(errno));
+			throw somethingWrong();
 			break;
 		default:
 
@@ -542,15 +543,20 @@ void ConnSocket::checkErrorPage()
 	_ERRORMAP::iterator	it = error_page.find(status);
 
 	if (it == error_page.end())				return;
-	if (this->internalRedirectCount == MAX_INTERNAL_REDIRECT)	{throw internalServerError(); }
+	if (this->internalRedirectCount == MAX_INTERNAL_REDIRECT)	{ throw internalServerError(); }
 
 	_ERRORPAIR	status_URI = (it->second);
 
-	this->ResH.setStatusCode(status_URI.first);
-	this->ReqH.setRequestTarget(status_URI.second);
-	this->ReqH.setURI(splitRequestTarget(this->ReqH.getRequestTarget()));
+	try								{ 
+									  this->ResH.setStatusCode(status_URI.first);
+									  this->ReqH.setRequestTarget(status_URI.second);
+									  this->ReqH.setURI(splitRequestTarget(this->ReqH.getRequestTarget()));
+									}
+	catch (HTTP_Error& e)			{ throw internalServerError(); }
 
-	cout << CYAN("ERROR REDIR TO: ")  << ReqH.getURI().path << endl;
+#ifdef PRINTHEADER
+	cout << YELLOW("ERRORPAGE REDIR TO: ")  << ReqH.getURI().path << endl;
+#endif
 	this->ReqH.setMethod("GET");
 	this->conf = CONF->getMatchedServer(this->linkServerSock, this->ReqH["Host"]);
 	this->serverName = CONF->getServerName(this->linkServerSock,ReqH["Host"]);

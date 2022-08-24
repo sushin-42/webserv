@@ -53,7 +53,5 @@ public:
 	void	clear();
 };
 
-IHeader::status_code_t	checkFile(const string& path);
-
 #endif
 

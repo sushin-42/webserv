@@ -1,6 +1,7 @@
 #include "utils.hpp"
 #include "ServerSocket.hpp"
 #include "Poll.hpp"
+#include "ServerConfig.hpp"
 #include <string>
 
 
@@ -265,6 +266,7 @@ bool isValidHeader(const string &content, string lineTerminator, bool parseStart
 	{
 		/* parse start-line	 */
 		line = content.substr(pStart, pEnd - pStart);
+
 		string::size_type posSP	= 0;
 		int					sp	= 0;
 		for (; posSP < pEnd; posSP++)
@@ -277,7 +279,7 @@ bool isValidHeader(const string &content, string lineTerminator, bool parseStart
 			}
 		}
 		if (sp != 2) return false;
-		pStart = pEnd + 2;
+		pStart = pEnd + lineTerminator.length();
 	}
 
 	/* parse header field */
@@ -294,46 +296,6 @@ bool isValidHeader(const string &content, string lineTerminator, bool parseStart
 	return true;
 }
 
-// bool isValidHeader(const string &content)
-// {
-// 	string::size_type pStart = 0;
-// 	string::size_type pEnd = string::npos;
-// 	string line;
-
-// 	if (content.empty())
-// 		return false;
-
-// 	pEnd = content.find("\r\n", pStart);
-
-// 	/* parse start-line	 */
-// 	line = content.substr(pStart, pEnd - pStart);
-// 	string::size_type posSP	= 0;
-// 	int					sp	= 0;
-// 	for (; posSP < pEnd; posSP++)
-// 	{
-// 		if (line[posSP] == ' ')
-// 		{
-// 			if ( posSP == 0)	return false;
-// 			if ( line.find_first_not_of("\t\r\n\f\v ", posSP) != posSP + 1 ) return false;
-// 			else sp++;
-// 		}
-// 	}
-// 	if (sp != 2) return false;
-
-// 	/* parse header field */
-// 	pStart = pEnd + 2;
-
-// 	while ((pEnd = content.find("\r\n", pStart)) != string::npos)
-// 	{
-// 		line = content.substr(pStart, pEnd - pStart);
-// 		if (line.empty())
-// 			break;
-// 		if (!isValidHeaderField(line))
-// 			return false;
-// 		pStart = pEnd + 2;
-// 	}
-// 	return true;
-// }
 
 bool has2CRLF(const string &content)
 {
@@ -379,11 +341,25 @@ void				createServerSockets(map<
 	for (;mit != mite; mit++)
 	{
 		serv = new ServerSocket(mit->first.first, mit->first.second);
+		int optval = 1;
+		setsockopt(serv->getFD(), SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+
+		cout << "-------------------------" << endl;
 		try						{ serv->bind(); }
 		catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
 		try						{ serv->listen(SOMAXCONN /*backlog*/); }
 		catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
 		serv->confs = mit->second;
+		vector<Config*>::iterator confIT = serv->confs.begin(); 
+		for (; confIT < serv->confs.end(); confIT++) 
+		{
+			vector<string>::iterator it, ite;
+			it = CONVERT(*confIT, ServerConfig)->server_names.begin();
+			ite = CONVERT(*confIT, ServerConfig)->server_names.end();
+			for (; it < ite; it++)
+				cout << "  •  " << (it->empty() ? "(empty name)" : *it) << endl;
+		}
+		cout << "-------------------------" << endl << endl;
 
 		POLLSET->enroll(serv, POLLIN);
 	}

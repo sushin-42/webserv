@@ -6,6 +6,25 @@
 #include <sys/socket.h>
 #include <fstream>
 
+# define _NC				"\033[0m"
+# define _UL				"\033[4m"
+# define _RED 				"\033[1;31m"
+# define _BLUE 				"\033[1;34m"
+# define _GRAY 				"\033[0;90m"
+# define _CYAN 				"\033[1;36m"
+# define _GREEN				"\033[0;32m"
+# define _YELLOW			"\033[0;33m"
+# define _PURPLE			"\033[0;35m"
+# define UL(s)				_UL s _NC
+# define RED(s) 			_RED s _NC
+# define BLUE(s) 			_BLUE s _NC
+# define GRAY(s) 			_GRAY s _NC
+# define CYAN(s) 			_CYAN s _NC
+# define GREEN(s)			_GREEN s _NC
+# define YELLOW(s)			_YELLOW s _NC
+# define PURPLE(s)			_PURPLE s _NC
+
+
 #define SERVERIP "127.0.0.1"
 #define SERVERPORT 8000
 #define BUFSIZE 10000
@@ -55,13 +74,13 @@ int main(int argc, char *argv[])
     fin.close();
 
     std::cout << "=============================" << std::endl;
-    std::cout << sendBuf;
-    std::cout << "=============================" << std::endl;
+    std::cout << _BLUE << sendBuf << _NC;
+
     byte = write(sock, sendBuf.c_str(), sendBuf.length());
     sleep(1);
     bzero(buf, BUFSIZE);
     byte = read(sock, buf, BUFSIZE);
-    std::cout << buf << std::endl;
+    std::cout << _GREEN << buf  << _NC << std::endl;
     std::cout << "=============================" << std::endl;
     return (0);
 }

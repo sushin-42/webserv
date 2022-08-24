@@ -1,5 +1,7 @@
 #include "ServerSocket.hpp"
 #include "ConfigLoader.hpp"
+#include "Exceptions.hpp"
+
 
 
 /**========================================================================
@@ -9,14 +11,17 @@
 	void			ServerSocket::bind()
 	{
 		int any =	::bind(this->fd, (struct sockaddr *)&this->info, sizeof(this->info));
-		if (any)	throw somethingWrong(strerror(errno));
-		cout << "bind OK" << endl;
+		cout << _GREEN << "bind " << _UL << getIP() + ":" + toString(getPort()) << _NC << "\t-> "; 
+		if (any)	{  cout << RED("FAIL: "); throw somethingWrong(strerror(errno)); }
+		cout << CYAN("OK") << endl;
 	}
 	void			ServerSocket::listen(int backlog)
 	{
 		int any =	::listen(this->fd, backlog);
-		if (any)	throw somethingWrong(strerror(errno));
-		cout << "listen OK" << endl;
+		cout << _GREEN << "listen " << _UL << getIP() + ":" + toString(getPort()) << _NC << "\t-> "; 
+		if (any)	{  cout << RED("FAIL: "); throw somethingWrong(strerror(errno)); }
+		cout << CYAN("OK") << endl;
+
 	}
 	ConnSocket		ServerSocket::accept() const
 	{
@@ -27,13 +32,10 @@
 		c.linkServerSock	= const_cast<ServerSocket*>(this);
 		if (c.fd == -1)
 		{
-			if (errno != EWOULDBLOCK && errno != EAGAIN)	exit(-1);
-			else											throw somethingWrong(strerror(errno));
+			if (errno != EWOULDBLOCK && errno != EAGAIN)	throw somethingWrong(strerror(errno));
+			else											throw readMore();
 		}
 
-		// struct linger l = {.l_onoff = 1, .l_linger = 15};
-		// setsockopt(this->fd, SOL_SOCKET, SO_LINGER, &l, sizeof(l));
-		// cout << "accept OK :" << c.fd << endl;
 		return c;
 	}
 	void		ServerSocket::send(const string& s) { (void)s; }

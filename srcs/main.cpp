@@ -36,29 +36,15 @@
 //*------------------------------------------------------------------------**/
 
 map<string, string> MIME;
-int	conn=0;
-void	printCummConn(int s)
-{
-	(void)s;
-	cerr << CYAN("\rCummulated connections: ") << _UL << conn << _NC  << endl;
-}
 
 int main(int argc, char** argv)
  {
 	if (argvError(argc))
 		return (errMsg());
 	signal(SIGPIPE, SIG_IGN);
-	signal(SIGINFO, printCummConn);
 
-	try
-	{
-		HttpConfig::getInstance()->setConfig(ReadConfig(argc, argv));
-	}
-	catch (const std::exception &e)
-	{
-		std::cerr << e.what() << '\n';
-		return -1;
-	}
+	try							{ HttpConfig::getInstance()->setConfig(ReadConfig(argc, argv));}
+	catch (const exception &e)	{ cerr << e.what() << endl; return -1; }
 
 	Pipe*						CGIpipe;
 	ConnSocket*					connected;
@@ -88,7 +74,7 @@ int main(int argc, char** argv)
 		{
 			string	outputContent;
 			stream = *it;
-			if	(CONVERT(stream, ServerSocket))	{ conn++; continue; }
+			if	(CONVERT(stream, ServerSocket))	{ continue; }
 
 			connected	= CONVERT(stream, ConnSocket);
 			CGIpipe		= CONVERT(stream, Pipe);

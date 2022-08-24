@@ -55,7 +55,6 @@ void	Pipe::core()
 			 this->output.rfind("\n\n") != string::npos		||
 			 readDone)
 		{
-			// cout << "GOT HEADER!" << endl;
 			this->processOutputHeader();
 			connected->pending = false;
 			this->headerDone = true;
@@ -234,9 +233,10 @@ void	Pipe::processOutputHeader()
 
 	if (isValidHeader(pickOutHeader(this->output, "\r\n"), "\r\n", true) == false &&
 		isValidHeader(pickOutHeader(this->output, "\r\n"), "\r\n", false) == false &&
-		isValidHeader(pickOutHeader(this->output, "\n"), "\n", true) == false &&
-		isValidHeader(pickOutHeader(this->output, "\n"), "\n", false) == false)
+		isValidHeader(pickOutHeader(this->output, "\n"),   "\n",   true) == false &&
+		isValidHeader(pickOutHeader(this->output, "\n"),   "\n",   false) == false)
 			throw internalServerError();
+			
 
 	moveToResH(this->output);
 
@@ -289,7 +289,11 @@ void	Pipe::localRedir()
 		connected->conf = CONF->getMatchedLocation(connected->ReqH.getURI().path,
 													CONVERT(connected->conf, ServerConfig));
 
-		cout << RED("LOCAL REDIR TO: ")  << connected->ReqH.getURI().path << endl;
+		
+
+#ifdef PRINTHEADER
+	cout << PURPLE("CGI LOCAL REDIR TO: ")  << connected->ReqH.getURI().path << endl;
+#endif
 
 		connected->unlink(this);
 		POLLSET->drop(this);

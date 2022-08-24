@@ -69,18 +69,6 @@ void	ResHeader::clear()
 }
 
 
-
-IHeader::status_code_t	checkFile(const string& path)
-{
-	int	requested	= open(path.c_str(), O_RDONLY);
-	if (requested == -1)
-	{
-		if (errno == ENOENT) { return 404; }
-	}
-	close(requested);
-	return 200;
-}
-
 void	ResHeader::fetchStatusField()
 {
 	if (this->exist("status") == true)

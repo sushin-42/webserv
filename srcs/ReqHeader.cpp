@@ -1,7 +1,7 @@
 #include "ReqHeader.hpp"
 #include "HTTP_Error.hpp"
 
-
+static void checkBadPathAccess(const string& reqTarget);
 /**========================================================================
 * *                            operators
 *========================================================================**/
@@ -22,7 +22,7 @@
 * #                          member functions
 *========================================================================**/
 
-	void			ReqHeader::setURI(const URI& uri)	{ this->uri = uri; }
+	void			ReqHeader::setURI(const URI& uri)	{ this->uri = uri; checkBadPathAccess(uri.path); }
 	const URI&		ReqHeader::getURI() const			{ return this->uri; }
 
 	void			ReqHeader::setRequestTarget(const string& s){	if (s.empty() ||
@@ -86,3 +86,17 @@
 
 		IHeader::setHTTPversion(v);
 	}
+
+static void checkBadPathAccess(const string& path)
+{
+	string::size_type	posSlash = 0;
+
+	while ((posSlash = path.find("/..", posSlash)) != string::npos)
+	{
+		if		(posSlash + 3 == path.length())
+			throw badRequest();
+		else if (path[posSlash + 3] == '/')
+			throw badRequest();
+		posSlash+=3;
+	}
+}

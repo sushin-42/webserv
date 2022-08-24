@@ -1,0 +1,2 @@
+GET /a../..a/./a/a.aa...../a..a#ab/../.. HTTP/1.1
+Host: localhost

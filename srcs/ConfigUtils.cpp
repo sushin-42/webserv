@@ -589,7 +589,7 @@ string ReadConfig(int argc, char **argv)
 {
     string line, configtemp;
     char temp[100];
-    string a = "compare/default.conf";
+    string a = "conf/default.conf";
     if (argc == 1)
     {
         strcpy(temp, a.c_str());

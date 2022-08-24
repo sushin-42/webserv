@@ -4,6 +4,7 @@
 #include "Stream.hpp"
 #include "Timer.hpp"
 #include "WriteUndoneBuf.hpp"
+#include "Exceptions.hpp"
 #include <ios>
 
 PollSet*	PollSet::pollset;
@@ -175,9 +176,9 @@ Stream*				PollSet::readRoutine(Stream* stream)
 				LOGGING(PollSet, GREEN("Server Got new connection, enroll ") "%d" , connected->getFD());
 				this->enroll(connected, POLLIN);
 			}
-			catch (exception& e)	// accept() not ready
-			{	continue;	}
-
+			catch (ISocket::somethingWrong& e)	{ return(serv); }		// accept() unexpected fail
+			catch (readMore& e)					{ continue;	}	// accept() not ready
+		
 			return (serv);
 		}
 	}
