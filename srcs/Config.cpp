@@ -64,7 +64,7 @@ void Config::SetupConfig()
         ss >> directive;
         while (ss >> tmp)
             arg.push_back(tmp);
-        
+
         call_function(directive, arg);
     }
 }

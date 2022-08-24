@@ -236,7 +236,7 @@ void	Pipe::processOutputHeader()
 		isValidHeader(pickOutHeader(this->output, "\n"),   "\n",   true) == false &&
 		isValidHeader(pickOutHeader(this->output, "\n"),   "\n",   false) == false)
 			throw internalServerError();
-			
+
 
 	moveToResH(this->output);
 
@@ -289,7 +289,7 @@ void	Pipe::localRedir()
 		connected->conf = CONF->getMatchedLocation(connected->ReqH.getURI().path,
 													CONVERT(connected->conf, ServerConfig));
 
-		
+
 
 #ifdef PRINTHEADER
 	cout << PURPLE("CGI LOCAL REDIR TO: ")  << connected->ReqH.getURI().path << endl;

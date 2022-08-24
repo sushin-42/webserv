@@ -547,7 +547,7 @@ void ConnSocket::checkErrorPage()
 
 	_ERRORPAIR	status_URI = (it->second);
 
-	try								{ 
+	try								{
 									  this->ResH.setStatusCode(status_URI.first);
 									  this->ReqH.setRequestTarget(status_URI.second);
 									  this->ReqH.setURI(splitRequestTarget(this->ReqH.getRequestTarget()));

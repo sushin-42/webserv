@@ -36,12 +36,12 @@ int main(int argc, char *argv[])
     bool            keep;
     sockaddr_in     info;
     std::string     sendBuf = "";
-    std::string     readBuf = "";     
+    std::string     readBuf = "";
     int             byte;
     int             fd;
     std::ifstream   fin;
     char            buf[BUFSIZE];
-    
+
     if (argc != 3)
     {
         std::cout << "useage : port add file path" << std::endl;
@@ -63,8 +63,8 @@ int main(int argc, char *argv[])
     fin.open(argv[2]);
     if (!fin.is_open())
         return 1;
-    
-    
+
+
     while (getline(fin, readBuf))
     {
         sendBuf.append(readBuf);

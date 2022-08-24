@@ -11,14 +11,14 @@
 	void			ServerSocket::bind()
 	{
 		int any =	::bind(this->fd, (struct sockaddr *)&this->info, sizeof(this->info));
-		cout << _GREEN << "bind " << _UL << getIP() + ":" + toString(getPort()) << _NC << "\t-> "; 
+		cout << _GREEN << "bind " << _UL << getIP() + ":" + toString(getPort()) << _NC << "\t-> ";
 		if (any)	{  cout << RED("FAIL: "); throw somethingWrong(strerror(errno)); }
 		cout << CYAN("OK") << endl;
 	}
 	void			ServerSocket::listen(int backlog)
 	{
 		int any =	::listen(this->fd, backlog);
-		cout << _GREEN << "listen " << _UL << getIP() + ":" + toString(getPort()) << _NC << "\t-> "; 
+		cout << _GREEN << "listen " << _UL << getIP() + ":" + toString(getPort()) << _NC << "\t-> ";
 		if (any)	{  cout << RED("FAIL: "); throw somethingWrong(strerror(errno)); }
 		cout << CYAN("OK") << endl;
 

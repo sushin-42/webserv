@@ -350,8 +350,8 @@ void				createServerSockets(map<
 		try						{ serv->listen(SOMAXCONN /*backlog*/); }
 		catch (exception& e)	{ cerr << e.what() << endl; exit(errno); }
 		serv->confs = mit->second;
-		vector<Config*>::iterator confIT = serv->confs.begin(); 
-		for (; confIT < serv->confs.end(); confIT++) 
+		vector<Config*>::iterator confIT = serv->confs.begin();
+		for (; confIT < serv->confs.end(); confIT++)
 		{
 			vector<string>::iterator it, ite;
 			it = CONVERT(*confIT, ServerConfig)->server_names.begin();

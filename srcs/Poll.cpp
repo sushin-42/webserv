@@ -178,7 +178,7 @@ Stream*				PollSet::readRoutine(Stream* stream)
 			}
 			catch (ISocket::somethingWrong& e)	{ return(serv); }		// accept() unexpected fail
 			catch (readMore& e)					{ continue;	}	// accept() not ready
-		
+
 			return (serv);
 		}
 	}

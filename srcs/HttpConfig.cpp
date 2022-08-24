@@ -95,7 +95,7 @@ void HttpConfig::defaultSet()
 }
 void HttpConfig::setConfig(string config)
 {
-    
+
     etc = config;
     defaultSet();
     separateHttpBlock();
@@ -103,7 +103,7 @@ void HttpConfig::setConfig(string config)
     SetupConfig();
     makeServerBlock();
     makeServerMap();
-    
+
 }
 
 void HttpConfig::makeServerMap()

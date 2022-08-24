@@ -287,7 +287,7 @@ void parse_listen(vector<string> arg, Config *config)
         port = convertStringToPort(arg[0]);
         ip = "127.0.0.1";
     }
-    
+
 
     for (vector<_Addr>::size_type i = 0; i < server->ipPort.size(); i++)
     {
@@ -295,7 +295,7 @@ void parse_listen(vector<string> arg, Config *config)
             throw Config::parseListenFail();
     }
     server->ipPort.push_back(make_pair(ip, port));
-    
+
 }
 
 void parse_server_names(vector<string> arg, Config *config)
