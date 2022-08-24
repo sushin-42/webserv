@@ -10,7 +10,7 @@ static void checkBadPathAccess(const string& reqTarget);
 	{
 		if (this != &src)
 		{
-			this->IHeader::operator=(src);
+			this->AHeader::operator=(src);
 			this->method		= src.method;
 			this->requestTarget	= src.requestTarget;
 		}
@@ -39,7 +39,7 @@ static void checkBadPathAccess(const string& reqTarget);
 
 	void	ReqHeader::clear()
 	{
-		IHeader::clear();
+		AHeader::clear();
 		method.clear();
 		requestTarget.clear();
 		HTTPversion.clear();
@@ -84,7 +84,7 @@ static void checkBadPathAccess(const string& reqTarget);
 		ver = strtod(version.c_str(), &t);
 		if (ver != 1.1)								throw HTTPVersionNotSupported();
 
-		IHeader::setHTTPversion(v);
+		AHeader::setHTTPversion(v);
 	}
 
 static void checkBadPathAccess(const string& path)

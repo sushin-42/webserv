@@ -9,5 +9,5 @@
 
 string			getFileName(ConnSocket* connected, const string& filepath);
 void			writeResponseHeader(ConnSocket* connected);
-void			core_wrapper(Stream* stream);
+void			core_wrapper(AStream* stream);
 

@@ -50,12 +50,12 @@ int main(int argc, char** argv)
 	ConnSocket*					connected;
 	FileStream*					filestream;
 
-	Stream*						inputStream;
-	Stream*						outputStream;
+	AStream*						inputStream;
+	AStream*						outputStream;
 
-	vector<Stream*>				ret;
-	vector<Stream*>::iterator	it, ite;
-	Stream*						stream;
+	vector<AStream*>				ret;
+	vector<AStream*>::iterator	it, ite;
+	AStream*						stream;
 
 	CONF->setAddrs(HttpConfig::getInstance()->serverMap);
 	CONF->loadMIME();

@@ -21,7 +21,7 @@
 *========================================================================**/
 
 	ConnSocket::ConnSocket()
-	: ISocket(), len(sizeof(info)),
+	: ASocket(), len(sizeof(info)),
 	  recvContent(), ReqH(), ReqB(), ResH(), ResB(),
 	  pending(true), chunk(false), FINsended(false), internalRedirect(false), keepAlive(true),
 	  internalRedirectCount(0), currentReqCount(0),
@@ -40,7 +40,7 @@
 	{
 		if (this != &src)
 		{
-			this->ISocket::operator=(src);
+			this->ASocket::operator=(src);
 			this->ReqH		= src.ReqH;
 			this->ReqB		= src.ReqB;
 			this->ResH		= src.ResH;
@@ -168,7 +168,7 @@ _skip:
 
 
 
-	void	ConnSocket::unlink(Stream* link)	//NOTE: unlink each side?
+	void	ConnSocket::unlink(AStream* link)	//NOTE: unlink each side?
 	{
 		if (linkInputFile == link)
 		{

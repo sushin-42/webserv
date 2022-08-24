@@ -1,10 +1,10 @@
 #ifndef IHEADER_HPP
 # define IHEADER_HPP
 # include <map>
-# include "IText.hpp"
+# include "AText.hpp"
 # include "utils.hpp"
 
-class IHeader: public IText
+class AHeader: public AText
 {
 /**========================================================================
 * '                              typedefs
@@ -28,17 +28,17 @@ public:
 *========================================================================**/
 
 public:
-	IHeader() : IText() {}
-	IHeader( const string& s ) : IText(s) {}
-	IHeader( const IHeader& src )
-	: IText(src.content), HTTPversion(src.HTTPversion), headerField(src.headerField) {}
-	virtual ~IHeader() {}
+	AHeader() : AText() {}
+	AHeader( const string& s ) : AText(s) {}
+	AHeader( const AHeader& src )
+	: AText(src.content), HTTPversion(src.HTTPversion), headerField(src.headerField) {}
+	virtual ~AHeader() {}
 
 /**========================================================================
 * *                            operators
 *========================================================================**/
 
-	IHeader&	operator=( const IHeader& src )
+	AHeader&	operator=( const AHeader& src )
 	{
 		if (this != &src)
 		{

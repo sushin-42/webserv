@@ -15,8 +15,8 @@
 
 #include "Config.hpp"
 # include "ConnSocket.hpp"
-# include "ISocket.hpp"
-#include "Stream.hpp"
+# include "ASocket.hpp"
+#include "AStream.hpp"
 # include "Pipe.hpp"
 # include "FileStream.hpp"
 # include "iterator_pair.hpp"
@@ -38,7 +38,7 @@ friend class Timer;
 * '                              typedefs
 *========================================================================**/
 
-typedef pair<Poll, Stream*> _PS;
+typedef pair<Poll, AStream*> _PS;
 typedef vector<Poll>		_Vp;
 typedef map<int, _PS>		_Map;
 
@@ -77,26 +77,26 @@ public:
 	}
 
 
-	void			enroll( Stream* stream, short event );
-	void			dropLink(Stream* link);
+	void			enroll( AStream* stream, short event );
+	void			dropLink(AStream* link);
 	void			drop( int fd );
-	void			drop( Stream* stream );
+	void			drop( AStream* stream );
 
 	time_t			getMinimumRemaining();
 	void			dropTimeout();
-	vector<Stream*>	examine();
+	vector<AStream*>	examine();
 	void			createMonitor();
-	void			prepareSend(const Stream* const stream);
+	void			prepareSend(const AStream* const stream);
 	void			prepareSend(int fd);
-	void			unsetSend(const Stream* const stream);
+	void			unsetSend(const AStream* const stream);
 	void			unsetSend(int fd);
-	const Poll&		getPoll(const Stream* const stream) const;
+	const Poll&		getPoll(const AStream* const stream) const;
 	const Poll&		getPoll(int fd) const;
-	void			setEvent(const Stream* const stream, short event);
+	void			setEvent(const AStream* const stream, short event);
 	void			setEvent(int fd, short event);
-	void			unsetEvent(const Stream* const stream, short event);
+	void			unsetEvent(const AStream* const stream, short event);
 	void			unsetEvent(int fd, short event);
-	short			getCatchedEvent(const Stream* const stream) const;
+	short			getCatchedEvent(const AStream* const stream) const;
 	short			getCatchedEvent(int fd) const;
 
 private:
@@ -107,8 +107,8 @@ private:
 	void			_setEvent( int fd, short event );
 	void			_unsetEvent( int fd, short event );
 
-	Stream*	readRoutine(Stream* stream);
-	Stream*	writeRoutine(Stream* stream);
+	AStream*	readRoutine(AStream* stream);
+	AStream*	writeRoutine(AStream* stream);
 
 
 };

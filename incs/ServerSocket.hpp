@@ -9,7 +9,7 @@
 # include <sys/socket.h>
 
 
-class ServerSocket : public ISocket
+class ServerSocket : public ASocket
 {
 /**========================================================================
 * %                           member variables
@@ -23,7 +23,7 @@ public:
 public:
 	ServerSocket( const string&			ip,
 				  const unsigned short& port )
-	: ISocket(ip, port), confs() {};
+	: ASocket(ip, port), confs() {};
 	~ServerSocket() {};
 
 /**========================================================================

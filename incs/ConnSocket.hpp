@@ -15,9 +15,9 @@
 # include <sys/fcntl.h>
 
 #include "FileStream.hpp"
-# include "ISocket.hpp"
+# include "ASocket.hpp"
 # include "Config.hpp"
-#include "Stream.hpp"
+#include "AStream.hpp"
 #include "ReqBody.hpp"
 #include "ReqHeader.hpp"
 #include "ResBody.hpp"
@@ -44,7 +44,7 @@
 
 
 class ServerSocket;
-class ConnSocket : public ISocket
+class ConnSocket : public ASocket
 {
 friend class ServerSocket;
 
@@ -102,7 +102,7 @@ public:
 	void	setHeaderOrReadMore();
 	void	setBodyOrReadMore();
 
-	void	unlink(Stream* link);
+	void	unlink(AStream* link);
 	void	unlinkAll();
 
 

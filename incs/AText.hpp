@@ -4,7 +4,7 @@
 # include <string>
 using namespace std;
 
-class IText
+class AText
 {
 /**========================================================================
 * %                          member variables
@@ -18,16 +18,16 @@ protected:
 *========================================================================**/
 
 public:
-	IText() : content() {}
-	IText( const string& s ) : content(s) {}
-	IText( const IText& src ) : content(src.content) {}
-	virtual ~IText() {}
+	AText() : content() {}
+	AText( const string& s ) : content(s) {}
+	AText( const AText& src ) : content(src.content) {}
+	virtual ~AText() {}
 
 /**========================================================================
 * *                            operators
 *========================================================================**/
 
-	IText&	operator=( const IText& src )
+	AText&	operator=( const AText& src )
 	{
 		if (this != &src)
 			content = src.content;

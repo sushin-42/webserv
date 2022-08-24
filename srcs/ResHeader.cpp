@@ -9,7 +9,7 @@ ResHeader&	ResHeader::operator=( const ResHeader& src )
 {
 	if (this != &src)
 	{
-		this->IHeader::operator=(src);
+		this->AHeader::operator=(src);
 		this->statusCode	= src.statusCode;
 		this->reasonPhrase	= src.reasonPhrase;
 	}
@@ -21,7 +21,7 @@ ResHeader&	ResHeader::operator=( const ResHeader& src )
 *========================================================================**/
 
 void					ResHeader::setStatusCode(status_code_t s)		{ this->statusCode = s; }
-IHeader::status_code_t	ResHeader::getStatusCode() const				{ return this->statusCode; }
+AHeader::status_code_t	ResHeader::getStatusCode() const				{ return this->statusCode; }
 
 void			ResHeader::setReasonPhrase(const string& r)	{ this->reasonPhrase = r; }
 const string&	ResHeader::getReasonPhrase() const				{ return this->reasonPhrase; }
@@ -63,7 +63,7 @@ void	ResHeader::print()
 
 void	ResHeader::clear()
 {
-	IHeader::clear();
+	AHeader::clear();
 	this->statusCode = 200;
 	this->reasonPhrase = "OK";
 }

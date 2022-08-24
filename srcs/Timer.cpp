@@ -25,7 +25,7 @@ void	Timer::monitor()
 
 	time_t	elapsedTime;
 	time_t	remainingTime;
-	Stream* stream;
+	AStream* stream;
 
 	for (;it != ite; it++)
 	{

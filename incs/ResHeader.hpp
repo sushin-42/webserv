@@ -1,11 +1,11 @@
 #ifndef RESHEADER_HPP
 # define RESHEADER_HPP
 
-#include "IHeader.hpp"
+#include "AHeader.hpp"
 # include "ReqHeader.hpp"
 #include <string>
 
-class ResHeader : public IHeader
+class ResHeader : public AHeader
 {
 /**========================================================================
 * %                          member variables
@@ -21,11 +21,11 @@ private:
 
 public:
 	ResHeader()
-	: IHeader(), statusCode(200), reasonPhrase("OK") {}
+	: AHeader(), statusCode(200), reasonPhrase("OK") {}
 	ResHeader( const string& content )
-	: IHeader(content), statusCode(200), reasonPhrase("OK") {}
+	: AHeader(content), statusCode(200), reasonPhrase("OK") {}
 	ResHeader( const ResHeader& src )
-	: IHeader(src), statusCode(src.statusCode), reasonPhrase(src.reasonPhrase) {}
+	: AHeader(src), statusCode(src.statusCode), reasonPhrase(src.reasonPhrase) {}
 	~ResHeader() {}
 
 /**========================================================================

@@ -2,12 +2,12 @@
 # define REQHEADER_HPP
 # include <fcntl.h>
 # include <string>
-# include "IHeader.hpp"
+# include "AHeader.hpp"
 # include "Config.hpp"
 # include "utils.hpp"
 
 
-class ReqHeader : public IHeader
+class ReqHeader : public AHeader
 {
 /**========================================================================
 * %                          member variables
@@ -24,11 +24,11 @@ private:
 
 public:
 	ReqHeader()
-	: IHeader(), method(), requestTarget() {}
+	: AHeader(), method(), requestTarget() {}
 	ReqHeader( const string& content )
-	: IHeader(content), method(), requestTarget() {}
+	: AHeader(content), method(), requestTarget() {}
 	ReqHeader( const ReqHeader& src )
-	: IHeader(src), method(src.method), requestTarget(src.requestTarget) {}	//TODO
+	: AHeader(src), method(src.method), requestTarget(src.requestTarget) {}	//TODO
 	~ReqHeader() {}
 
 /**========================================================================

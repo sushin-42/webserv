@@ -264,4 +264,4 @@ _AllDone:
 		return ;
 	}
 
-	void	ReqBody::clear() { content.clear(), clearChunk(); /*IText::clear();*/ }
+	void	ReqBody::clear() { content.clear(), clearChunk(); /*AText::clear();*/ }

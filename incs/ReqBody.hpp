@@ -1,7 +1,7 @@
 #ifndef REQBODY_HPP
 # define REQBODY_HPP
 
-#include "IText.hpp"
+#include "AText.hpp"
 #include "utils.hpp"
 #include <exception>
 #include <iostream>
@@ -12,7 +12,7 @@
 using namespace std;
 
 
-class ReqBody : public IText
+class ReqBody : public AText
 {
 /**========================================================================
 * %                          member variables
@@ -34,8 +34,8 @@ friend class ConnSocket;
 * @                           Constructors
 *========================================================================**/
 public:
-	ReqBody(): IText() {clearChunk();}
-	ReqBody( const ReqBody& src ): IText(src.content){}
+	ReqBody(): AText() {clearChunk();}
+	ReqBody( const ReqBody& src ): AText(src.content){}
 	~ReqBody() {}
 
 /**========================================================================

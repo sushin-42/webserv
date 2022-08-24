@@ -20,10 +20,10 @@ SRCS =  $(SRC_DIR)/checkFile.cpp \
 		$(SRC_DIR)/FileStream.cpp \
 		$(SRC_DIR)/HTTP_Error.cpp \
 		$(SRC_DIR)/HttpConfig.cpp \
-		$(SRC_DIR)/IHeader.cpp \
-		$(SRC_DIR)/ISocket.cpp \
-		$(SRC_DIR)/Stream.cpp \
-		$(SRC_DIR)/IText.cpp \
+		$(SRC_DIR)/AHeader.cpp \
+		$(SRC_DIR)/ASocket.cpp \
+		$(SRC_DIR)/AStream.cpp \
+		$(SRC_DIR)/AText.cpp \
 		$(SRC_DIR)/LocationConfig.cpp \
 		$(SRC_DIR)/Pipe.cpp \
 		$(SRC_DIR)/Poll.cpp \

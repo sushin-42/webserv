@@ -1,13 +1,13 @@
 #ifndef PIPE_HPP
 # define PIPE_HPP
 # include "utils.hpp"
-# include "Stream.hpp"
+# include "AStream.hpp"
 
 # include <sys/_types/_pid_t.h>
 
 class ConnSocket;
 
-class Pipe : public Stream
+class Pipe : public AStream
 {
 /**========================================================================
 * %                          member variables

@@ -1,7 +1,7 @@
 #include "Poll.hpp"
 #include "FileStream.hpp"
 #include "Pipe.hpp"
-#include "Stream.hpp"
+#include "AStream.hpp"
 #include "Timer.hpp"
 #include "WriteUndoneBuf.hpp"
 #include "Exceptions.hpp"
@@ -22,7 +22,7 @@ PollSet::~PollSet() {}
 *========================================================================**/
 
 
-void		PollSet::enroll( Stream* stream, short events )
+void		PollSet::enroll( AStream* stream, short events )
 {
 	Poll		p;
 	p.fd		= stream->getFD();
@@ -56,7 +56,7 @@ void		PollSet::enroll( Stream* stream, short events )
 void	PollSet::_drop( int fd )
 {
 	Poll	p;
-	Stream* s;
+	AStream* s;
 
 	p = this->pollMap[fd].first;
 	s = this->pollMap[fd].second;
@@ -84,7 +84,7 @@ void	PollSet::_drop( int fd )
 
 }
 
-void	PollSet::drop( Stream* stream ) { _drop(stream->getFD()); }
+void	PollSet::drop( AStream* stream ) { _drop(stream->getFD()); }
 void	PollSet::drop( int fd )			{ _drop(fd); }
 
 void	PollSet::makePollVec()
@@ -113,7 +113,7 @@ void	PollSet::makePollVec()
 
 }
 
-vector<Stream*>	PollSet::examine()
+vector<AStream*>	PollSet::examine()
 {
 	int		numReady = 0;
 	time_t	minRemaining = 2000;;
@@ -127,7 +127,7 @@ vector<Stream*>	PollSet::examine()
 
 	makePollVec();
 	_Vp::iterator it, ite;
-	vector<Stream*> ret;
+	vector<AStream*> ret;
 	it = pollVec.begin(), ite = pollVec.end();
 
 	switch (numReady = ::poll(pollVec.data(), pollVec.size(), minRemaining/*time-out*/))
@@ -145,7 +145,7 @@ vector<Stream*>	PollSet::examine()
 		else
 		{
 			pollMap[it->fd].first.revents = it->revents;
-			Stream* stream = pollMap[it->fd].second;
+			AStream* stream = pollMap[it->fd].second;
 			//IMPL: separate updateLastWrite, updateLastRead for send_timeout
 			pollMap[it->fd].second->updateLastActive();
 			if 			(it->revents & POLLOUT)		ret.push_back( writeRoutine(stream) );
@@ -157,7 +157,7 @@ vector<Stream*>	PollSet::examine()
 	return ret;
 }
 
-Stream*				PollSet::readRoutine(Stream* stream)
+AStream*				PollSet::readRoutine(AStream* stream)
 {
 	ServerSocket*	serv		= CONVERT(stream, ServerSocket);
 	ConnSocket*		connected	= CONVERT(stream, ConnSocket);
@@ -176,7 +176,7 @@ Stream*				PollSet::readRoutine(Stream* stream)
 				LOGGING(PollSet, GREEN("Server Got new connection, enroll ") "%d" , connected->getFD());
 				this->enroll(connected, POLLIN);
 			}
-			catch (ISocket::somethingWrong& e)	{ return(serv); }		// accept() unexpected fail
+			catch (ASocket::somethingWrong& e)	{ return(serv); }		// accept() unexpected fail
 			catch (readMore& e)					{ continue;	}	// accept() not ready
 
 			return (serv);
@@ -204,7 +204,7 @@ Stream*				PollSet::readRoutine(Stream* stream)
 	}
 }
 
-Stream*	PollSet::writeRoutine(Stream* stream)
+AStream*	PollSet::writeRoutine(AStream* stream)
 {
 	LOGGING(PollSet, GREEN("Can write to ") "%d", stream->getFD());
 	return stream;
@@ -216,25 +216,25 @@ Stream*	PollSet::writeRoutine(Stream* stream)
 
 
 
-const Poll&		PollSet::getPoll(const Stream* const stream) const				{ return _getPoll(stream->getFD()); }
+const Poll&		PollSet::getPoll(const AStream* const stream) const				{ return _getPoll(stream->getFD()); }
 const Poll&		PollSet::getPoll(int fd) const									{ return _getPoll(fd); }
 const Poll&		PollSet::_getPoll(int fd) const									{ return (getValueIfExists(pollMap, fd).first); }
 
-void			PollSet::setEvent(const Stream* const stream, short event)		{ _setEvent(stream->getFD(), event); }
+void			PollSet::setEvent(const AStream* const stream, short event)		{ _setEvent(stream->getFD(), event); }
 void			PollSet::setEvent(int fd, short event)							{ _setEvent(fd, event); }
 void			PollSet::_setEvent(int fd, short event)							{ pollMap[fd].first.events |= event; }
 
-void			PollSet::unsetEvent(const Stream* const stream, short event)	{ _unsetEvent(stream->getFD(), event); }
+void			PollSet::unsetEvent(const AStream* const stream, short event)	{ _unsetEvent(stream->getFD(), event); }
 void			PollSet::unsetEvent(int fd, short event)						{ _unsetEvent(fd, event); }
 void			PollSet::_unsetEvent(int fd, short event)						{ pollMap[fd].first.events &= ~event; }
 
 void			PollSet::prepareSend( int fd )									{ _setEvent(fd, POLLOUT); }
-void			PollSet::prepareSend( const Stream* const stream )				{ _setEvent(stream->getFD(), POLLOUT); }
+void			PollSet::prepareSend( const AStream* const stream )				{ _setEvent(stream->getFD(), POLLOUT); }
 
 void			PollSet::unsetSend( int fd )									{ _unsetEvent(fd, POLLOUT); }
-void			PollSet::unsetSend( const Stream* const stream )				{ _unsetEvent(stream->getFD(), POLLOUT); }
+void			PollSet::unsetSend( const AStream* const stream )				{ _unsetEvent(stream->getFD(), POLLOUT); }
 
-short			PollSet::getCatchedEvent(const Stream* const stream) const		{ return _getPoll(stream->getFD()).revents; }
+short			PollSet::getCatchedEvent(const AStream* const stream) const		{ return _getPoll(stream->getFD()).revents; }
 short			PollSet::getCatchedEvent(int fd) const							{ return _getPoll(fd).revents; }
 
 

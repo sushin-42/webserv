@@ -10,7 +10,7 @@
 using namespace std;
 
 class Poll;
-class Stream
+class AStream
 {
 /**========================================================================
 * %                          member variables
@@ -29,17 +29,17 @@ public:
 *========================================================================**/
 
 public:
-	Stream();
-	Stream( int _fd );
-	Stream( int _fd, time_t _to);
-	Stream( const Stream& src );
-	virtual ~Stream();
+	AStream();
+	AStream( int _fd );
+	AStream( int _fd, time_t _to);
+	AStream( const AStream& src );
+	virtual ~AStream();
 
 /**========================================================================
 * *                            operators
 *========================================================================**/
 
-	Stream&	operator=( const Stream& src );
+	AStream&	operator=( const AStream& src );
 
 /**========================================================================
 * #                          member functions

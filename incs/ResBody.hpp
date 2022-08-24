@@ -2,7 +2,7 @@
 # define RESBODY_HPP
 
 #include "FileStream.hpp"
-#include "IText.hpp"
+#include "AText.hpp"
 #include "color.hpp"
 #include <iostream>
 # include <string>
@@ -14,7 +14,7 @@ using namespace std;
 
 typedef unsigned short status_code_t;
 
-class ResBody : public IText
+class ResBody : public AText
 {
 public:
 
@@ -22,8 +22,8 @@ public:
 * @                           Constructors
 *========================================================================**/
 
-	ResBody(): IText() {}
-	ResBody( const ResBody& src ): IText(src.content) {}
+	ResBody(): AText() {}
+	ResBody( const ResBody& src ): AText(src.content) {}
 	~ResBody() {}
 
 /**========================================================================

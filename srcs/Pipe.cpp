@@ -12,13 +12,13 @@
 *========================================================================**/
 
 	Pipe::Pipe()
-	: Stream(-1), output(), pid(0), status(0), headerDone(false), readDone(false), linkConn(NULL) {}
+	: AStream(-1), output(), pid(0), status(0), headerDone(false), readDone(false), linkConn(NULL) {}
 
 	Pipe::Pipe( int fd, pid_t p )
-	:Stream(fd), output(), pid(p), status(0), headerDone(false), readDone(false), linkConn(NULL) {}
+	:AStream(fd), output(), pid(p), status(0), headerDone(false), readDone(false), linkConn(NULL) {}
 
 	Pipe::Pipe( const Pipe& src )
-	: Stream(src), output(src.output), pid(src.pid), status(src.status), headerDone(false), readDone(false), linkConn(src.linkConn) {}
+	: AStream(src), output(src.output), pid(src.pid), status(src.status), headerDone(false), readDone(false), linkConn(src.linkConn) {}
 
 	Pipe::~Pipe() {}
 
@@ -30,7 +30,7 @@
 	{
 		if (this != &src)
 		{
-			this->Stream::operator=(src);
+			this->AStream::operator=(src);
 			this->output 	= src.output;
 			this->pid	 	= src.pid;
 			this->status 	= src.status;

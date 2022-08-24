@@ -10,12 +10,12 @@
 # include <string>
 # include <unistd.h>
 
-#include "Stream.hpp"
+#include "AStream.hpp"
 # include "color.hpp"
 
 using namespace std;
 
-class ISocket : public Stream
+class ASocket : public AStream
 {
 /**========================================================================
 * '                              typedefs
@@ -35,9 +35,9 @@ protected:
 *========================================================================**/
 
 public:
-	ISocket() : Stream() {};
-	ISocket( const string& ip, const unsigned short& port )
-	: Stream()
+	ASocket() : AStream() {};
+	ASocket( const string& ip, const unsigned short& port )
+	: AStream()
 	{
 		info.sin_family	= PF_INET;
 		setIP(ip);
@@ -47,20 +47,20 @@ public:
 		fd = socket(PF_INET, SOCK_STREAM, 0);
 		fcntl(fd, F_SETFL, O_NONBLOCK);
 	}
-	ISocket( const ISocket& src )
-	:Stream(src), info(src.info) {}
+	ASocket( const ASocket& src )
+	:AStream(src), info(src.info) {}
 
-	~ISocket() {}
+	~ASocket() {}
 
 /**========================================================================
 * *                            operators
 *========================================================================**/
 
-	ISocket&	operator=( const ISocket& src )
+	ASocket&	operator=( const ASocket& src )
 	{
 		if (this != &src)
 		{
-			this->::Stream::operator=(src);
+			this->::AStream::operator=(src);
 			this->info = src.info;
 		}
 		return *this;

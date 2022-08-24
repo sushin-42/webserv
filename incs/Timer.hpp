@@ -11,7 +11,7 @@ class Timer
 private:
 	// typedef PollSet::iterator		iterator;
 	// typedef PollSet::const_iterator	const_iterator;
-	// typedef pair<Poll, Stream*>	_Ps;
+	// typedef pair<Poll, AStream*>	_Ps;
 
 /**========================================================================
 * %                          member variables

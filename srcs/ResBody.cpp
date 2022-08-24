@@ -17,5 +17,5 @@
 /**========================================================================
 * #                          member functions
 *========================================================================**/
-	void	ResBody::clear() { content.clear(); /*IText::clear();*/ }
+	void	ResBody::clear() { content.clear(); /*AText::clear();*/ }
 
